@@ -1,5 +1,5 @@
 # SageCompass Process Model
-_instructions v3.0_
+_instructions v3.1_
 
 **Purpose**  
 Defines the reasoning pipeline that operationalizes `<PROCESS>` during SageCompass evaluations.

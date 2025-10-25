@@ -1,5 +1,5 @@
 # SageCompass – Output Format Specification
-_instructions v3.0_
+_instructions v3.1_
 
 Defines the canonical JSON schema emitted by SageCompass. The first line of any model response must be valid JSON matching this structure.
 

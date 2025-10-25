@@ -1,3 +1,4 @@
+- v3.3 – Pumping up version number 
 - v3.2 – Added decision_confidence, handling missing baseline 
 - v3.1 – Missed knowledge files references 
 - v3.0 – v3 
