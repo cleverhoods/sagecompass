@@ -1,8 +1,8 @@
 # SageCompass – Problem Archetypes
-_instructions v2.2_
+_instructions v3.0_
 
-Defines common machine learning problem types, their business manifestations, and common misapplications.  
-SageCompass uses this reference to map natural-language challenges into correct ML archetypes, detect false positives, and reduce unnecessary ML usage.
+Defines standardized ML problem families with explicit guidance for business fit, expected data, and common misapplications.  
+SageCompass uses this reference to classify business challenges, recommend the correct ML archetype, and detect when a rule-based or simpler method is more appropriate.
 
 ---
 
@@ -18,11 +18,11 @@ Supervised
 Accuracy, Precision, Recall, F1, ROC-AUC, Log-loss
 
 **Business Cues (Good Fit):**
-- Detect whether a transaction is fraudulent or legitimate.
-- Classify tickets or messages by topic or intent.
-- Determine whether a part is defective.
-- Identify which customers are likely to churn.
-- Categorize sentiment (positive, neutral, negative).
+- Detect fraudulent vs. legitimate transactions
+- Identify which customers are likely to churn
+- Categorize text tickets or messages by topic
+- Determine defective products or quality issues
+- Classify sentiment (positive / neutral / negative)
 
 **Good Examples:**
 - Email spam detection
@@ -32,14 +32,26 @@ Accuracy, Precision, Recall, F1, ROC-AUC, Log-loss
 
 **Bad Examples:**
 - “Calculate total revenue per month.” → numeric output → regression
-- “Sort customers alphabetically.” → deterministic rule → not ML
+- “Sort customers alphabetically.” → deterministic → not ML
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | categorical (binary or multiclass) |
+| Features | encoded categorical and numeric predictors |
+| Granularity | one record per entity (user, transaction, case) |
+| Sample size | ≥ 10 000 for binary, ≥ 50 000 for multiclass |
+
+**Recommended Technical Metrics:** Accuracy, Recall, F1, ROC-AUC  
+**Common Business KPIs:** decision accuracy, automation rate, cost per error  
+**Non-ML Alternatives:** rule filters, lookup tables, threshold logic
 
 ---
 
 ## 2. Regression
 
 **Goal:**  
-Predict continuous numeric outcomes based on input features.
+Predict continuous numeric outcomes from structured inputs.
 
 **Learning Paradigm:**  
 Supervised
@@ -51,18 +63,28 @@ MAE, RMSE, R², MAPE
 - Estimate delivery time or cost
 - Predict monthly sales or revenue
 - Forecast customer lifetime value
-- Estimate house prices
-- Predict time to resolve a support ticket
+- Estimate housing or asset prices
 
 **Good Examples:**
-- Forecasting revenue by region
+- Forecasting regional revenue
 - Predicting housing prices
-- Estimating repair time from service logs
-- Predicting loan amount recovery rate
+- Estimating repair time from logs
 
 **Bad Examples:**
 - “Predict if a customer will churn.” → classification
 - “Group customers by behavior.” → clustering
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | continuous numeric |
+| Features | historical, contextual, or operational variables |
+| Granularity | one record per event or entity |
+| Sample size | ≥ 10 000 |
+
+**Recommended Technical Metrics:** MAE, RMSE, R²  
+**Common Business KPIs:** forecast deviation, cost prediction accuracy, efficiency gain  
+**Non-ML Alternatives:** spreadsheet regression, linear rules, heuristic formulas
 
 ---
 
@@ -75,89 +97,120 @@ Predict future numeric values from temporally ordered historical data.
 Supervised (sequence modeling)
 
 **Typical Metrics:**  
-MAE, RMSE, MAPE, SMAPE, seasonal error
+MAE, RMSE, MAPE, SMAPE, Forecast Bias
 
 **Business Cues (Good Fit):**
 - Forecast next month’s demand or traffic
 - Predict daily sales or web visits
-- Estimate electricity or energy consumption
-- Forecast inventory or staffing needs
-- Predict patient admissions per week
+- Estimate energy consumption or production
+- Forecast staffing or call-center volume
 
 **Good Examples:**
-- Demand forecasting for retail products
+- Demand forecasting for retail
 - Power consumption prediction
 - Stock level forecasting
-- Predicting call-center volume by day
 
 **Bad Examples:**
-- “Classify transactions as fraudulent or not.” → classification
+- “Classify transactions as fraudulent.” → classification
 - “Segment users by behavior.” → clustering
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | numeric, indexed by time |
+| Features | lagged variables, seasonality, external signals |
+| Granularity | hourly, daily, weekly, or monthly |
+| Sample size | ≥ 24–36 time points per series |
+
+**Recommended Technical Metrics:** MAPE, RMSE  
+**Common Business KPIs:** forecast accuracy, inventory waste reduction, revenue volatility decrease  
+**Non-ML Alternatives:** moving average, ARIMA, exponential smoothing
 
 ---
 
 ## 4. Ranking
 
 **Goal:**  
-Order or prioritize items based on relevance or importance.
+Order or prioritize items based on predicted relevance or importance.
 
 **Learning Paradigm:**  
 Supervised (pointwise or pairwise)
 
 **Typical Metrics:**  
-NDCG, MAP, Precision@K, Recall@K
+NDCG@K, MAP@K, Precision@K
 
 **Business Cues (Good Fit):**
-- Show the most relevant products or articles first
-- Prioritize leads for sales follow-up
-- Rank job candidates or suppliers
-- Order support tickets by urgency
-- Optimize content recommendations by relevance score
+- Show the most relevant results first
+- Prioritize leads or candidates
+- Rank support tickets by urgency
+- Optimize recommendation relevance
 
 **Good Examples:**
-- Search engine results ranking
-- Prioritizing leads in CRM systems
+- Search-result ranking
+- Lead prioritization in CRM
 - Ranking articles for personalization
 
 **Bad Examples:**
-- “Predict customer churn probability.” → classification
-- “Calculate average time to resolve.” → regression
+- “Predict churn probability.” → classification
+- “Compute average handle time.” → regression
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | ordinal or binary relevance |
+| Features | user/query context + item attributes |
+| Granularity | record per item-query pair |
+| Sample size | ≥ 100 000 pairs typical |
+
+**Recommended Technical Metrics:** NDCG@K, MAP@K  
+**Common Business KPIs:** CTR, conversion uplift, satisfaction index  
+**Non-ML Alternatives:** static weighting, manual sorting rules
 
 ---
 
 ## 5. Recommendation
 
 **Goal:**  
-Suggest items, actions, or content likely to interest a user based on behavior or similarity.
+Suggest items or content likely to interest a user.
 
 **Learning Paradigm:**  
-Supervised or hybrid (collaborative + content-based)
+Supervised or hybrid (collaborative + content)
 
 **Typical Metrics:**  
-Precision@K, Recall@K, Hit Rate, Coverage, Diversity, MAP
+Precision@K, Recall@K, Hit Rate, Coverage, Diversity
 
 **Business Cues (Good Fit):**
-- Recommend products or content to users
-- Suggest next best action or offer
-- Generate personalized playlists or bundles
-- Help users discover related items
-- Provide content tailored to behavior
+- Recommend products, offers, or content
+- Suggest next best action
+- Personalize feeds or playlists
 
 **Good Examples:**
 - Product recommendations in e-commerce
-- Movie or music recommender systems
-- Personalized news or blog feeds
+- Movie or music recommendation
+- Personalized news feeds
 
 **Bad Examples:**
 - “Predict total sales next month.” → regression
-- “Segment customers into groups.” → clustering
+- “Segment customers.” → clustering
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | implicit or explicit user-item interactions |
+| Features | user profile, item attributes, interaction context |
+| Granularity | user-item pair |
+| Sample size | ≥ 1 000 000 interactions recommended |
+
+**Recommended Technical Metrics:** Recall@K, NDCG@K  
+**Common Business KPIs:** CTR, CVR, average order value, retention uplift  
+**Non-ML Alternatives:** popularity ranking, manual cross-sell rules
 
 ---
 
 ## 6. Clustering
 
 **Goal:**  
-Group similar data points together without predefined labels.
+Group similar entities without predefined labels.
 
 **Learning Paradigm:**  
 Unsupervised
@@ -167,55 +220,75 @@ Silhouette Score, Davies–Bouldin Index, Calinski–Harabasz Score
 
 **Business Cues (Good Fit):**
 - Segment customers by behavior or demographics
-- Group products by similarity or purchase pattern
-- Discover hidden patterns in survey responses
-- Group users by app activity
-- Cluster log events by type
+- Group products by similarity or pattern
+- Discover hidden patterns in survey or event data
 
 **Good Examples:**
 - Customer segmentation for marketing
-- Grouping similar products
-- Detecting behavior clusters in analytics data
+- Product similarity grouping
+- Behavior clustering in analytics
 
 **Bad Examples:**
 - “Predict next week’s demand.” → forecasting
-- “Classify reviews as positive or negative.” → classification
+- “Classify reviews by sentiment.” → classification
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | none |
+| Features | numeric or encoded categorical features |
+| Granularity | one record per entity |
+| Sample size | ≥ 5 000 typical |
+
+**Recommended Technical Metrics:** Silhouette Score  
+**Common Business KPIs:** campaign ROI by segment, conversion uplift  
+**Non-ML Alternatives:** manual grouping, rule-based segmentation
 
 ---
 
 ## 7. Anomaly Detection
 
 **Goal:**  
-Identify rare, unexpected, or abnormal patterns compared to typical data behavior.
+Detect rare or abnormal patterns compared to normal data behavior.
 
 **Learning Paradigm:**  
 Unsupervised or semi-supervised
 
 **Typical Metrics:**  
-Precision, Recall, F1, False Positive Rate, ROC-AUC
+Precision, Recall, F1, False-Positive Rate, ROC-AUC
 
 **Business Cues (Good Fit):**
-- Detect fraudulent transactions or account activity
-- Identify defective products in production
-- Detect abnormal system performance
-- Spot security breaches or intrusion attempts
-- Detect unexpected sensor readings
+- Detect fraud or abnormal transactions
+- Identify defective products or outliers
+- Monitor systems for irregular performance
 
 **Good Examples:**
-- Credit card fraud detection
+- Credit-card fraud detection
 - Network intrusion detection
 - Equipment failure detection
 
 **Bad Examples:**
 - “Group users by preference.” → clustering
-- “Predict sales for next quarter.” → forecasting
+- “Predict sales next quarter.” → forecasting
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | optional (few positive cases) |
+| Features | numeric signals, logs, sensor data |
+| Granularity | per transaction or time window |
+| Sample size | highly unbalanced, need large normal set |
+
+**Recommended Technical Metrics:** F1, ROC-AUC  
+**Common Business KPIs:** fraud loss reduction, detection latency improvement  
+**Non-ML Alternatives:** rule thresholds, control charts
 
 ---
 
 ## 8. Policy / Reinforcement Learning
 
 **Goal:**  
-Learn and optimize actions through trial, feedback, or simulated environments.
+Learn and optimize actions through feedback and iterative interaction.
 
 **Learning Paradigm:**  
 Reinforcement
@@ -224,60 +297,79 @@ Reinforcement
 Cumulative Reward, Average Reward, Regret, Success Rate
 
 **Business Cues (Good Fit):**
-- Continuously optimize decisions or strategies
-- Adapt to user feedback over time
-- Balance exploration and exploitation
-- Automate sequential decision-making
-- Train an agent to interact with an environment
+- Continuous optimization of dynamic decisions
+- Strategy learning from feedback
+- Sequential automation of control processes
 
 **Good Examples:**
 - Dynamic pricing optimization
 - Ad bidding strategy learning
-- Game-playing agents
-- Robotic control tasks
+- Robotic control agent training
 
 **Bad Examples:**
-- “Predict customer churn once.” → classification
-- “Cluster customers.” → unsupervised static grouping
+- “Predict churn once.” → classification
+- “Cluster customers.” → unsupervised grouping
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | reward signal per action |
+| Features | state, action, reward, next-state tuples |
+| Granularity | per timestep or episode |
+| Sample size | ≥ 10 000 episodes minimum |
+
+**Recommended Technical Metrics:** Average Reward, Regret  
+**Common Business KPIs:** ROI improvement, cost per action reduction  
+**Non-ML Alternatives:** heuristic policies, static decision tables
 
 ---
 
 ## 9. Rules / Non-ML
 
 **Goal:**  
-Use deterministic or statistical logic to achieve predictable output without learning.
+Execute deterministic logic for predictable outcomes without learning.
 
 **Learning Paradigm:**  
-None (explicit rules)
+None (explicit logic)
 
 **Typical Metrics:**  
-None (logic-driven)
+None (logic-based)
 
 **Business Cues (Good Fit):**
-- “If X then Y” workflows
-- Threshold or rule-based decisions
-- Simple aggregations or filters
-- Counting, summing, sorting
-- Business rules that don’t require adaptation
+- Threshold or condition-based automation
+- Counting, filtering, or aggregating
+- Static workflows with fixed decisions
 
 **Good Examples:**
 - Alert if sales drop below a threshold
 - Count users by region
-- Trigger email if status = "inactive"
+- Trigger email when status = “inactive”
 
 **Bad Examples:**
-- “Predict future demand using if-statements.” → forecasting
-- “Use threshold to detect sentiment.” → classification required
+- “Predict future demand with if-statements.” → forecasting
+- “Detect sentiment using keyword threshold only.” → classification needed
+
+**Expected Data**
+| Aspect | Requirement |
+|---------|-------------|
+| Label | N/A |
+| Features | N/A |
+| Granularity | per rule trigger |
+| Sample size | irrelevant |
+
+**Recommended Technical Metrics:** None  
+**Common Business KPIs:** rule uptime, latency, override frequency  
+**Non-ML Alternatives:** same category (rules themselves)
 
 ---
 
 ## How SageCompass Uses This
 
-- When user input matches **Business Cues**, assign `problem_type` and infer `learning_paradigm`.
-- Compare intent: if it resembles **Bad Examples**, return `"problem_type": "rules"` and `"ml_justified": "no"`.
-- If multiple archetypes match, ask one clarifying question.
-- If none match, return `"problem_type": "unknown"` and `"ml_justified": "unclear"`.
-- Always prefer the simplest approach that fulfills measurable KPIs.
+- Match **Business Cues** to infer `problem_type` and `learning_paradigm`.
+- Use **Expected Data** and **Typical Metrics** for Stage 3 and Stage 4 reasoning.
+- When user text resembles **Bad Examples**, set `"ml_justified": "no"` and recommend a simpler approach.
+- If multiple fits are detected, include all in `solution_alignment.problem_types` with confidence values.
+- Prefer the **simplest method** that achieves measurable business KPIs.
 
 ---
 
