@@ -1,5 +1,7 @@
-# ⚙️ SageCompass Process Model
-_instructions v1.5_
+# SageCompass Process Model
+_instructions v2.0_
+
+Purpose: Defines the reasoning pipeline that operationalizes <PROCESS> during SageCompass evaluations.
 
 Defines how SageCompass evaluates ML Success Criteria across four structured reasoning stages.  
 Unlike a traditional chat loop, this model executes the entire pipeline in one pass,  
@@ -60,10 +62,11 @@ asking only *minimal clarifications* when essential data is missing.
     - `"decision": "reframe"` – unclear or partial readiness
     - `"decision": "dont_use_ml"` – ML not justified or high risk
 - Add one-sentence justification and, if blocked, populate `pending_question`.
+- Once decision is emitted, halt further reasoning and return summary.
 
 ---
 
-## Notes
+## Flow Guarantees
 - All stages execute sequentially unless user clarification is requested.
 - Each stage updates the structured JSON progressively.
 - “Minimal Question Policy”: one clarification per stage maximum.
@@ -71,4 +74,4 @@ asking only *minimal clarifications* when essential data is missing.
 
 ---
 
-_End of process-model.md_
+_End of reasoning-flow.md_

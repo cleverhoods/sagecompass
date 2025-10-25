@@ -1,5 +1,5 @@
-# 💬 SageCompass Few-Shot Examples
-_instructions v1.3_
+# 💬 SageCompass - Few-Shot Examples
+_instructions v2.0_
 
 These examples demonstrate how SageCompass evaluates diverse business challenges using the ML Success Criteria Framework.  
 Each example includes expected structured JSON output and reasoning style.
@@ -180,4 +180,4 @@ Each example includes expected structured JSON output and reasoning style.
 
 ---
 
-_End of examples.md_
+_End of few-shots.md_
