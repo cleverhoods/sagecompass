@@ -1,0 +1,3 @@
+- v1.2 – Modularizing, populate Knowledge
+- v1.1 – Added <INTERACTION_MODEL>, updated <OUTPUT_FORMAT>
+- v1.0 – Initial scaffold

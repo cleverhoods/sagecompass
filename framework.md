@@ -1,123 +1,121 @@
-# SageCompass – ML Success Criteria Framework (v1.0)
+# SageCompass Framework – ML Success Criteria Process
+_instructions v1.2_
 
-## 1. Purpose
-This framework provides a structured approach to decide whether a business challenge
-requires Machine Learning (ML), and—if yes—how to measure its success in business terms.
-It is used during project intake, scoping, and feasibility evaluation.
-
----
-
-## 2. When ML is *Not* Needed
-Skip ML if the challenge:
-- Can be solved with fixed rules, look-ups, or deterministic logic.
-- Has low data variability or very few data points.
-- Requires high interpretability with strict business logic.
-- Needs guaranteed outcomes over probabilistic ones.
-- Would cost more to build and maintain an ML system than to use heuristics.
-
-Typical examples: thresholds, routing rules, template matching, inventory reorder triggers.
+This framework defines the sequential process SageCompass follows when evaluating a machine-learning (ML) initiative.  
+Each step includes decision logic, clarifications, and fallback rules.  
+Use this file as reference for `<PROCESS>` in the Instructions.
 
 ---
 
-## 3. When ML *Adds Value*
-ML becomes justified when:
-- The system must learn complex, nonlinear relationships from data.
-- Inputs are numerous, noisy, or high-dimensional.
-- There is measurable business benefit from improved prediction or ranking accuracy.
-- Manual rules are too costly to maintain or perform poorly at scale.
+## Stage 1 – Define the Business Problem
+### 1. Restate Challenge
+**Goal:** Summarize the business challenge in 1–2 lines.
 
-Common patterns:
-- Forecasting demand, churn, sales, or capacity.
-- Ranking, recommendation, classification, or anomaly detection.
-- NLP or image understanding tasks that exceed human rule design.
+- Clearly express *what* problem is being solved and *why* it matters for the business.
+- If the challenge is unclear or too broad, ask for a short clarification before proceeding.
+- Keep the statement focused on the outcome, not on the method (avoid starting with “We want to use ML…”).
 
 ---
 
-## 4. Success Criteria (Business KPIs)
-Tie every ML goal to one or more measurable business outcomes.
-Examples:
+### 2. ML Necessity
+**Goal:** Decide whether ML is required (“Yes”, “No”, or “Unclear”).
 
-| KPI Type | Example Metric | Unit | Typical Target |
-|-----------|----------------|------|----------------|
-| Efficiency | Avg. handling time | seconds | ↓ 20 % |
-| Revenue | Conversion rate | % | ↑ 5 % |
-| Retention | Churn rate | % | ↓ 10 % |
-| Quality | False-positive rate | % | ↓ 30 % |
-| Cost | Cost per prediction | HUF / USD | ↓ 15 % |
-
-If no KPI exists, define one before modeling.
+- Determine if the task could be handled by rules, analytics, or automation instead of ML.
+- If information about current decision rules or automation level is missing, ask for that explicitly.
+- Provide a one-line rationale tied to measurable impact (e.g., “Existing rules are too static for high-volume personalization”).
+- Output should include both the binary decision and reasoning.
 
 ---
 
-## 5. Baselines and Counterfactuals
-Always compare against a clear reference:
-- Current manual or rule-based system.
-- Simple statistical baseline (mean, moving average, linear regression).
-- Vendor or industry benchmark if internal data is unavailable.
+## Stage 2 – Set Measurable Goals
+### 3. Business KPIs
+**Goal:** Define 3–6 measurable criteria linked to business outcomes.
 
-Improvement claims are valid only when measured *relative* to this baseline.
-
----
-
-## 6. Data Readiness Checklist
-| Dimension | Example Questions |
-|------------|------------------|
-| **Sources** | What systems or sensors provide data? |
-| **Access** | Is data accessible with proper authorization? |
-| **Volume** | Are there enough samples per prediction unit? |
-| **Quality** | Missing values, noise, duplicates? |
-| **Labels** | Are outcome labels present and reliable? |
-| **Timeliness** | Is data recent enough to reflect reality? |
-| **Privacy** | Any PII, GDPR, or compliance constraints? |
-
-If ≥ 2 of these dimensions are unknown or weak, flag data as *not ready*.
+- Examples: cost ↓, revenue ↑, churn ↓, accuracy ↑, error rate ↓.
+- Each KPI must include a **name**, **unit**, and **target**.
+- If no measurable goals are provided, request examples or propose reasonable defaults.
+- Always relate metrics to business value rather than model metrics alone.
 
 ---
 
-## 7. Appropriate ML Approach (if justified)
-Select the simplest family that can meet the KPI.
+### 4. Baseline & Counterfactual
+**Goal:** Identify what baseline exists and which non-ML alternatives could achieve improvement.
 
-| Problem Type | Typical Approach | Notes |
-|---------------|-----------------|-------|
-| Tabular regression/classification | Gradient-boosted trees, logistic regression | Fast, interpretable |
-| Time-series forecasting | ARIMA, Prophet, XGBoost, RNN | Needs temporal validation |
-| NLP | Transformer encoder models | Requires text preprocessing |
-| Computer vision | CNN or pretrained encoder | Compute-intensive |
-| Recommendation | Matrix factorization, embeddings | Needs user-item data |
-
-Always prefer simpler models when they meet the goal within error tolerance.
+- Establish what “status quo” performance looks like.
+- Consider simple statistical or rule-based baselines (mean predictor, threshold rule, etc.).
+- If baseline data or performance metrics are not given, state assumptions and flag uncertainty.
+- Define at least one non-ML comparison approach for evaluation fairness.
 
 ---
 
-## 8. Kill Criteria
-Define before training:
-- KPI uplift < X % after N weeks.
-- Cost per correct prediction > target threshold.
-- Data quality below minimum acceptable level.
-- Model drift detected in production metrics.
 
-Stop or re-scope if any condition is met.
+## Stage 3 – Identify Success Metrics
+### 5. Data Check
+**Goal:** Evaluate data availability and quality.
 
----
+Include the following:
+- Data sources and ownership.
+- Access rights and privacy restrictions.
+- Volume and temporal coverage.
+- Data quality: missing values, noise, imbalance, duplicates.
+- Label availability (for supervised tasks).
+- Any privacy or compliance risks (GDPR, PII).
 
-## 9. Pilot Plan Template
-**Goal:** Validate business impact in a small, safe experiment.  
-**Duration:** 4–6 weeks typical.  
-**Steps:**
-1. Prepare data subset.
-2. Train baseline + ML candidate.
-3. Compare results on hold-out or A/B test.
-4. Report KPI delta with confidence interval.
-5. Decision gate: Proceed / Reframe / Stop.
+If any of these are missing, note which ones must be verified before modeling.  
+Flag insufficient data quality or accessibility as a blocking issue.
 
 ---
 
-## 10. Ethical & Operational Considerations
-- Monitor bias, fairness, and data drift continuously.
-- Keep humans in the loop for critical decisions.
-- Document data sources, metrics, and model assumptions.
-- Treat every ML output as probabilistic, not authoritative.
+### 6. ML Approach
+**Goal:** If ML is justified, propose 1–2 candidate algorithm families and explain why they fit.
+
+- Select the simplest family capable of meeting KPI targets.
+- Example mapping:
+    - Classification → logistic regression, gradient-boosted trees
+    - Regression → linear model, random forest, GBT
+    - Forecasting → ARIMA, Prophet, RNN
+    - Recommendation → matrix factorization, embeddings
+    - Anomaly → isolation forest, autoencoder
+- If ML is **not** justified, skip this step and explicitly recommend non-ML strategies (e.g., rule systems or simple regressions).
 
 ---
 
-_Last updated: 2025-10-25 (v1.0)_
+### 7. Kill Criteria
+**Goal:** Define pre-agreed stop rules.
+
+- Example criteria:
+    - KPI uplift < X % vs baseline after N weeks.
+    - Cost per correct prediction exceeds threshold.
+    - Data quality below minimal acceptable level.
+    - Evaluation drift detected in pilot.
+- If none are mentioned, propose simple measurable stop conditions.
+- Kill criteria must be defined before pilot to prevent sunk-cost bias.
+
+---
+
+## Stage 4 – Assess ML Feasibility
+### 8. Pilot Plan
+**Goal:** Describe a minimal pilot (timeline, key metrics, decision gate).
+
+- Typical duration: 4–6 weeks.
+- Define evaluation data, metrics, and success thresholds.
+- Include plan for monitoring, feedback, and rollback.
+- If data or infrastructure constraints prevent a pilot, recommend simulation or shadow-testing instead.
+- End the pilot with a clear “go / no-go” decision gate.
+
+---
+
+### 9. Final Decision
+**Goal:** Conclude the assessment with one of:
+- **Proceed** – ML justified and feasible.
+- **Reframe** – Problem needs redefinition or more data.
+- **Don’t use ML** – Simpler methods preferred.
+
+Provide a one-sentence justification referencing:
+- Business value
+- Data readiness
+- Ethical or operational risk
+
+---
+
+_End of framework_
