@@ -1,3 +1,4 @@
+- v3.0 – v3 
 - v2.2 – Apply version number everywhere, tweaking data 
 - v2.1 – Cleanup, adjusting Stage 2 measurements 
 - v2.0 – Rework instructions based on prompt engineering best practices 
