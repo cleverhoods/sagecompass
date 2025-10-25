@@ -153,6 +153,7 @@ Defines the canonical JSON schema emitted by SageCompass. The first line of any 
   "go_no_go": {
     "ml_justified": "yes",
     "decision": "proceed",
+    "decision_confidence": "high|medium|low",
     "kill_criteria": ["no uplift after 4 weeks", "data leakage found"],
     "stage_status": {
       "stage1_problem": "ok",

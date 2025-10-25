@@ -101,41 +101,65 @@ Convert the business challenge into 2–3 concrete, profit-oriented goals with c
 
 ## Stage 3 – KPI & Metric Alignment
 
-**Objective**  
+### Objective
 Define measurable success criteria that directly connect business goals to model evaluation and decision thresholds.
 
-**Process**
-1. **Generate candidate business KPIs**
-    - Derive **1–2** business KPIs from `goal_alignment.profit_goals` using reasoning.
-    - Validate and enrich each KPI with *Knowledge › metrics-library.md*.
-    - Add up to **2** additional KPIs from the library matching the detected archetype and business domain.
+### Process
 
-2. **Create synthetic KPIs**
-    - For each major business KPI, produce **derived or projected metrics** that show the link between operations and financial value.
-    - Populate these in `synthetic_kpis` with fields: `name`, `formula`, `expected_range`, `unit`, `derived_from`, `purpose`, `justification`.
-    - Allowed `purpose` values:  
-      `financial_projection | illustrative | sensitivity_analysis | scenario_comparison | scaling_projection | benchmark_alignment | data_quality_proxy | kpi_bridge`.
+#### 1) Generate candidate business KPIs
+- Derive **1–2** business KPIs from `goal_alignment.profit_goals`.
+- Validate and enrich with *Knowledge › metrics-library.md*.
+- Optionally add up to **2** more KPIs from the library that fit the archetype and domain.
 
-3. **Define technical metrics**
-    - For ML-justified problems, propose **1–2 Supporting Technical Metrics** to track model quality.
-    - Use *Knowledge › metrics-library.md* to select metrics typical for the detected problem archetype (e.g., F1 for classification, MAE for regression).
-    - Each metric must include fields: `name`, `description`, `metric_type`, `unit`, `target`, `baseline`, `direction`, `dataset_split`, `evaluation_frequency`, `kpi_link`, `confidence`, `justification`.
-    - Label these as internal validation metrics.
+#### 2) Create synthetic KPIs
+- For each major business KPI, produce **derived/projected** metrics linking operations to financial value.
+- Populate `synthetic_kpis` with: `name`, `formula`, `expected_range`, `unit`, `derived_from`, `purpose`, `justification`.
+- Allowed `purpose` values:
+```
+financial_projection | illustrative | sensitivity_analysis | scenario_comparison |
+scaling_projection | benchmark_alignment | data_quality_proxy | kpi_bridge
+```
 
-4. **Ensure traceability**
-    - Each `technical_metric.kpi_link` should reference at least one `business_kpi.name`.
-    - Each `synthetic_kpi.derived_from` should reference one or more business KPIs.
+#### 3) Define technical metrics
+- For ML-justified problems, propose **1–2** supporting technical metrics to track model quality.
+- Use *Knowledge › metrics-library.md* to choose archetype-appropriate metrics (e.g., F1 for classification, MAE for regression).
+- Each metric must include:
+```
+name, description, metric_type, unit, target, baseline, direction,
+dataset_split, evaluation_frequency, kpi_link, confidence, justification
+```
+- Label as internal validation metrics.
 
-5. **Populate output fields**
-    - `kpi_alignment.business_kpis`
-    - `kpi_alignment.synthetic_kpis`
-    - `kpi_alignment.technical_metrics`
+##### Baseline Inference Policy
+If a baseline is not provided by the user or library, infer it via the table below.
 
-**Completion criteria**
-- At least one KPI per **financial**, **operational**, and **experience** dimension (if applicable).
+| metric_type              | baseline_template                         | note                         |
+|--------------------------|-------------------------------------------|------------------------------|
+| classification           | `[Estimated] 0.6–0.7`                     | typical initial accuracy     |
+| anomaly                  | `[Estimated] 0.5–0.6`                     | early unsupervised detection |
+| regression / forecasting | `[Estimated] prior error range`           | reuse MAE / RMSE             |
+| ranking / recommendation | `[Estimated] 0.3–0.5`                     | low-baseline relevance       |
+| clustering               | `[Estimated] 0.25–0.45 (Silhouette)`      | expected separation          |
+| reinforcement            | `[Estimated] baseline reward per episode` | pre-learning reward          |
+| custom                   | `[Unknown]`                               | no archetype mapping         |
+
+**Rule 3.4 – Baseline Derivation**  
+If `baseline` is missing, look up `metric_type` in the table. If no match exists, set `[Unknown]`. Always tag derived values with `[Estimated]`.
+
+### Traceability
+- Each `technical_metric.kpi_link` references ≥1 `business_kpi.name`.
+- Each `synthetic_kpi.derived_from` references ≥1 business KPI.
+
+### Populate output fields
+- `kpi_alignment.business_kpis`
+- `kpi_alignment.synthetic_kpis`
+- `kpi_alignment.technical_metrics`
+
+### Completion criteria
+- At least one KPI for **financial**, **operational**, and **experience** (when applicable).
 - `synthetic_kpis` include clear formulas and purposes.
-- `technical_metrics` connect to at least one business KPI via `kpi_link`.
-- All targets, baselines, and confidence levels are filled or marked `[Unknown]` if missing.
+- `technical_metrics` link to ≥1 business KPI via `kpi_link`.
+- All targets, baselines, and confidence are fi
 
 ---
 
@@ -212,11 +236,16 @@ Aggregate all evidence from previous stages to issue a single, clear decision on
     - `"decision": "reframe"` → ML has potential but requires clearer data, scope, or goals.
     - `"decision": "dont_use_ml"` → ML not justified, too costly, or better handled with non-ML methods.
 
-3. **Provide concise justification**
+3. **Assign "decision_confidence" based on evidence strength**
+    - `"decision_confidence": "high"` → all stages complete, data_readiness_score ≥ 21, no pending questions.
+    - `"decision_confidence": "medium"` → some assumptions [Estimated] or partial data readiness (14–20).
+    - `"decision_confidence": "low"` → uncertainty, weak baselines, or pending clarification.
+
+4. **Provide concise justification**
     - Add a one- or two-sentence summary explaining *why* the decision was reached.
     - If a missing or ambiguous factor blocks the decision, set `"ml_justified": "unclear"` and record one short clarification in `"pending_question"`.
 
-4. **Finalize outputs**
+5. **Finalize outputs**
     - Update:
         - `go_no_go.ml_justified`
         - `go_no_go.decision`
