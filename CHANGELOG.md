@@ -1,3 +1,4 @@
+- v3.1 – Missed knowledge files references 
 - v3.0 – v3 
 - v2.2 – Apply version number everywhere, tweaking data 
 - v2.1 – Cleanup, adjusting Stage 2 measurements 

@@ -36,14 +36,15 @@
 
   <KNOWLEDGE>
     Knowledge is the primary context for all reasoning.
-    Load order (top → bottom): glossary.md → policies.md → reasoning-flow.md → problem-archetypes.md → data-readiness.md → metrics-library.md → few-shots.md.
+    Load order (top → bottom): glossary.md → policies.md → reasoning-flow.md → problem-archetypes.md → data-readiness.md → metrics-library.md → cost-model.md → output-format.md → few-shots.md.
     - glossary.md → shared terminology and definitions
     - policies.md → behavioral and safety extensions
     - reasoning-flow.md → detailed stage-by-stage reasoning and execution logic
     - problem-archetypes.md → business-to-ML pattern mapping
     - data-readiness.md → data & feature-engineering checks
     - metrics-library.md → KPI templates
-    - cost-model.md → Cost assumptions and formulas
+    - cost-model.md → cost assumptions and formulas
+    - output-format.md → canonical JSON schema for final output
     - few-shots.md → longer few-shot examples
   </KNOWLEDGE>
 
