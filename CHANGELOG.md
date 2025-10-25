@@ -1,3 +1,4 @@
+- v1.3 – Introducing problem-archetype, extending tests, examples etc
 - v1.2 – Modularizing, populate Knowledge
 - v1.1 – Added <INTERACTION_MODEL>, updated <OUTPUT_FORMAT>
 - v1.0 – Initial scaffold

@@ -1,88 +1,91 @@
-# SageCompass – Glossary
-_instructions v1.2_
+# 📘 SageCompass Glossary
+_instructions v1.3_
 
-This glossary defines the key terms, acronyms, and conceptual anchors used throughout SageCompass reasoning.  
-It ensures consistent interpretation across the ML Success Criteria framework.
-
----
-
-## 1. Business and Process Terms
-
-| Term | Definition |
-|------|-------------|
-| **Business Challenge** | The practical, measurable problem the organization aims to solve (e.g., reducing churn, optimizing pricing). |
-| **Baseline** | The current or simplest non-ML method used for comparison (e.g., rule-based system, historical average). |
-| **Counterfactual** | A “what-if” alternative used to measure ML uplift against the baseline. |
-| **KPI (Key Performance Indicator)** | A quantifiable measure of success tied to business outcomes (e.g., conversion rate, error rate). |
-| **Pilot** | A small, time-bounded test deployment used to evaluate ML impact before full rollout. |
-| **Kill Criteria** | Pre-agreed stop conditions indicating when to halt a project that underperforms expectations. |
-| **Decision Gate** | The point at which leadership decides whether to proceed, reframe, or stop the ML initiative. |
-| **Success Criteria** | Combined definition of measurable goals, expected impact, and thresholds for declaring an ML effort successful. |
+Defines standardized terminology used across the SageCompass ML Success Criteria Framework.  
+All reasoning, classification, and JSON outputs must adhere to these definitions.
 
 ---
 
-## 2. Data and Modeling Terms
+## Core Concepts
 
-| Term | Definition |
-|------|-------------|
-| **Feature** | An input variable used by an ML model for learning patterns. |
-| **Label** | The known target value used in supervised learning (e.g., “churned” vs. “retained”). |
-| **Granularity** | The level at which data is collected or aggregated (e.g., user, transaction, day). |
-| **Data Leakage** | Occurs when information from the future or the target variable influences the training set, causing overfitting. |
-| **Imbalance** | A situation where one class or outcome occurs far more frequently than others, biasing model results. |
-| **Data Drift** | Change in the statistical distribution of input data over time. |
-| **Model Drift** | Degradation of model performance due to evolving real-world data or conditions. |
-| **Data Readiness** | The overall fitness of data for ML use, considering quality, labeling, and compliance. |
+**Machine Learning (ML)**  
+A family of algorithms that learn patterns from data to make predictions, classifications, or decisions without explicit programming.
 
----
+**Business Challenge**  
+A measurable operational or strategic problem stated in natural language (e.g., “reduce churn,” “forecast demand”).
 
-## 3. Machine Learning Paradigms
+**Success Criteria**  
+Concrete, measurable outcomes that define project success (e.g., churn ↓ 15 %, RMSE ≤ 5 %).
 
-| Paradigm | Description |
-|-----------|--------------|
-| **Supervised Learning** | Model learns from labeled examples to predict known outcomes (e.g., classification, regression). |
-| **Unsupervised Learning** | Model identifies structure or patterns without labels (e.g., clustering, dimensionality reduction). |
-| **Reinforcement Learning** | Model learns via trial and reward signals through interaction with an environment. |
-| **None (Rule-Based)** | Traditional algorithmic or heuristic approach, without learning from data. |
+**Baseline**  
+Current non-ML performance level against which improvement is measured.
+
+**Counterfactual / Alternative**  
+The simplest non-ML or heuristic method that could solve the same problem; used to validate whether ML adds incremental value.
+
+**Feasibility**  
+Degree to which data quality, access, and labeling support ML experimentation.
 
 ---
 
-## 4. Common Problem Types
+## Problem Archetypes
+(see Knowledge › problem-archetypes.md for details)
 
-| Type | Description |
-|------|-------------|
-| **Classification** | Predicting discrete categories (e.g., spam/not spam). |
-| **Regression** | Predicting continuous values (e.g., sales forecast). |
-| **Forecasting** | Predicting future outcomes based on time series data. |
-| **Recommendation** | Suggesting items or actions tailored to users. |
-| **Anomaly Detection** | Identifying unusual or suspicious patterns. |
-| **Clustering** | Grouping similar data points without labels. |
-| **Ranking** | Ordering items by predicted relevance or likelihood. |
-| **Policy Optimization** | Learning strategies or actions that maximize cumulative reward. |
-| **Rules / Analytics** | Non-ML baselines such as heuristics, scoring systems, or if/then logic. |
-
----
-
-## 5. Output JSON Fields (Quick Reference)
-
-| Field | Meaning |
-|--------|----------|
-| `needs_ml` | “yes”, “no”, or “unclear” — whether ML is justified. |
-| `problem_type` | Type of task (classification, regression, etc.). |
-| `learning_paradigm` | Supervised, unsupervised, reinforcement, or none. |
-| `business_kpis` | List of measurable KPIs tied to business outcomes. |
-| `data_profile` | Summary of dataset readiness, volume, and privacy flags. |
-| `ml_recommendations` | Suggested model families or algorithms. |
-| `kill_criteria` | Rules for terminating unsuccessful pilots. |
-| `decision` | Final recommendation: proceed, reframe, or don’t use ML. |
+| Archetype | Goal Summary | Typical Learning Paradigm |
+|------------|---------------|----------------------------|
+| Classification | Assign discrete labels (spam / not spam) | Supervised |
+| Regression | Predict continuous numeric values | Supervised |
+| Forecasting | Predict future numeric values over time | Supervised (sequence) |
+| Ranking | Order items by relevance | Supervised |
+| Recommendation | Suggest items or actions | Supervised / Hybrid |
+| Clustering | Group similar data points | Unsupervised |
+| Anomaly Detection | Detect rare or abnormal patterns | Unsupervised / Semi-supervised |
+| Policy / Reinforcement | Optimize sequential actions through feedback | Reinforcement |
+| Rules / Non-ML | Deterministic logic without learning | None |
 
 ---
 
-## 6. Ethical and Governance Notes
-- **Fairness:** Avoid models that amplify social or demographic bias.
-- **Transparency:** Ensure stakeholders understand decision logic.
-- **Accountability:** Business owners must approve deployment, not the model alone.
-- **Compliance:** All data use must follow applicable privacy and security laws.
+## Data-Related Terms
+
+**Labels** – Known outcomes used for supervised learning.  
+**Features** – Input variables or attributes used for prediction.  
+**Sample** – One data record (e.g., user, order, transaction).  
+**Granularity** – Unit of observation (user, session, order, etc.).  
+**Volume Tier** – Approximate sample magnitude (1e3 = thousands, 1e6+ = millions).  
+**Privacy Flags** – Compliance markers (PII, GDPR, none).
+
+---
+
+## Evaluation Metrics
+
+- **Accuracy / Precision / Recall / F1 / ROC-AUC** → Classification
+- **MAE / RMSE / R² / MAPE** → Regression / Forecasting
+- **NDCG / MAP / Precision@K** → Ranking / Recommendation
+- **Silhouette / DBI / CH Score** → Clustering
+- **Reward / Regret / Success Rate** → Reinforcement Learning
+
+See Knowledge › metrics-library.md for full metric templates.
+
+---
+
+## Decision Outcomes
+
+| Decision | Meaning |
+|-----------|----------|
+| **proceed** | ML justified; pilot recommended |
+| **reframe** | Problem unclear or reformulation needed |
+| **dont_use_ml** | Simpler non-ML method sufficient |
+| **unclear** | Insufficient information to decide |
+
+---
+
+## JSON Output Conventions
+
+- All responses start with valid JSON.
+- Use lowercase keys with underscores.
+- `pending_question` contains **only one** concise clarifying question when blocked.
+- Boolean or categorical options (yes | no | unclear) must match schema.
+- Lists (e.g., metrics, goals) must use plain JSON arrays, not quoted strings.
 
 ---
 
