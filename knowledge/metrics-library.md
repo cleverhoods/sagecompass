@@ -1,5 +1,5 @@
 # SageCompass – Metrics Library (Business-Focused)
-_instructions v2.1_
+_instructions v2.2_
 
 Defines business-level success criteria for evaluating ML project value.  
 Each archetype lists **primary business KPIs** (stakeholder-facing) and **supporting technical metrics** (internal validation).

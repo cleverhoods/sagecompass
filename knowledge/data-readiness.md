@@ -1,5 +1,5 @@
 # SageCompass – Data Readiness & Feature Engineering
-_instructions v1.3_
+_instructions v2.2_
 
 Used in **Stage 4 – Feasibility & Data Check** to evaluate whether available data can reliably support ML experimentation.  
 Outputs map directly to the `"data_profile"` field in the JSON response.

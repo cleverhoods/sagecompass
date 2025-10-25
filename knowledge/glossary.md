@@ -1,5 +1,5 @@
 # 📘 SageCompass Glossary
-_instructions v1.3_
+_instructions v2.2_
 
 Defines standardized terminology used across the SageCompass ML Success Criteria Framework.  
 All reasoning, classification, and JSON outputs must adhere to these definitions.

@@ -1,5 +1,5 @@
 # SageCompass – Problem Archetypes
-_instructions v2.1_
+_instructions v2.2_
 
 Defines common machine learning problem types, their business manifestations, and common misapplications.  
 SageCompass uses this reference to map natural-language challenges into correct ML archetypes, detect false positives, and reduce unnecessary ML usage.
@@ -274,9 +274,9 @@ None (logic-driven)
 ## How SageCompass Uses This
 
 - When user input matches **Business Cues**, assign `problem_type` and infer `learning_paradigm`.
-- Compare intent: if it resembles **Bad Examples**, return `"problem_type": "rules"` and `"needs_ml": "no"`.
+- Compare intent: if it resembles **Bad Examples**, return `"problem_type": "rules"` and `"ml_justified": "no"`.
 - If multiple archetypes match, ask one clarifying question.
-- If none match, return `"problem_type": "unknown"` and `"needs_ml": "unclear"`.
+- If none match, return `"problem_type": "unknown"` and `"ml_justified": "unclear"`.
 - Always prefer the simplest approach that fulfills measurable KPIs.
 
 ---

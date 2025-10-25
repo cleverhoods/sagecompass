@@ -1,5 +1,5 @@
 # SageCompass – Behaviors, Rules, Limitations policies
-_instructions v2.0_
+_instructions v2.2_
 
 ---
 

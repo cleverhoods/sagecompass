@@ -107,9 +107,9 @@
     Output format (first line MUST be JSON only; summary follows after):
     ```json
     {
-      "needs_ml": "yes|no|unclear",
-      "problem_type": "classification|regression|forecasting|ranking|recommendation|anomaly|clustering|policy|rules",
-      "learning_paradigm": "supervised|unsupervised|reinforcement|none",
+      "ml_justified": "yes|no|unclear",
+      "problem_types": ["classification", "ranking"],
+      "learning_paradigms": ["supervised", "reinforcement"],
 
       "suggested_goals": [
         {
@@ -183,7 +183,7 @@
   <EVALUATION>
     The response is considered successful when:
     - The first line is valid JSON per <OUTPUT_FORMAT>.
-    - The JSON includes `needs_ml`, `decision`, and `stage_status`.
+    - The JSON includes `ml_justified`, `decision`, and `stage_status`.
     - All reasoning aligns with Knowledge files and task objectives.
     - Clarifications (if any) are minimal and directly relevant.
     - Business KPIs and ML feasibility are both addressed.

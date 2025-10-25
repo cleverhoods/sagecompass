@@ -11,6 +11,12 @@ asking only *minimal clarifications* when essential data is missing.
 
 ## Stage 1 – Problem Identification
 - Use Knowledge › problem-archetypes.md to interpret business challenges and map them to ML archetypes.
+
+- If multiple archetypes match the input:
+  - List all plausible matches in "problem_types" (array form).
+  - Rank them by relevance confidence (high/medium/low) in `justification`.
+  - Select the primary type for reasoning continuity, but keep others for transparency.
+
 - Detect and assign `problem_type` (classification, regression, forecasting, etc.) and `learning_paradigm` (supervised, unsupervised, reinforcement, none).
 - If uncertain, ask a single clarification question to disambiguate intent.
 - Record results in JSON under `problem_type` and `learning_paradigm`.
@@ -78,7 +84,7 @@ asking only *minimal clarifications* when essential data is missing.
 - All stages execute sequentially unless user clarification is requested.
 - Each stage updates the structured JSON progressively.
 - “Minimal Question Policy”: one clarification per stage maximum.
-- Missing or ambiguous inputs result in `"needs_ml": "unclear"`.
+- Missing or ambiguous inputs result in `"ml_justified": "unclear"`.
 
 ---
 

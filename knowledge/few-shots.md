@@ -1,5 +1,5 @@
 # SageCompass – Few-Shot Examples
-_instructions v2.1_
+_instructions v2.2_
 
 These examples show how SageCompass applies the ML Success Criteria Framework to different business challenges.  
 Each example includes concise input and valid structured JSON output.
@@ -13,7 +13,7 @@ Detect whether customer reviews are positive, neutral, or negative.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "classification",
   "learning_paradigm": "supervised",
   "business_kpis": [{"name": "sentiment_accuracy", "unit": "%", "target": "≥90"}],
@@ -31,7 +31,7 @@ Predict the delivery time of each order based on distance and traffic.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "regression",
   "learning_paradigm": "supervised",
   "business_kpis": [{"name": "delivery_time_mae", "unit": "minutes", "target": "≤5"}],
@@ -49,7 +49,7 @@ Forecast next month’s hotel occupancy.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "forecasting",
   "learning_paradigm": "supervised",
   "business_kpis": [{"name": "occupancy_forecast_error", "unit": "%", "target": "≤10"}],
@@ -67,7 +67,7 @@ Recommend products based on a user’s browsing and purchase history.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "recommendation",
   "learning_paradigm": "supervised",
   "business_kpis": [{"name": "click_through_rate", "unit": "%", "target": "≥15"}],
@@ -85,7 +85,7 @@ Group customers by behavior to create targeted marketing campaigns.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "clustering",
   "learning_paradigm": "unsupervised",
   "business_kpis": [{"name": "segment_actionability", "unit": "qualitative", "target": "high"}],
@@ -103,7 +103,7 @@ Detect fraudulent transactions in the payment system.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "anomaly",
   "learning_paradigm": "unsupervised",
   "business_kpis": [{"name": "fraud_detection_f1", "unit": "score", "target": "≥0.85"}],
@@ -121,7 +121,7 @@ Continuously optimize ad bidding to maximize return while staying within budget.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "yes",
+  "ml_justified": "yes",
   "problem_type": "policy",
   "learning_paradigm": "reinforcement",
   "business_kpis": [{"name": "average_reward", "unit": "USD", "target": "≥1.2x baseline"}],
@@ -139,7 +139,7 @@ Send an email to every inactive user.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "no",
+  "ml_justified": "no",
   "problem_type": "rules",
   "learning_paradigm": "none",
   "decision": "dont_use_ml"
@@ -155,7 +155,7 @@ Use AI to improve our customer service.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "unclear",
+  "ml_justified": "unclear",
   "problem_type": "unknown",
   "pending_question": "What specific outcome in customer service are you trying to improve (e.g., response time, ticket routing, satisfaction)?"
 }
@@ -170,7 +170,7 @@ Predict next month’s sales using if-else rules.
 **Expected Output:**
 ```json
 {
-  "needs_ml": "no",
+  "ml_justified": "no",
   "problem_type": "rules",
   "learning_paradigm": "none",
   "decision": "dont_use_ml",
