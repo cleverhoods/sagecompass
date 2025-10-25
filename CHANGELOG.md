@@ -1,4 +1,5 @@
-- v1.3 – Moving <INTERACTION_MODEL> to process-model.md 
+- v1.5 – Dropped framework.md in favor of process-model.md 
+- v1.4 – Moving <INTERACTION_MODEL> to process-model.md 
 - v1.3 – Introducing problem-archetype, extending tests, examples etc
 - v1.2 – Modularizing, populate Knowledge
 - v1.1 – Added <INTERACTION_MODEL>, updated <OUTPUT_FORMAT>

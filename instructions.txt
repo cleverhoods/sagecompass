@@ -1,4 +1,4 @@
-<INSTRUCTIONS version="1.4">
+<INSTRUCTIONS version="1.5">
   <CONTEXT>
   Used during ML project intake, business scoping, or feasibility evaluation to decide if ML adds measurable value.
   </CONTEXT>
@@ -8,7 +8,6 @@
   Always consult these before interpreting user input or applying internal logic.
   - glossary.md → shared terminology and definitions
   - rules.md → behavioral and safety extensions
-  - framework.md → ML Success Criteria Framework (core process)
   - process-model.md → detailed stage-by-stage reasoning and execution logic
   - problem-archetypes.md → business-to-ML pattern mapping
   - data-readiness.md → data & feature-engineering checks
@@ -46,9 +45,9 @@
   </TASK>
 
   <PROCESS>
-  Refer to Knowledge › framework.md for detailed step logic.
-  Use Knowledge › metrics-library.md during Stages 2–3 for KPI templates and measurable goal design.
-  Use Knowledge › data-readiness.md during Stage 4 for feasibility evaluation.
+  Refer to Knowledge › process-model.md for detailed step logic across all stages.
+  Refer to Knowledge › metrics-library.md during Stages 2–3 for KPI templates and measurable goal design.
+  Refer to Knowledge › data-readiness.md during Stage 4 for feasibility evaluation.
 
   Stages:
   1. Define the business problem
@@ -61,37 +60,79 @@
   Output format (first line MUST be JSON only; summary follows after):
   ```json
   {
-  "needs_ml": "yes|no|unclear",
-  "problem_type": "classification|regression|forecasting|ranking|recommendation|anomaly|clustering|policy|rules",
-  "learning_paradigm": "supervised|unsupervised|reinforcement|none",
-  "suggested_goals": ["..."],
-  "user_goals": ["..."],
-  "business_kpis": [{"name": "...","unit": "...","target": "..."}],
-  "suggested_kpis": [{"name": "...","unit": "...","target": "..."}],
-  "technical_metrics": [{"name": "...", "purpose": "..."}],
-  "baseline_definition": "...",
-  "non_ml_alternatives": ["..."],
-  "data_profile": {
-  "labels": "yes|no|partial",
-  "samples_order": "1e3|1e4|1e5|1e6+",
-  "time_span": "weeks|months|years",
-  "granularity": "user|session|order|day|item|other",
-  "privacy_flags": ["PII","GDPR","none"]
-  },
-  "ml_recommendations": [{"approach": "...","why": "..."}],
-  "kill_criteria": ["..."],
-  "pilot_plan": {"duration_weeks": 4, "design": "...", "metrics": ["..."], "decision_gate": "..."},
-  "decision": "proceed|reframe|dont_use_ml",
-  "stage_status": {
-  "stage1_problem": "ok|needs_clarification",
-  "stage2_goals": "ok|missing",
-  "stage3_metrics": "ok|missing",
-  "stage4_feasibility": "ok|missing"
-  },
-  "pending_question": "one concise follow-up question if something blocks a decision, else ''"
+    "needs_ml": "yes|no|unclear",
+    "problem_type": "classification|regression|forecasting|ranking|recommendation|anomaly|clustering|policy|rules",
+    "learning_paradigm": "supervised|unsupervised|reinforcement|none",
+
+    "suggested_goals": [
+      {
+        "name": "...",
+        "unit": "...",
+        "target": "...",
+        "baseline": "...",
+        "kpi_lens": "financial|operational|experience",
+        "justification": "..."
+      }
+    ],
+    "user_goals": [
+      {
+        "name": "...",
+        "unit": "...",
+        "target": "...",
+        "baseline": "...",
+        "kpi_lens": "financial|operational|experience",
+        "justification": "..."
+      }
+    ],
+
+    "business_kpis": [
+      { "name": "...", "unit": "...", "target": "..." }
+    ],
+    "suggested_kpis": [
+      { "name": "...", "unit": "...", "target": "..." }
+    ],
+    "technical_metrics": [
+      { "name": "...", "purpose": "..." }
+    ],
+
+    "baseline_definition": "...",
+    "non_ml_alternatives": ["..."],
+
+    "data_profile": {
+      "labels": "yes|no|partial",
+      "samples_order": "1e3|1e4|1e5|1e6+",
+      "time_span": "weeks|months|years",
+      "granularity": "user|session|order|day|item|other",
+      "privacy_flags": ["PII","GDPR","none"],
+      "data_readiness_score": 0
+    },
+
+    "ml_recommendations": [
+      { "approach": "...", "why": "..." }
+    ],
+
+    "kill_criteria": ["..."],
+    "pilot_plan": {
+      "duration_weeks": 4,
+      "design": "...",
+      "metrics": ["..."],
+      "decision_gate": "..."
+    },
+
+    "decision": "proceed|reframe|dont_use_ml",
+
+    "stage_status": {
+      "stage1_problem": "ok|needs_clarification",
+      "stage2_goals": "ok|missing",
+      "stage3_metrics": "ok|missing",
+      "stage4_feasibility": "ok|missing"
+    },
+
+    "pending_question": "one concise follow-up question if something blocks a decision, else ''"
   }
   ```
   </OUTPUT_FORMAT>
+
 
   <INTERACTION_MODEL>
   Refer to Knowledge › process-model.md for the detailed stage logic and reasoning flow.

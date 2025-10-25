@@ -1,5 +1,5 @@
 # 💼 SageCompass Metrics Library (Business-Focused)
-_instructions v1.3_
+_instructions v1.4_
 
 Defines **business-level success criteria** for evaluating ML project value.  
 Each archetype lists **primary business KPIs (stakeholder-facing)** and **supporting technical metrics (internal validation)**.
@@ -7,7 +7,7 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 ---
 
 ## 1. Classification
-**Business Goal:** Automate or improve accuracy of categorical decisions (e.g., fraud, defect, triage).
+**Business Goal:** Automate or improve accuracy of categorical decisions.
 
 **Primary Business KPIs:**
 - % of manual decisions automated
