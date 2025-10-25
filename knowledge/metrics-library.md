@@ -1,8 +1,8 @@
-# 💼 SageCompass Metrics Library (Business-Focused)
-_instructions v1.4_
+# SageCompass – Metrics Library (Business-Focused)
+_instructions v2.1_
 
-Defines **business-level success criteria** for evaluating ML project value.  
-Each archetype lists **primary business KPIs (stakeholder-facing)** and **supporting technical metrics (internal validation)**.
+Defines business-level success criteria for evaluating ML project value.  
+Each archetype lists **primary business KPIs** (stakeholder-facing) and **supporting technical metrics** (internal validation).
 
 ---
 
@@ -10,16 +10,17 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Automate or improve accuracy of categorical decisions.
 
 **Primary Business KPIs:**
-- % of manual decisions automated
-- Processing time per case ↓ (%)
-- Operational cost per decision ↓ (%)
+- Percentage of manual decisions automated
+- Processing time per case reduction (%)
+- Operational cost per decision reduction (%)
 - Accuracy of business-critical decisions (%)
-- False alerts / complaint rate ↓ (%)
-- Compliance adherence ↑ (%)
-- Throughput per analyst ↑ (%)
+- False alert or complaint rate reduction (%)
+- Compliance adherence improvement (%)
+- Throughput per analyst increase (%)
 - SLA adherence improvement (%)
 
-**Supporting Technical Metrics:** Accuracy, Precision, Recall, F1, ROC-AUC
+**Supporting Technical Metrics:**  
+Accuracy, Precision, Recall, F1, ROC-AUC
 
 ---
 
@@ -27,16 +28,17 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Predict numeric outcomes to optimize efficiency, planning, or cost.
 
 **Primary Business KPIs:**
-- Forecast deviation from target ↓ (%)
-- Resource allocation efficiency ↑ (%)
-- Cost forecast error ↓ (%)
-- Operational waste ↓ (%)
-- SLA breach rate ↓ (%)
-- Unit cost per output ↓ (%)
-- Planning cycle time ↓ (%)
-- Profit margin stability ↑ (%)
+- Forecast deviation from target reduction (%)
+- Resource allocation efficiency increase (%)
+- Cost forecast error reduction (%)
+- Operational waste reduction (%)
+- SLA breach rate reduction (%)
+- Unit cost per output reduction (%)
+- Planning cycle time reduction (%)
+- Profit margin stability increase (%)
 
-**Supporting Technical Metrics:** MAE, RMSE, R², MAPE
+**Supporting Technical Metrics:**  
+MAE, RMSE, R², MAPE
 
 ---
 
@@ -44,33 +46,35 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Anticipate future demand or events to guide proactive decisions.
 
 **Primary Business KPIs:**
-- Demand-supply mismatch ↓ (%)
-- Stockout frequency ↓ (%)
-- Inventory waste ↓ (%)
-- Forecast-driven profit uplift (Δ %)
-- Schedule adherence ↑ (%)
-- Production overcapacity ↓ (%)
-- Revenue volatility ↓ (%)
+- Demand-supply mismatch reduction (%)
+- Stockout frequency reduction (%)
+- Inventory waste reduction (%)
+- Forecast-driven profit uplift (%)
+- Schedule adherence improvement (%)
+- Production overcapacity reduction (%)
+- Revenue volatility reduction (%)
 - Planning accuracy improvement (%)
 
-**Supporting Technical Metrics:** MAPE, RMSE, Forecast bias
+**Supporting Technical Metrics:**  
+MAPE, RMSE, Forecast Bias
 
 ---
 
 ## 4. Ranking
-**Business Goal:** Optimize ordering or prioritization (e.g., search, leads, task queues).
+**Business Goal:** Optimize ordering or prioritization (search, leads, or task queues).
 
 **Primary Business KPIs:**
-- Click-through rate (CTR) ↑ (%)
-- Time-to-first-relevant-result ↓ (s)
-- Conversion rate ↑ (%)
-- Lead qualification accuracy ↑ (%)
-- Search abandonment rate ↓ (%)
-- User satisfaction rating ↑ (%)
-- Average rank position of relevant items ↑
-- Manual re-sorting actions ↓ (%)
+- Click-through rate (CTR) increase (%)
+- Time-to-first-relevant-result reduction (seconds)
+- Conversion rate increase (%)
+- Lead qualification accuracy increase (%)
+- Search abandonment rate reduction (%)
+- User satisfaction rating increase (%)
+- Average rank position of relevant items improvement
+- Manual re-sorting actions reduction (%)
 
-**Supporting Technical Metrics:** NDCG@K, MAP@K, Precision@K
+**Supporting Technical Metrics:**  
+NDCG@K, MAP@K, Precision@K
 
 ---
 
@@ -78,16 +82,17 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Personalize experiences to increase engagement, retention, or sales.
 
 **Primary Business KPIs:**
-- CTR ↑ (%)
-- CVR ↑ (%)
-- Average order value ↑ (%)
-- Customer retention rate ↑ (%)
-- Cross-sell / upsell rate ↑ (%)
-- Session engagement duration ↑ (%)
-- Churn rate ↓ (%)
-- Customer satisfaction (survey %) ↑
+- Click-through rate (CTR) increase (%)
+- Conversion rate (CVR) increase (%)
+- Average order value increase (%)
+- Customer retention rate increase (%)
+- Cross-sell or upsell rate increase (%)
+- Session engagement duration increase (%)
+- Churn rate reduction (%)
+- Customer satisfaction (survey %) increase (%)
 
-**Supporting Technical Metrics:** Recall@K, MAP@K, NDCG@K
+**Supporting Technical Metrics:**  
+Recall@K, MAP@K, NDCG@K
 
 ---
 
@@ -95,16 +100,17 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Identify meaningful groups to drive marketing, targeting, or optimization.
 
 **Primary Business KPIs:**
-- Segment-driven campaign ROI ↑ (%)
-- Response rate within key segments ↑ (%)
+- Segment-driven campaign ROI increase (%)
+- Response rate within key segments increase (%)
 - Retention uplift within top segments (%)
-- Revenue per segment ↑ (%)
-- Targeting cost ↓ (%)
+- Revenue per segment increase (%)
+- Targeting cost reduction (%)
 - Conversion uplift from personalization (%)
-- CLV per segment ↑ (%)
-- Time-to-deploy targeted actions ↓ (%)
+- CLV per segment increase (%)
+- Time-to-deploy targeted actions reduction (%)
 
-**Supporting Technical Metrics:** Silhouette Score, DBI, CH Score
+**Supporting Technical Metrics:**  
+Silhouette Score, Davies–Bouldin Index, Calinski–Harabasz Score
 
 ---
 
@@ -112,16 +118,17 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Detect and mitigate rare or high-risk events early.
 
 **Primary Business KPIs:**
-- Fraud loss ↓ (%)
-- Detection latency ↓ (hours / transactions)
-- False-positive handling cost ↓ (%)
-- Incidents prevented (# / month)
-- Compliance violation rate ↓ (%)
-- Time-to-response ↓ (%)
-- System reliability uptime ↑ (%)
-- Customer trust / complaint rate ↓ (%)
+- Fraud loss reduction (%)
+- Detection latency reduction (hours or transactions)
+- False-positive handling cost reduction (%)
+- Incidents prevented per month (#)
+- Compliance violation rate reduction (%)
+- Time-to-response reduction (%)
+- System reliability uptime increase (%)
+- Customer trust and complaint rate improvement (%)
 
-**Supporting Technical Metrics:** Precision, Recall, F1, Detection latency
+**Supporting Technical Metrics:**  
+Precision, Recall, F1, Detection Latency
 
 ---
 
@@ -129,16 +136,17 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Business Goal:** Continuously optimize operational or strategic decisions through feedback.
 
 **Primary Business KPIs:**
-- ROI improvement vs baseline (%)
-- Operational cost per action ↓ (%)
-- Reward gain per iteration ↑ (%)
+- ROI improvement versus baseline (%)
+- Operational cost per action reduction (%)
+- Reward gain per iteration increase (%)
 - Policy convergence time (weeks)
-- Efficiency per decision ↑ (%)
-- Human intervention frequency ↓ (%)
+- Efficiency per decision increase (%)
+- Human intervention frequency reduction (%)
 - Long-term performance gain (%)
-- Decision automation coverage ↑ (%)
+- Decision automation coverage increase (%)
 
-**Supporting Technical Metrics:** Average Reward, Regret, Success Rate
+**Supporting Technical Metrics:**  
+Average Reward, Regret, Success Rate
 
 ---
 
@@ -148,26 +156,27 @@ Each archetype lists **primary business KPIs (stakeholder-facing)** and **suppor
 **Primary Business KPIs:**
 - Rule execution success rate (%)
 - Policy compliance rate (%)
-- Manual override frequency ↓ (%)
+- Manual override frequency reduction (%)
 - Average rule latency (ms)
 - Rule coverage completeness (%)
-- Maintenance cost ↓ (%)
-- Workflow uptime ↑ (%)
-- Business exception handling time ↓ (%)
+- Maintenance cost reduction (%)
+- Workflow uptime increase (%)
+- Business exception handling time reduction (%)
 
-**Supporting Technical Metrics:** None required
+**Supporting Technical Metrics:**  
+None required
 
 ---
 
 ## 10. Guidance
-- Always include **at least one KPI** from each dimension:
-    - 💰 Financial — revenue ↑, cost ↓, ROI ↑
-    - ⚙️ Operational — speed ↑, accuracy ↑, efficiency ↑
-    - 👥 Experience — satisfaction ↑, complaints ↓, retention ↑
+- Always include at least one KPI from each dimension:
+    - Financial — revenue increase, cost reduction, ROI improvement
+    - Operational — speed increase, accuracy improvement, efficiency improvement
+    - Experience — satisfaction increase, complaints reduction, retention increase
 - Quantify all goals relative to current baselines.
 - Technical metrics validate feasibility, not value.
 - Non-ML baselines must use comparable business KPIs.
-- Each pilot decision should cite 3–6 of these metrics.
+- Each pilot decision should cite three to six of these metrics.
 
 ---
 

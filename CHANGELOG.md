@@ -1,3 +1,4 @@
+- v2.1 – Cleanup, adjusting Stage 2 measurements 
 - v2.0 – Rework instructions based on prompt engineering best practices 
 - v1.5 – Dropped framework.md in favor of process-model.md 
 - v1.4 – Moving <INTERACTION_MODEL> to process-model.md 

@@ -1,14 +1,14 @@
-# 💬 SageCompass - Few-Shot Examples
-_instructions v2.0_
+# SageCompass – Few-Shot Examples
+_instructions v2.1_
 
-These examples demonstrate how SageCompass evaluates diverse business challenges using the ML Success Criteria Framework.  
-Each example includes expected structured JSON output and reasoning style.
+These examples show how SageCompass applies the ML Success Criteria Framework to different business challenges.  
+Each example includes concise input and valid structured JSON output.
 
 ---
 
-## ✅ Classification Example
+## Example 1 – Classification
 **Input:**  
-“Detect whether customer reviews are positive, neutral, or negative.”
+Detect whether customer reviews are positive, neutral, or negative.
 
 **Expected Output:**
 ```json
@@ -16,17 +16,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "classification",
   "learning_paradigm": "supervised",
-  "business_kpis": [{"name": "sentiment_accuracy","unit": "%","target": "≥90"}],
-  "ml_recommendations": [{"approach": "text classification (fine-tuned BERT)","why": "learns sentiment patterns from labeled data"}],
+  "business_kpis": [{"name": "sentiment_accuracy", "unit": "%", "target": "≥90"}],
+  "ml_recommendations": [{"approach": "text classification (fine-tuned BERT)", "why": "learns sentiment patterns from labeled data"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## ✅ Regression Example
+## Example 2 – Regression
 **Input:**  
-“Predict the delivery time of each order based on distance and traffic.”
+Predict the delivery time of each order based on distance and traffic.
 
 **Expected Output:**
 ```json
@@ -34,17 +34,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "regression",
   "learning_paradigm": "supervised",
-  "business_kpis": [{"name": "delivery_time_mae","unit": "minutes","target": "≤5"}],
-  "ml_recommendations": [{"approach": "gradient-boosted regression","why": "handles nonlinear numeric relationships"}],
+  "business_kpis": [{"name": "delivery_time_mae", "unit": "minutes", "target": "≤5"}],
+  "ml_recommendations": [{"approach": "gradient-boosted regression", "why": "handles nonlinear numeric relationships"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## ✅ Forecasting Example
+## Example 3 – Forecasting
 **Input:**  
-“We want to forecast next month’s hotel occupancy.”
+Forecast next month’s hotel occupancy.
 
 **Expected Output:**
 ```json
@@ -52,17 +52,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "forecasting",
   "learning_paradigm": "supervised",
-  "business_kpis": [{"name": "occupancy_forecast_error","unit": "%","target": "≤10"}],
-  "ml_recommendations": [{"approach": "time-series regression (ARIMA or Prophet)","why": "captures temporal and seasonal trends"}],
+  "business_kpis": [{"name": "occupancy_forecast_error", "unit": "%", "target": "≤10"}],
+  "ml_recommendations": [{"approach": "time-series regression (ARIMA or Prophet)", "why": "captures temporal and seasonal trends"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## ✅ Recommendation Example
+## Example 4 – Recommendation
 **Input:**  
-“Recommend products based on a user’s browsing and purchase history.”
+Recommend products based on a user’s browsing and purchase history.
 
 **Expected Output:**
 ```json
@@ -70,17 +70,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "recommendation",
   "learning_paradigm": "supervised",
-  "business_kpis": [{"name": "click_through_rate","unit": "%","target": "≥15"}],
-  "ml_recommendations": [{"approach": "collaborative filtering","why": "learns similarity patterns across users and items"}],
+  "business_kpis": [{"name": "click_through_rate", "unit": "%", "target": "≥15"}],
+  "ml_recommendations": [{"approach": "collaborative filtering", "why": "learns similarity patterns across users and items"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## ✅ Clustering Example
+## Example 5 – Clustering
 **Input:**  
-“Group our customers by behavior to create targeted marketing campaigns.”
+Group customers by behavior to create targeted marketing campaigns.
 
 **Expected Output:**
 ```json
@@ -88,17 +88,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "clustering",
   "learning_paradigm": "unsupervised",
-  "business_kpis": [{"name": "segment_actionability","unit": "qualitative","target": "high"}],
-  "ml_recommendations": [{"approach": "k-means clustering","why": "discovers natural customer groups without labels"}],
+  "business_kpis": [{"name": "segment_actionability", "unit": "qualitative", "target": "high"}],
+  "ml_recommendations": [{"approach": "k-means clustering", "why": "discovers natural customer groups without labels"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## ✅ Anomaly Detection Example
+## Example 6 – Anomaly Detection
 **Input:**  
-“Detect fraudulent transactions in our payment system.”
+Detect fraudulent transactions in the payment system.
 
 **Expected Output:**
 ```json
@@ -106,17 +106,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "anomaly",
   "learning_paradigm": "unsupervised",
-  "business_kpis": [{"name": "fraud_detection_f1","unit": "score","target": "≥0.85"}],
-  "ml_recommendations": [{"approach": "isolation forest","why": "detects outliers with minimal assumptions"}],
+  "business_kpis": [{"name": "fraud_detection_f1", "unit": "score", "target": "≥0.85"}],
+  "ml_recommendations": [{"approach": "isolation forest", "why": "detects outliers with minimal assumptions"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## ✅ Reinforcement Learning Example
+## Example 7 – Reinforcement Learning
 **Input:**  
-“Continuously optimize ad bidding to maximize return while staying within budget.”
+Continuously optimize ad bidding to maximize return while staying within budget.
 
 **Expected Output:**
 ```json
@@ -124,17 +124,17 @@ Each example includes expected structured JSON output and reasoning style.
   "needs_ml": "yes",
   "problem_type": "policy",
   "learning_paradigm": "reinforcement",
-  "business_kpis": [{"name": "average_reward","unit": "USD","target": "≥1.2x baseline"}],
-  "ml_recommendations": [{"approach": "reinforcement learning (Q-learning or PPO)","why": "optimizes sequential decisions under feedback"}],
+  "business_kpis": [{"name": "average_reward", "unit": "USD", "target": "≥1.2x baseline"}],
+  "ml_recommendations": [{"approach": "reinforcement learning (Q-learning or PPO)", "why": "optimizes sequential decisions under feedback"}],
   "decision": "proceed"
 }
 ```
 
 ---
 
-## 🚫 Non-ML Example
+## Example 8 – Non-ML Case
 **Input:**  
-“Send an email to every inactive user.”
+Send an email to every inactive user.
 
 **Expected Output:**
 ```json
@@ -148,24 +148,24 @@ Each example includes expected structured JSON output and reasoning style.
 
 ---
 
-## ⚠️ Ambiguous Example
+## Example 9 – Ambiguous Request
 **Input:**  
-“We want to use AI to improve our customer service.”
+Use AI to improve our customer service.
 
 **Expected Output:**
 ```json
 {
   "needs_ml": "unclear",
   "problem_type": "unknown",
-  "pending_question": "What specific process or outcome in customer service are you trying to improve (e.g., response time, ticket routing)?"
+  "pending_question": "What specific outcome in customer service are you trying to improve (e.g., response time, ticket routing, satisfaction)?"
 }
 ```
 
 ---
 
-## 🚫 Bad-Fit Example
+## Example 10 – Bad-Fit Case
 **Input:**  
-“We want to predict sales next month using if-else rules.”
+Predict next month’s sales using if-else rules.
 
 **Expected Output:**
 ```json

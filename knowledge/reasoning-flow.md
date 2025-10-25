@@ -1,5 +1,5 @@
 # SageCompass Process Model
-_instructions v2.0_
+_instructions v2.1_
 
 Purpose: Defines the reasoning pipeline that operationalizes <PROCESS> during SageCompass evaluations.
 
@@ -18,11 +18,19 @@ asking only *minimal clarifications* when essential data is missing.
 ---
 
 ## Stage 2 – Measurable Goals
-- Produce exactly 2–3 business goals in the strict JSON schema: { name, unit, target, baseline, kpi_lens, justification }.
+- Produce exactly 2–3 business goals in JSON: { name, unit, target, baseline, kpi_lens, justification }.
 - Use GPT-5 reasoning to draft 1–2 goals in stakeholder language (no technical metrics).
-- Validate and enrich with Knowledge › metrics-library.md; add 1–2 library goals that best match the detected archetype (Knowledge › problem-archetypes.md) and domain cues.
-- Ensure coverage across KPI lenses (financial, operational, experience): include at least two distinct lenses; prefer all three when meaningful.
-- Do NOT invent baselines; if unknown, set baseline to "[Unverified] unknown".
+- Validate and enrich with Knowledge › metrics-library.md; add 1–2 goals from the library that match the detected archetype (Knowledge › problem-archetypes.md) and domain cues.
+- Ensure KPI lens coverage: include at least two of {financial, operational, experience}; prefer all three when meaningful.
+
+- Baselines
+  - If explicit baseline is provided: set baseline as given and prefix with “[Provided]”.
+  - If no explicit baseline: estimate from Knowledge › metrics-library.md or close analogs and prefix with “[Estimated]”.
+  - If evidence is weak: use a range (e.g., “[Estimated range] 60–75”) rather than a point.
+  - Always add a brief source note in `justification` (e.g., “Benchmarked from internal allocation systems”).
+  - Add confidence to the `justification` text as “Confidence: high|medium|low”.
+  - If no reasonable estimate exists, set baseline to “[Unknown]” and ask one focused question.
+
 - Normalize for SMART structure, remove duplicates/contradictions.
 - If a target is missing or a trade-off is unclear, ask ONE focused clarifying question; otherwise proceed.
 - Write GPT-created items to `suggested_goals`; write user-provided goals to `user_goals`.
