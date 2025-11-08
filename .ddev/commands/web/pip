@@ -1,0 +1,7 @@
+#!/bin/bash
+## Description: Run pip commands in the web container
+## Usage: pip [args]
+## Example: "ddev pip"
+set -euo pipefail
+
+pip "$@"

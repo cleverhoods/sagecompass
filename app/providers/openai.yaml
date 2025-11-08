@@ -1,0 +1,3 @@
+module: langchain_openai
+class: ChatOpenAI
+key_env: OPENAI_API_KEY

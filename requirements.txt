@@ -1,0 +1,6 @@
+langchain
+langchain-openai
+langchain-perplexity
+gradio
+python-dotenv
+pyyaml

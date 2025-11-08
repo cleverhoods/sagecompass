@@ -1,0 +1,6 @@
+#!/bin/bash
+## Description: Run python inside project virtualenv
+## Usage: python [args]
+set -euo pipefail
+
+python "$@"
