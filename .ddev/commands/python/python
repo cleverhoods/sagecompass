@@ -1,0 +1,6 @@
+#!/bin/bash
+## Description: Run python commands inside the Python ddev container.
+## Usage: python [args]
+set -euo pipefail
+
+python "$@"

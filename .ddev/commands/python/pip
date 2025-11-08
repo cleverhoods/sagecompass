@@ -1,5 +1,5 @@
 #!/bin/bash
-## Description: Run pip commands in the web container
+## Description: Run pip commands inside the Python ddev container.
 ## Usage: pip [args]
 ## Example: "ddev pip"
 set -euo pipefail

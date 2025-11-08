@@ -1,25 +1,8 @@
 name: sagecompass
 type: generic
-docroot: ""
-php_version: "8.3"
 webserver_type: generic
-xdebug_enabled: false
-additional_hostnames: []
-webimage_extra_packages: [python3, python-is-python3, python3-pip, python3-venv]
-additional_fqdns: []
-database:
-    type: mariadb
-    version: "10.11"
-use_dns_when_possible: true
-composer_version: "2"
-web_environment: []
-corepack_enable: false
-
-web_extra_exposed_ports:
-  - name: gradio
-    container_port: 8000
-    http_port: 8000
-    https_port: 8001
+docroot: ""
+omit_containers: [db, ddev-ssh-agent]
 
 # Key features of DDEV's config.yaml:
 

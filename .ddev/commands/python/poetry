@@ -1,0 +1,6 @@
+#!/bin/bash
+## Description: Run poetry commands inside the Python ddev container.
+## Usage: poetry [args]
+set -euo pipefail
+
+poetry "$@"

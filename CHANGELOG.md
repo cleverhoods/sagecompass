@@ -1,8 +1,15 @@
 # SageCompass changelog
+## v4.0 - alpha2
+- Rework ddev integration into a separate Python service
+- Replacing requirements.txt with Potery (pyproject.toml) to manage project requirements.
+- Added new ddev command: ddev poetry
+- Fine-tuning python compose to manage Poetry and Python cache
+
 ## v4.0 - alpha1 
-  - Adding DDev environment (generic, with python 3 installed on web)
-  - Adding Python project necessities (requirements.txt)
-  - Reorganising project setup (configs, prompts, providers, utils, main/logic and ui.py)
+- Adding DDev environment (generic, with python 3 installed on web)
+- Adding Python project necessities (requirements.txt)
+- Reorganising project setup (configs, prompts, providers, utils, main/logic and ui.py)
+
 ## v1.0 - v3.3  
 - v3.3 – Pumping up version number 
 - v3.2 – Added decision_confidence, handling missing baseline 

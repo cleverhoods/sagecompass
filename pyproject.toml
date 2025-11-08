@@ -1,0 +1,22 @@
+[project]
+name = "sagecompass"
+version = "1.0.0-alpha1"
+description = "AI reasoning runtime for SageCompass"
+authors = [{ name = "Gábor M." }]
+requires-python = ">=3.12,<4.0"
+
+dependencies = [
+    "langchain>=1.0.4,<2.0.0",
+    "langchain-openai",
+    "langchain-perplexity",
+    "gradio",
+    "python-dotenv",
+    "pyyaml"
+]
+
+[tool.poetry]
+packages = [{ include = "app" }]
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+black = "*"
