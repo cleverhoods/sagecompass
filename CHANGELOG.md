@@ -1,4 +1,14 @@
 # SageCompass changelog
+## v4.0 - alpha4
+- Moved provider config under config/
+- Added 'agent' config
+- Updated yaml configuration data structures
+- Renamed and reworked logic.py to orchestrator.py
+- Generalised prompt_ and config_loader. The new util is file_loader.py.
+- Introduced DEFAULT_PROVIDER envvar
+- Rewrite agents/base.py to comply with generic agent abstraction (PRAL)
+- Rewrite agents/problem_framing.py to comply with base.py abstraction
+
 ## v4.0 - alpha3
 - Created BaseAgent abstract class
 - Implemented basic PRAL

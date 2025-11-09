@@ -1,0 +1,10 @@
+# Provider
+module: langchain_openai
+class: ChatOpenAI
+key_env: OPENAI_API_KEY
+
+# LLM defaults
+defaults:
+  model: gpt-5
+  temperature: 0.2
+  max_tokens: 100000

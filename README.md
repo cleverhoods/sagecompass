@@ -26,26 +26,32 @@ before anyone spends money building it.
 ## Project structure
 ```
 app/
-├── chain.py                  ← orchestrates multi-agent pipeline
-├── main.py                   ← entry point (loads UI)
-├── ui.py                     ← Gradio interface
-├── agents/
-│   ├── base.py               ← abstract, PRAL
+├── main.py                   ← entry point (sets up paths, loads .env, create app & UI)
+├── orchestrator.py           ← orchestrates multi-agent pipeline
+├── ui.py                     ← Gradio segment
+├── agents/                   ← Agents implementation
+│   ├── base.py               ← base abstract, PRAL stubs
 │   ├── problem_framing.py    ← ProblemFramingAgent
 │   └── ...
 ├── config/
-│   ├── llm.yaml              ← LLM config (provider/model/temp/etc)
+│   ├── agents                ← Agent specific config (provider/model/temp/etc...)
+│   │   ├── problem_framing.yaml 
+│   │   └── ...
+│   └── llm                   ← LLM config (module/class/key_env, default values for /model/temp/etc)  
+│       ├── openai.yaml       
+│       ├── perplexity.yaml   
+│       └── ...              
 ├── prompts/                  ← Prompts storage
-│   ├── system.prompt         ← Main, system level prompt.
-│   ├── problem_framing.prompt
+│   ├── system.prompt         ← Main system prompt with global scope.
+│   ├── problem_framing.prompt← Agent prompt with Agent scope.
 │   ├──  ...
 ├── schemas/                  ← Schema storage
 │   ├── _shared.json          ← Shared across all other schemas and agents
 │   ├── problem_framing.json
 ├── utils/                    
-│   ├── config_loader.py      ← Loads config files
-│   ├── event_logger.py       ← Logging events in the system
-│   ├── prompt_loader.py      ← Loads prompt files
+│   ├── file_loader.py        ← Manages loading files for config/schema/prompts
+│   ├── logger.py             ← Logging events in the system
+│   ├── provider_config.py    ← Provider Factory configurations
 │   ├── retriever.py          ← shared RAG context (NEW)
 │   ├── validation.py         ← Runs schema validation
 │   └── ...

@@ -1,0 +1,6 @@
+version: 0.0.1
+provider: openai
+params:
+  model: gpt-5
+  temperature: 0.4
+  max_tokens: 4096

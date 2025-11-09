@@ -1,0 +1,10 @@
+# Provider
+module: langchain_perplexity
+class: ChatPerplexity
+key_env: PERPLEXITY_API_KEY
+
+# LLM defaults
+defaults:
+  model: sonar
+  temperature: 0.2
+  max_tokens: 100000

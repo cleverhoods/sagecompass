@@ -1,3 +1,0 @@
-module: langchain_perplexity
-class: ChatPerplexity
-key_env: PERPLEXITY_API_KEY

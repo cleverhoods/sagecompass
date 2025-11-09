@@ -4,6 +4,7 @@
 # App level
 .env
 .notes
+logs
 
 # Python
 # Byte-compiled / optimized / DLL files
