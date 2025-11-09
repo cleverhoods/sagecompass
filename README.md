@@ -1,0 +1,64 @@
+# SageCompass
+SageCass is a decision system that checks whether a business idea actually needs AI 
+before anyone spends money building it.
+
+## You Do What?
+“It’s a virtual consultant that applies consistent logic to every AI idea and tells you — with numbers — if it’s worth doing or not.”
+
+| Human equivalent                                    | SagePass equivalent          |
+| --------------------------------------------------- |------------------------------|
+| Consultant asking “What problem are we solving?”    | Stage 1 – Problem framing    |
+| Analyst turning that into measurable goals          | Stage 2 – Goals & KPIs       |
+| Data scientist checking “Do we have data for this?” | Stage 4 – Feasibility        |
+| Executive deciding “Is this worth doing?”           | Stage 5 – Decision synthesis |
+
+## Encompassing roles/Agents (v4)
+
+| Agent              | Simple metaphor      |
+| ------------------ |----------------------|
+| **Problem Agent**  | Business analysis    |
+| **Goal Agent**     | Strategy translator  |
+| **KPI Agent**      | Performance analysis |
+| **Data Agent**     | Data engineering     |
+| **Decision Agent** | Executive summarizer |
+
+
+## Project structure
+```
+app/
+├── chain.py                  ← orchestrates multi-agent pipeline
+├── main.py                   ← entry point (loads UI)
+├── ui.py                     ← Gradio interface
+├── agents/
+│   ├── base.py               ← abstract, PRAL
+│   ├── problem_framing.py    ← ProblemFramingAgent
+│   └── ...
+├── config/
+│   ├── llm.yaml              ← LLM config (provider/model/temp/etc)
+├── prompts/                  ← Prompts storage
+│   ├── system.prompt         ← Main, system level prompt.
+│   ├── problem_framing.prompt
+│   ├──  ...
+├── schemas/                  ← Schema storage
+│   ├── _shared.json          ← Shared across all other schemas and agents
+│   ├── problem_framing.json
+├── utils/                    
+│   ├── config_loader.py      ← Loads config files
+│   ├── event_logger.py       ← Logging events in the system
+│   ├── prompt_loader.py      ← Loads prompt files
+│   ├── retriever.py          ← shared RAG context (NEW)
+│   ├── validation.py         ← Runs schema validation
+│   └── ...
+```
+
+---
+
+## v5 - food for thoughts
+- Contribution: Create python Add-on for DDev (the existing one is not too great).
+- create SystemObserver Agent
+  - Listens to all emitted log_events.
+  - Detects anomalies (too many validation errors, rising cost, latency spikes).
+  - Decides actions: alert human, scale down LLM size, retry failed chain, etc.
+  - Learns patterns over time (“KPIAgent often fails when schema v2 is active”).
+
+---

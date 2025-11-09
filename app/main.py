@@ -5,8 +5,8 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.append(PROJECT_ROOT)
 
-from logic import SageCompass
-from ui import SageCompassUI
+from app.chain import SageCompass
+from app.ui import SageCompassUI
 
 if __name__ == "__main__":
     app = SageCompass()

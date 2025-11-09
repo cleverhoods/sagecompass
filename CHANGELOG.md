@@ -1,4 +1,17 @@
 # SageCompass changelog
+## v4.0 - alpha3
+- Created BaseAgent abstract class
+- Implemented basic PRAL
+- Implemented *_shared* and *problem_framing* Schemas and their validation
+- Added event_logger, retriever and validator utility
+- Updated prompt_loader and config loader utilities with event_logger
+- Added SAGECOMPASS_ENV environmental value for event log verbosity
+- Created ProblemFramingAgent
+- logic.py renamed to chain.py, reworked previous orchestration
+- Updated system.prompt and created problem_framing.prompt
+- Updated README.md
+- Created LEARNING.md to store certain learning materials
+
 ## v4.0 - alpha2
 - Rework ddev integration into a separate Python service
 - Replacing requirements.txt with Potery (pyproject.toml) to manage project requirements.

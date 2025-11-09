@@ -3,6 +3,7 @@
 
 # App level
 .env
+.notes
 
 # Python
 # Byte-compiled / optimized / DLL files
