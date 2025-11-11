@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProblemFramingOutput",
+  "type": "object",
+  "properties": {
+    "problem_summary": {
+      "type": "string",
+      "description": "Short, clear description of the main problem to solve."
+    },
+    "clarifying_question": {
+      "type": "string",
+      "description": "Optional follow-up question if the user's request is unclear."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confidence that the problem was framed correctly."
+    }
+  },
+  "required": ["problem_summary"]
+}

@@ -9,49 +9,49 @@
 
   "properties": {
     "problem_summary": {
-      "$ref": "./_shared.json#/$defs/scored_text",
+      "$ref": "../_core/_shared.json#/$defs/scored_text",
       "description": "A concise summary of the business problem as framed by the agent."
     },
 
     "archetypes": {
       "type": "array",
-      "items": { "$ref": "./_shared.json#/$defs/scored_name" },
+      "items": { "$ref": "../_core/_shared.json#/$defs/scored_name"},
       "minItems": 1,
       "description": "List of one or more recognized problem archetypes (e.g., churn prediction, demand forecasting) relevant to the user's input."
     },
 
     "business_goals": {
       "type": "array",
-      "items": { "$ref": "./_shared.json#/$defs/scored_text" },
+      "items": { "$ref": "../_core/_shared.json#/$defs/scored_text"},
       "minItems": 1,
       "description": "Business goals derived from the problem framing. Each goal should be actionable, measurable, and aligned with the overall challenge."
     },
 
     "assumptions": {
       "type": "array",
-      "items": { "$ref": "./_shared.json#/$defs/scored_text" },
+      "items": { "$ref": "../_core/_shared.json#/$defs/scored_text"},
       "description": "Explicit or implicit assumptions detected during problem framing that may influence goal definition or feasibility."
     },
 
     "retrieved_evidence": {
       "type": "array",
-      "items": { "$ref": "./_shared.json#/$defs/retrieved_evidence" },
+      "items": { "$ref": "../_core/_shared.json#/$defs/retrieved_evidence"},
       "description": "Evidence retrieved from internal knowledge or external RAG sources that support the problem framing."
     },
 
     "context_domains": {
       "type": "array",
-      "items": { "$ref": "./_shared.json#/$defs/scored_name" },
+      "items": { "$ref": "../_core/_shared.json#/$defs/scored_name"},
       "description": "Detected or inferred business domains (e.g., marketing, supply chain, finance) relevant to the problem context."
     },
 
     "clarifying_question": {
-      "$ref": "./_shared.json#/$defs/scored_text",
+      "$ref": "../_core/_shared.json#/$defs/scored_text",
       "description": "A clarifying question the agent may ask to reduce ambiguity if confidence across critical fields is low."
     },
 
     "metadata": {
-      "$ref": "./_shared.json#/$defs/metadata",
+      "$ref": "../_core/_shared.json#/$defs/metadata",
       "description": "Common metadata block including version, schema path, and timestamp."
     }
   },

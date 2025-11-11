@@ -21,6 +21,7 @@ services:
     restart: "no"
     ports:
       - "8000:8000" #<host_port>:<container_port>
+      - "43800:43800"
     environment:
       - PYTHONUNBUFFERED=1
       - POETRY_VIRTUALENVS_CREATE=false

@@ -1,4 +1,21 @@
 # SageCompass changelog
+## v4.0 - alpha5
+- Reorganize project → each agent in its own folder (/agents/{agent}/)
+- Keep utils/ for infrastructure and drop DI concepts
+- Redefine BaseAgent → now CoreAgent with full PRAL and hooks
+- Finalize FileLoader + ProviderFactory (core bootstrapping)
+  - updated: ProviderFactory now reads params: sub-block from YAML and handles LangChain v1 modules dynamically. 
+  - updated: FileLoader and AgentLoader support flat agent.yaml / schema.json / system.prompt layout.
+- Lifecycle (config → prompt → schema → execution → validation)
+- Load agent config and model via ProviderFactory
+- Load system + agent prompts via FileLoader and AgentLoader
+- Schema validation via ValidationService
+- PRAL loop (perceive → reason → act → learn) implemented and validated end-to-end
+- Logging for PRAL stages and agent I/O - Hook-based execution replaces _default methods; system_prompt is merged (core + agent).
+- SageCompass.ask() refactored for sequential agent handoff
+- Shared state dictionary for intermediate results
+- Schema validation between agent outputs/inputs
+
 ## v4.0 - alpha4
 - Moved provider config under config/
 - Added 'agent' config

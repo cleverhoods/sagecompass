@@ -1,34 +1,35 @@
-import os, importlib
+import os
+import importlib
 from app.utils.file_loader import FileLoader
 from app.utils.logger import log
 
 
 class ProviderFactory:
     """
-    Loads provider and agent configurations,
-    merges parameters, validates environment,
-    and returns an instantiated provider client.
+    Instantiates an LLM provider for a given agent based on:
+      - agent.yaml (specific overrides)
+      - config/provider/{provider}.yaml (global defaults)
+    Supports any provider module in LangChain ecosystem.
     """
 
     @staticmethod
     def for_agent(agent_name: str):
         try:
-            # --- Load agent config ---
-            agent_cfg = FileLoader.load_agent_config(agent_name)
+            # --- Load configurations ---
+            agent_cfg = FileLoader.load_agent_config(agent_name) or {}
             provider_name = (agent_cfg.get("provider") or os.getenv("DEFAULT_PROVIDER", "openai")).lower()
-            log("provider.load.start", {"agent": agent_name, "provider": provider_name})
-
-            # --- Load provider config ---
             prov_cfg = FileLoader.load_provider_config(provider_name)
             if not prov_cfg:
                 raise FileNotFoundError(f"Provider config missing for '{provider_name}'")
 
-            # --- Merge params (provider.defaults ← agent.params) ---
-            provider_defaults = prov_cfg.get("defaults", {}) or {}
-            agent_overrides = agent_cfg.get("params", {}) or {}
-            params = {**provider_defaults, **agent_overrides}
+            log("provider.load.start", {"agent": agent_name, "provider": provider_name})
 
-            # --- Validate required provider keys ---
+            # --- Merge parameters (provider.defaults <- agent.yaml) ---
+            provider_defaults = prov_cfg.get("defaults", {}) or {}
+            agent_params = agent_cfg.get("params", {})
+            params = {**provider_defaults, **agent_params}
+
+            # --- Required provider keys ---
             for key in ("module", "class", "key_env"):
                 if key not in prov_cfg:
                     raise KeyError(f"Missing '{key}' in provider config '{provider_name}'")
@@ -40,8 +41,11 @@ class ProviderFactory:
 
             # --- Dynamic import and instantiation ---
             module = importlib.import_module(prov_cfg["module"])
-            cls = getattr(module, prov_cfg["class"])
-            llm_instance = cls(api_key=api_key, **params)
+            provider_class = getattr(module, prov_cfg["class"])
+
+            # Detect constructor signature for LangChain v1 providers
+            # ChatOpenAI → api_key=..., model=..., temperature=...
+            instance = provider_class(api_key=api_key, **params)
 
             log("provider.load.success", {
                 "agent": agent_name,
@@ -49,7 +53,7 @@ class ProviderFactory:
                 "params": list(params.keys())
             })
 
-            return llm_instance, params
+            return instance, params
 
         except Exception as e:
             log("provider.load.error", {"agent": agent_name, "error": str(e)})

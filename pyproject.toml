@@ -3,7 +3,7 @@ name = "sagecompass"
 version = "1.0.0-alpha1"
 description = "AI reasoning runtime for SageCompass"
 authors = [{ name = "Gábor M." }]
-requires-python = ">=3.12,<4.0"
+requires-python = ">=3.12,<3.13"
 
 dependencies = [
     "langchain>=1.0.4,<2.0.0",
@@ -11,7 +11,10 @@ dependencies = [
     "langchain-perplexity",
     "gradio",
     "python-dotenv",
-    "pyyaml"
+    "pyyaml",
+    "jsonschema (>=4.25.1,<5.0.0)",
+    "aim (==3.25.0)",
+    "langchain-community (>=0.4.1,<0.5.0)"
 ]
 
 [tool.poetry]

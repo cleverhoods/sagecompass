@@ -9,8 +9,8 @@ before anyone spends money building it.
 | --------------------------------------------------- |------------------------------|
 | Consultant asking “What problem are we solving?”    | Stage 1 – Problem framing    |
 | Analyst turning that into measurable goals          | Stage 2 – Goals & KPIs       |
-| Data scientist checking “Do we have data for this?” | Stage 4 – Feasibility        |
-| Executive deciding “Is this worth doing?”           | Stage 5 – Decision synthesis |
+| Data scientist checking “Do we have data for this?” | Stage 3 – Feasibility        |
+| Executive deciding “Is this worth doing?”           | Stage 4 – Decision synthesis |
 
 ## Encompassing roles/Agents (v4)
 
@@ -22,7 +22,35 @@ before anyone spends money building it.
 | **Data Agent**     | Data engineering     |
 | **Decision Agent** | Executive summarizer |
 
+## Project Architecture
 
+### Core concepts
+
+#### PRAL Loop
+Every agent behaves as a miniature cognitive entity following:
+
+| Stage | Description |
+|--------|-------------|
+| **Perceive** | Gather context from user input, prior agents, and stored memory |
+| **Reason** | Analyze patterns, derive implications, identify uncertainties |
+| **Act / Ask** | Take an action or ask clarifying questions, possibly invoking tools |
+| **Learn** | Store outcomes and update memory for future runs |
+
+The orchestrator also follows PRAL at a higher level — coordinating agent execution and updating global memory after each cycle.
+
+---
+
+#### BaseAgent Abstraction
+
+All agents inherits `BaseAgent`, which defines:
+- the PRAL interface (`perceive`, `reason`, `act`, `learn`);
+- access to configuration, prompt, and schema files;
+- shared helper logic (logging, validation, tool invocation);
+- seamless delegation to other agents.
+
+This abstraction enforces *cognitive consistency* and keeps agents interoperable.
+
+---
 ## Project structure
 ```
 app/

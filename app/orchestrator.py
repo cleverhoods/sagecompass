@@ -1,45 +1,50 @@
-# app/orchestrator.py
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableSequence
-from app.utils.file_loader import FileLoader
-from app.utils.provider_config import ProviderFactory
-
+from app.agents.problem_framing.agent import ProblemFramingAgent
+from app.utils.logger import log
+from app.utils.validation import ValidationService
 
 class SageCompass:
-    """
-    Main orchestration layer.
-    Loads agent config, initializes LLM, and runs the reasoning chain.
-    """
+    """Sequential multi-agent orchestrator (Phase 4)."""
 
-    def __init__(self, agent_name: str = "problem_framing"):
-        # --- Load agent configuration ---
-        self.agent_name = agent_name
-        self.agent_config = FileLoader.load_agent_config(agent_name) or {}
+    def __init__(self, pipeline=None):
+        self.pipeline = pipeline or ["problem_framing"]   # extend later
+        self.state = {"context": {}, "trace": []}
+        self.validator = ValidationService()
+        self.agents = self._load_agents(self.pipeline)
 
-        # --- Load agent-specific and system prompts ---
-        self.prompt_text = FileLoader.load_prompt(agent_name)
-        self.system_prompt = FileLoader.load_prompt("system") or \
-                             "You are SageCompass, an ML strategy advisor."
+    def _load_agents(self, names):
+        """Instantiate each agent in the pipeline."""
+        mapping = {
+            "problem_framing": ProblemFramingAgent,
+            # "cost_model": CostModelAgent,
+            # "data_readiness": DataReadinessAgent,
+        }
+        return [mapping[n](n) for n in names if n in mapping]
 
-        # --- Initialize LLM instance ---
-        self.llm, self.llm_params = ProviderFactory.for_agent(agent_name)
+    def ask(self, question: str, context=None):
+        """Run the full PRAL pipeline sequentially."""
+        input_data = question
+        self.state["context"] = context or {}
 
-        # --- Initialize chain ---
-        self.chain = self._init_chain()
+        for agent in self.agents:
+            log("orchestrator.stage.start", {"agent": agent.name})
+            result = agent.run(input_data, self.state)
 
-    # ---------------- Internal methods ---------------- #
+            # store
+            self.state[agent.name] = result
+            self.state["trace"].append({"agent": agent.name, "result": result})
 
-    def _init_chain(self):
-        """Builds the LLM reasoning chain."""
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", self.system_prompt),
-            ("human", self.prompt_text or "{question}")
-        ])
-        return RunnableSequence(prompt | self.llm)
+            # validate schema
+            try:
+                valid = self.validator.validate(result, agent.schema, agent=agent.name)
+                if not valid:
+                    raise ValueError(f"{agent.name} produced invalid output")
+            except Exception as e:
+                log("orchestrator.validation.error",
+                    {"agent": agent.name, "error": str(e)}, level="error")
+                break
 
-    # ---------------- Public interface ---------------- #
+            # prepare input for next agent
+            input_data = result
 
-    def ask(self, question: str) -> str:
-        """Entry point for UI."""
-        result = self.chain.invoke({"question": question})
-        return result.content if hasattr(result, "content") else str(result)
+        log("orchestrator.pipeline.complete", {"agents": self.pipeline})
+        return self.state

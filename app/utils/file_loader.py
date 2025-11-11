@@ -29,27 +29,29 @@ class FileLoader:
     @classmethod
     @lru_cache(maxsize=None)
     def load_yaml(cls, relative_path: str, category: str = "config"):
-        full_path = os.path.join(cls.BASE_DIR, relative_path)
-        return cls._read_file(full_path, loader=yaml.safe_load, category=category)
+        file_path = os.path.join(cls.BASE_DIR, relative_path)
+        return cls._read_file(file_path, loader=yaml.safe_load, category=category)
 
     @classmethod
     @lru_cache(maxsize=None)
-    def load_prompt(cls, name: str):
-        file_path = os.path.join(cls.BASE_DIR, "prompts", f"{name}.prompt")
+    def load_prompt(cls, agent_name: str, prompt_name: str):
+        """Loads a specific .prompt file for a given agent."""
+        file_path = os.path.join(cls.BASE_DIR, "agents", agent_name, f"{prompt_name}.prompt")
         return cls._read_file(file_path, category="prompt")
 
     @classmethod
     @lru_cache(maxsize=None)
-    def load_schema(cls, name: str):
-        file_path = os.path.join(cls.BASE_DIR, "schemas", f"{name}.json")
+    def load_schema(cls, agent_name: str, schema_name: str):
+        file_path = os.path.join(cls.BASE_DIR, "agents", agent_name, f"{schema_name}.json")
         return cls._read_file(file_path, loader=json.load, category="schema")
 
     # --- Specialized shortcuts ---
     @classmethod
     @lru_cache(maxsize=None)
     def load_agent_config(cls, agent_name: str):
-        category = "agent"
-        return cls.load_yaml(f"config/{category}/{agent_name}.yaml", category=category)
+        """Loads config/agent.yaml for a given agent."""
+        path = os.path.join(cls.BASE_DIR, "agents", agent_name, "agent.yaml")
+        return cls._read_file(path, loader=yaml.safe_load, category="agent.config")
 
     @classmethod
     @lru_cache(maxsize=None)
