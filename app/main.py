@@ -11,7 +11,7 @@ if PROJECT_ROOT not in sys.path:
 base = Path(__file__).resolve().parent
 load_dotenv(dotenv_path=base.parent / ".env")
 
-# --- Import core logic and UI ---
+# --- Import core logic, graph picture generation and UI ---
 from app.orchestrator import SageCompass
 from app.ui import SageCompassUI
 

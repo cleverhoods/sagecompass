@@ -5,7 +5,7 @@ from pathlib import Path
 
 from app.utils.logger import log
 from app.agents.base import LLMAgent
-from app.models import ProblemFrame
+from app.models import ProblemFrame, BusinessGoalsOutput
 from app.state import PipelineState
 from app.utils.retriever import get_context_for_query
 
@@ -13,19 +13,24 @@ AGENT_DIR = Path(__file__).resolve().parent
 PROMPT_PATH = AGENT_DIR / "system.prompt"
 
 
-class ProblemFramingLLMAgent(LLMAgent[ProblemFrame]):
+class BusinessGoalsLLMAgent(LLMAgent[BusinessGoalsOutput]):
     def __init__(self) -> None:
         super().__init__(
-            name="problem_framing",
-            output_model=ProblemFrame,
+            name="business_goals",
+            output_model=BusinessGoalsOutput,
             prompt_path=PROMPT_PATH,
         )
 
-    def run_on_state(self, state: PipelineState) -> ProblemFrame:
+    def run_on_state(self, state: PipelineState) -> BusinessGoalsOutput:
         raw_text = state["raw_text"]
+        pf: ProblemFrame = state["problem_frame"]
+
         context = get_context_for_query(raw_text)
 
+        pf_json = pf.model_dump_json(indent=2)
+
         human_instructions = (
+            f"ProblemFrame (JSON):\n{pf_json}\n\n"
             f"User question:\n{raw_text}\n\n"
             f"Context (may be empty):\n{context}"
         )
@@ -33,27 +38,20 @@ class ProblemFramingLLMAgent(LLMAgent[ProblemFrame]):
         return self.run(human_instructions=human_instructions)
 
 
-_pf_agent = ProblemFramingLLMAgent()
+_bg_agent = BusinessGoalsLLMAgent()
 
 
-def node_pf(state: PipelineState) -> PipelineState:
-    """
-    LangGraph node wrapper for the ProblemFraming LLMAgent.
-    """
-    log("agent.node.start", {"agent": "problem_framing"})
-
+def node_bg(state: PipelineState) -> PipelineState:
+    log("agent.node.start", {"agent": "business_goals"})
     new_state = deepcopy(state)
-
-    pf = _pf_agent.run_on_state(state)
-
+    bg_output = _bg_agent.run_on_state(state)
     log(
         "agent.node.done",
         {
-            "agent": "problem_framing",
-            "business_domain": pf.business_domain,
-            "primary_outcome": pf.primary_outcome,
+            "agent": "business_goals",
+            "goals_count": len(bg_output.business_goals),
         },
     )
 
-    new_state["problem_frame"] = pf
+    new_state["business_goals"] = bg_output.business_goals
     return new_state

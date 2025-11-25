@@ -13,10 +13,14 @@ class ProviderFactory:
     """
 
     @staticmethod
-    def for_agent(agent_name: str):
+    def for_agent(agent_name: str = None):
         try:
             # --- Load configurations ---
-            agent_cfg = FileLoader.load_agent_config(agent_name) or {}
+            if agent_name is None:
+                agent_cfg = {}
+            else:
+                agent_cfg = FileLoader.load_agent_config(agent_name) or {}
+
             provider_name = (agent_cfg.get("provider") or os.getenv("DEFAULT_PROVIDER", "openai")).lower()
             prov_cfg = FileLoader.load_provider_config(provider_name)
             if not prov_cfg:
@@ -27,6 +31,7 @@ class ProviderFactory:
             # --- Merge parameters (provider.defaults <- agent.yaml) ---
             provider_defaults = prov_cfg.get("defaults", {}) or {}
             agent_params = agent_cfg.get("params", {})
+
             params = {**provider_defaults, **agent_params}
 
             # --- Required provider keys ---

@@ -5,7 +5,10 @@
 .env
 .notes
 logs
-
+app/reports
+.trash
+.vscode
+*.sqlite3
 # Python
 # Byte-compiled / optimized / DLL files
 __pycache__/

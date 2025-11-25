@@ -1,4 +1,8 @@
 # SageCompass changelog
+## v5.0 - alpha1
+- Implement LangGraph solution
+- Vastly reduce the size of the project
+- Reorganize agents
 ## v4.0 - alpha5
 - Reorganize project → each agent in its own folder (/agents/{agent}/)
 - Keep utils/ for infrastructure and drop DI concepts

@@ -50,7 +50,7 @@ class FileLoader:
     @lru_cache(maxsize=None)
     def load_agent_config(cls, agent_name: str):
         """Loads config/agent.yaml for a given agent."""
-        path = os.path.join(cls.BASE_DIR, "agents", agent_name, "agent.yaml")
+        path = os.path.join(cls.BASE_DIR, "agents", agent_name, "config.yaml")
         return cls._read_file(path, loader=yaml.safe_load, category="agent.config")
 
     @classmethod
