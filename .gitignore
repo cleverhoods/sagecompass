@@ -5,7 +5,8 @@
 .env
 .notes
 logs
-app/reports
+output/*
+!output/*/.gitkeep
 .trash
 .vscode
 *.sqlite3
@@ -13,3 +14,7 @@ app/reports
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+
+# LangGraph API aggregates
+.langgraph_api
+data

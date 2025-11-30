@@ -1,19 +1,15 @@
-import os, sys
-from pathlib import Path
+import sys
 from dotenv import load_dotenv
+from app.utils.paths import PROJECT_ROOT
 
-# --- Ensure project root in sys.path ---
-PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-if PROJECT_ROOT not in sys.path:
-    sys.path.append(PROJECT_ROOT)
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
-# --- Load environment variables ---
-base = Path(__file__).resolve().parent
-load_dotenv(dotenv_path=base.parent / ".env")
+load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
 
 # --- Import core logic, graph picture generation and UI ---
-from app.orchestrator import SageCompass
-from app.ui import SageCompassUI
+from app.runtime.orchestrator import SageCompass
+from app.runtime.ui import SageCompassUI
 
 if __name__ == "__main__":
     app = SageCompass()

@@ -1,8 +1,7 @@
 import gradio as gr
-import json
-import os
-import time
-
+import json, os, time
+from pathlib import Path
+from app.utils.paths import REPORTS_DIR
 
 class SageCompassUI:
     def __init__(self, app):
@@ -39,8 +38,12 @@ class SageCompassUI:
         # PROBLEM FRAME
         if label == "PROBLEM FRAME":
             try:
-                domain = getattr(value, "business_domain", None) or value.get("business_domain")
-                outcome = getattr(value, "primary_outcome", None) or value.get("primary_outcome")
+                domain = getattr(value, "business_domain", None) or value.get(
+                    "business_domain"
+                )
+                outcome = getattr(value, "primary_outcome", None) or value.get(
+                    "primary_outcome"
+                )
                 return f"[PF] Problem framed – domain: {domain}; outcome: {outcome}"
             except Exception:
                 return "[PF] Problem framed."
@@ -64,7 +67,9 @@ class SageCompassUI:
         if label == "ELIGIBILITY":
             try:
                 category = getattr(value, "category", None) or value.get("category")
-                confidence = getattr(value, "confidence", None) or value.get("confidence")
+                confidence = getattr(value, "confidence", None) or value.get(
+                    "confidence"
+                )
                 return f"[EA] Eligibility: {category} (confidence {confidence:.2f})"
             except Exception:
                 return "[EA] Eligibility result ready."
@@ -90,8 +95,13 @@ class SageCompassUI:
                 options = getattr(value, "options", None) or value.get("options", [])
                 options = list(options)
                 n = len(options)
-                rec_id = getattr(value, "recommended_option_id", None) or value.get("recommended_option_id")
-                return f"[SDA] {n} solution options. Recommended: {rec_id or 'not specified'}"
+                rec_id = getattr(value, "recommended_option_id", None) or value.get(
+                    "recommended_option_id"
+                )
+                return (
+                    f"[SDA] {n} solution options. "
+                    f"Recommended: {rec_id or 'not specified'}"
+                )
             except Exception:
                 return "[SDA] Solution design ready."
 
@@ -105,7 +115,10 @@ class SageCompassUI:
                     oid = getattr(e, "option_id", None) or e.get("option_id")
                     if oid:
                         opt_ids.append(oid)
-                return f"[CEA] Cost estimates for {n} options (e.g. {', '.join(opt_ids)})"
+                return (
+                    f"[CEA] Cost estimates for {n} options "
+                    f"(e.g. {', '.join(opt_ids)})"
+                )
             except Exception:
                 return "[CEA] Cost estimates ready."
 
@@ -130,18 +143,12 @@ class SageCompassUI:
 
         for label, value in self.app.ask_stream(message):
             if label == "HTML REPORT":
-                # value should be the raw HTML string stored by node_output_formatter
-                if hasattr(value, "html"):
-                    html_str = value.html
-                else:
-                    html_str = str(value)
+                # value is the raw HTML string from node_output_formatter
+                html_str = str(value)
 
                 # Save HTML report
-                reports_dir = os.path.join(os.path.dirname(__file__), "reports")
-                os.makedirs(reports_dir, exist_ok=True)
-
                 filename = f"sagecompass_report_{int(time.time())}.html"
-                file_path = os.path.join(reports_dir, filename)
+                file_path = os.path.join(REPORTS_DIR, filename)
 
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(html_str)

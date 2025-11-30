@@ -1,19 +1,26 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
 
 from app.utils.logger import log
 from app.agents.base import LLMAgent
+
 from app.models import ProblemFrame
 from app.state import PipelineState
-from app.utils.retriever import get_context_for_query
 
 AGENT_DIR = Path(__file__).resolve().parent
 PROMPT_PATH = AGENT_DIR / "system.prompt"
 
-
 class ProblemFramingLLMAgent(LLMAgent[ProblemFrame]):
+    """
+    Problem Framing agent built on top of the shared LLMAgent base.
+
+    Responsibilities:
+    - Load its own system.prompt.
+    - Build a structured payload from PipelineState (original_input + optional RAG context).
+    - Return a structured ProblemFrame model.
+    """
+
     def __init__(self) -> None:
         super().__init__(
             name="problem_framing",
@@ -21,39 +28,19 @@ class ProblemFramingLLMAgent(LLMAgent[ProblemFrame]):
             prompt_path=PROMPT_PATH,
         )
 
+    def build_payload(self, state: PipelineState) -> dict:
+        raw_text = state.get("raw_text", "") or ""
+
+        return {
+            "original_input": raw_text or None,
+            "retrieved_context": None,
+        }
+
     def run_on_state(self, state: PipelineState) -> ProblemFrame:
-        raw_text = state["raw_text"]
-        context = get_context_for_query(raw_text)
-
-        human_instructions = (
-            f"User question:\n{raw_text}\n\n"
-            f"Context (may be empty):\n{context}"
+        payload = self.build_payload(state)
+        log(
+            "agent.problem_framing.payload",
+            {"keys": list(payload.keys())},
         )
+        return self.run_with_payload(payload)
 
-        return self.run(human_instructions=human_instructions)
-
-
-_pf_agent = ProblemFramingLLMAgent()
-
-
-def node_pf(state: PipelineState) -> PipelineState:
-    """
-    LangGraph node wrapper for the ProblemFraming LLMAgent.
-    """
-    log("agent.node.start", {"agent": "problem_framing"})
-
-    new_state = deepcopy(state)
-
-    pf = _pf_agent.run_on_state(state)
-
-    log(
-        "agent.node.done",
-        {
-            "agent": "problem_framing",
-            "business_domain": pf.business_domain,
-            "primary_outcome": pf.primary_outcome,
-        },
-    )
-
-    new_state["problem_frame"] = pf
-    return new_state

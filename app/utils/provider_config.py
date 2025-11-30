@@ -2,6 +2,10 @@ import os
 import importlib
 from app.utils.file_loader import FileLoader
 from app.utils.logger import log
+from app.utils.paths import CONFIG_DIR
+
+PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
+
 
 
 class ProviderFactory:

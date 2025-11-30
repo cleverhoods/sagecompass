@@ -17,7 +17,7 @@ if PROJECT_ROOT not in sys.path:
 base = Path(__file__).resolve().parent
 load_dotenv(dotenv_path=base.parent / ".env")
 
-from app.orchestrator import SageCompass
+from app.runtime.orchestrator import SageCompass
 
 
 def run_example():
@@ -31,8 +31,8 @@ def run_example():
 
     state = compass.ask(question)
 
-    print("\n=== FINAL RECOMMENDATION ===")
-    print(state.get("final_recommendation", "<no final_recommendation>"))
+   # print("\n=== FINAL RECOMMENDATION ===")
+   # print(state.get("final_recommendation", "<no final_recommendation>"))
 
     print("\n=== PROBLEM FRAME ===")
     pprint(state.get("problem_frame"))

@@ -1,4 +1,18 @@
 # SageCompass changelog
+## v5.0 - alpha2
+- Project package management is done via 'uv' (poetry has been removed)
+- Restructured project
+  - Agents and Nodes have been separated
+  - runtime, services, subgraph, tools, utils separation created
+  - moved config, logs, reports out of app folder (logs and reports are in the output folder)
+  - greatly reworked agents and nodes
+- Created supervisor node
+- Created RAG node
+- Created vector store service
+- Created unstructured ingest service (using Doclinger)
+- Models have been updated with Descriptions, prompts are heavily relying on it
+- Added global_system.prompt
+- 
 ## v5.0 - alpha1
 - Implement LangGraph solution
 - Vastly reduce the size of the project

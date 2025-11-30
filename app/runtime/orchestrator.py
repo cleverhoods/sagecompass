@@ -1,4 +1,3 @@
-# app/orchestrator.py
 from __future__ import annotations
 
 from typing import Any, Dict, Generator, Tuple
@@ -17,13 +16,15 @@ class SageCompass:
 
     def __init__(self, pipeline=None):
         # 'pipeline' is kept only for backwards compatibility / logging.
+        # Updated names to reflect the current graph and added output_formatter.
         self.pipeline = pipeline or [
             "problem_framing",
-            "atomic_business_goals",
+            "business_goals",
             "eligibility",
             "kpi",
             "solution_design",
             "cost_estimation",
+            "output_formatter",
         ]
         self.state: Dict[str, Any] = {"context": {}, "trace": []}
 
@@ -106,7 +107,7 @@ class SageCompass:
 
         initial_state: PipelineState = {"raw_text": question}
         if context:
-            initial_state["context"] = context
+            initial_state["context"] = context  # Optional extra; state is total=False
 
         # Track which keys we have already emitted
         seen_keys = set()

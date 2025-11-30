@@ -1,25 +1,38 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
-import json
+from typing import List
+
 from app.utils.logger import log
 from app.agents.base import LLMAgent
+
 from app.models import (
-    AtomicKPI,
-    KPIOutput,
     ProblemFrame,
-    AtomicBusinessGoal,
+    BusinessGoal,
     EligibilityResult,
+    KPIOutput,
 )
+
 from app.state import PipelineState
-from app.utils.retriever import get_context_for_query
 
 AGENT_DIR = Path(__file__).resolve().parent
 PROMPT_PATH = AGENT_DIR / "system.prompt"
 
+class KPIAgent(LLMAgent[KPIOutput]):
+    """
+    KPI agent built on top of the shared LLMAgent base.
 
-class KpiLLMAgent(LLMAgent[KPIOutput]):
+    Responsibilities:
+    - Load its own system.prompt.
+    - Build a structured payload from PipelineState:
+      - original_input
+      - problem_frame
+      - business_goals
+      - eligibility
+      - optional RAG context
+    - Return a KPIOutput model.
+    """
+
     def __init__(self) -> None:
         super().__init__(
             name="kpi",
@@ -27,50 +40,28 @@ class KpiLLMAgent(LLMAgent[KPIOutput]):
             prompt_path=PROMPT_PATH,
         )
 
+    def build_payload(self, state: PipelineState) -> dict:
+        raw_text = state.get("raw_text", "") or ""
+
+        pf: ProblemFrame | None = state.get("problem_frame")
+        goals: List[BusinessGoal] = state.get("business_goals") or []
+        eligibility: EligibilityResult | None = state.get("eligibility")
+
+        rag_contexts = state.get("rag_contexts") or {}
+        kpi_context = rag_contexts.get("kpi") or rag_contexts.get("general") or ""
+
+        return {
+            "original_input": raw_text or None,
+            "problem_frame": pf.model_dump() if pf is not None else None,
+            "business_goals": [g.model_dump() for g in goals] if goals else [],
+            "eligibility": eligibility.model_dump() if eligibility is not None else None,
+            "retrieved_context": kpi_context or None,
+        }
+
     def run_on_state(self, state: PipelineState) -> KPIOutput:
-        raw_text = state["raw_text"]
-        pf: ProblemFrame = state["problem_frame"]
-        goals: list[AtomicBusinessGoal] = state.get("business_goals", [])
-        elig: EligibilityResult = state["eligibility"]
-
-        context = get_context_for_query(raw_text)
-
-        pf_json = pf.model_dump_json(indent=2)
-        goals_json = json.dumps([g.model_dump() for g in goals], indent=2)
-        elig_json = elig.model_dump_json(indent=2)
-
-        human_instructions = (
-            f"ProblemFrame (JSON):\n{pf_json}\n\n"
-            f"Business goals (JSON array):\n{goals_json}\n\n"
-            f"EligibilityResult (JSON):\n{elig_json}\n\n"
-            f"User question:\n{raw_text}\n\n"
-            f"Context (may be empty):\n{context}"
-        )
+        payload = self.build_payload(state)
         log(
-            "agent.kpi.run_on_state",
-            {
-                "human": human_instructions
-            },
+            "agent.kpi.payload",
+            {"keys": list(payload.keys())},
         )
-        return self.run(human_instructions=human_instructions)
-
-
-_kpi_agent = KpiLLMAgent()
-
-
-def node_kpi(state: PipelineState) -> PipelineState:
-    """
-    LangGraph node wrapper for the KPI LLMAgent.
-    """
-    log("agent.node.start", {"agent": "kpi"})
-    new_state = deepcopy(state)
-    kpi_output = _kpi_agent.run_on_state(state)
-    log(
-        "agent.node.done",
-        {
-            "agent": "kpi",
-            "kpis_count": len(kpi_output.kpis),
-        },
-    )
-    new_state["kpis"] = kpi_output.kpis
-    return new_state
+        return self.run_with_payload(payload)

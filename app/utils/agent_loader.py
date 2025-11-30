@@ -1,7 +1,7 @@
 import os
 from app.utils.file_loader import FileLoader
 from app.utils.logger import log
-
+from app.utils.paths import APP_DIR
 
 class AgentLoader:
     """Aggregates all files belonging to an agent into a structured package."""
@@ -18,8 +18,8 @@ class AgentLoader:
           - core_system_prompt (_core/core.prompt)
           - agent_system_prompt (agent/system.prompt)
         """
-        base = FileLoader.BASE_DIR
-        agent_dir = os.path.join(base, "agents", agent_name)
+
+        agent_dir = os.path.join(APP_DIR, "agents", agent_name)
 
         if not os.path.isdir(agent_dir):
             msg = f"Agent folder not found: {agent_dir}"

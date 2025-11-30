@@ -1,19 +1,27 @@
 from __future__ import annotations
 
-from copy import deepcopy
 from pathlib import Path
 
-from app.utils.logger import log
 from app.agents.base import LLMAgent
 from app.models import ProblemFrame, BusinessGoalsOutput
 from app.state import PipelineState
-from app.utils.retriever import get_context_for_query
 
 AGENT_DIR = Path(__file__).resolve().parent
 PROMPT_PATH = AGENT_DIR / "system.prompt"
 
-
 class BusinessGoalsLLMAgent(LLMAgent[BusinessGoalsOutput]):
+    """
+    Business Goals agent built on top of the shared LLMAgent base.
+
+    Responsibilities:
+    - Load its own system.prompt.
+    - Build human_instructions from PipelineState:
+      - raw_text
+      - current ProblemFrame (if available)
+      - optional RAG context (via RAGAgent)
+    - Return a BusinessGoalsOutput model.
+    """
+
     def __init__(self) -> None:
         super().__init__(
             name="business_goals",
@@ -21,37 +29,19 @@ class BusinessGoalsLLMAgent(LLMAgent[BusinessGoalsOutput]):
             prompt_path=PROMPT_PATH,
         )
 
+    def build_payload(self, state: PipelineState) -> dict:
+        raw_text = state.get("raw_text", "") or ""
+        pf: ProblemFrame | None = state.get("problem_frame")
+
+        rag_contexts = state.get("rag_contexts") or {}
+        bg_context = rag_contexts.get("business_goals") or rag_contexts.get("general") or ""
+
+        return {
+            "original_input": raw_text,
+            "problem_frame": pf.model_dump() if pf is not None else None,
+            "retrieved_context": bg_context or None,
+        }
+
     def run_on_state(self, state: PipelineState) -> BusinessGoalsOutput:
-        raw_text = state["raw_text"]
-        pf: ProblemFrame = state["problem_frame"]
-
-        context = get_context_for_query(raw_text)
-
-        pf_json = pf.model_dump_json(indent=2)
-
-        human_instructions = (
-            f"ProblemFrame (JSON):\n{pf_json}\n\n"
-            f"User question:\n{raw_text}\n\n"
-            f"Context (may be empty):\n{context}"
-        )
-
-        return self.run(human_instructions=human_instructions)
-
-
-_bg_agent = BusinessGoalsLLMAgent()
-
-
-def node_bg(state: PipelineState) -> PipelineState:
-    log("agent.node.start", {"agent": "business_goals"})
-    new_state = deepcopy(state)
-    bg_output = _bg_agent.run_on_state(state)
-    log(
-        "agent.node.done",
-        {
-            "agent": "business_goals",
-            "goals_count": len(bg_output.business_goals),
-        },
-    )
-
-    new_state["business_goals"] = bg_output.business_goals
-    return new_state
+        payload = self.build_payload(state)
+        return self.run_with_payload(payload)
