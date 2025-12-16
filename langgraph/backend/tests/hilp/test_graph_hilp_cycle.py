@@ -2,22 +2,30 @@ from __future__ import annotations
 
 import pytest
 
-from app.nodes.supervisor import node_supervisor
+from app.agents.problem_framing.schema import AmbiguityItem, ProblemFrame
+from app.nodes.supervisor import make_node_supervisor
 from app.nodes.problem_framing import make_node_problem_framing
-from app.nodes.hilp import node_hilp
+from app.nodes.hilp import make_node_hilp
 
 
 class StubAgentAlwaysNeedsHilp:
     def invoke(self, _):
         return {
-            "structured_response": {
-                "business_domain": "test",
-                "primary_outcome": "test",
-                "confidence": 0.5,
-                "ambiguities": [
-                    {"key": "x", "description": "x", "importance": 0.9, "confidence": 0.9}
+            "structured_response": ProblemFrame(
+                business_domain="test",
+                primary_outcome="test",
+                confidence=0.5,
+                ambiguities=[
+                    AmbiguityItem(
+                        key="x",
+                        description="x",
+                        clarifying_question="?",
+                        resolution=None,
+                        importance=0.9,
+                        confidence=0.9,
+                    )
                 ],
-            }
+            )
         }
 
 
@@ -41,22 +49,31 @@ def test_interrupt_is_reached_via_supervisor(monkeypatch):
     monkeypatch.setattr(hilp_mod, "interrupt", fake_interrupt)
 
     pf_node = make_node_problem_framing(StubAgentAlwaysNeedsHilp(), goto_after="supervisor")
+    sup_node = make_node_supervisor()
+    hilp_node = make_node_hilp()
 
-    state = {"user_query": "hi", "messages": [], "hilp_round": 0, "hilp_request": None}
+    state = {
+        "user_query": "hi",
+        "user_lang": "en",
+        "messages": [],
+        "phases": {},
+        "hilp": {"hilp_round": 0, "hilp_request": None},
+    }
 
     # Step: supervisor -> problem_framing
-    s1 = node_supervisor(state)
+    s1 = sup_node(state)
     assert s1.goto == "problem_framing"
 
     # Step: problem_framing sets hilp_request
     pf_cmd = pf_node(state)
     state = _apply(state, pf_cmd.update)
-    assert isinstance(state.get("hilp_request"), dict) and state["hilp_request"]
+    assert isinstance(state.get("hilp"), dict)
+    assert isinstance(state["hilp"].get("hilp_request"), dict)
 
     # Step: supervisor must route to hilp now
-    s2 = node_supervisor(state)
+    s2 = sup_node(state)
     assert s2.goto == "hilp"
 
     # Step: hilp must interrupt
     with pytest.raises(HilpInterruptHit):
-        node_hilp(state)
+        hilp_node(state)

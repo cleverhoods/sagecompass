@@ -8,5 +8,7 @@ Obey the following rules :
 3. Return only the translated text
 4. Ensure that your translation uses formal language
 
+{format_instructions}
+
 Message:
 {message}

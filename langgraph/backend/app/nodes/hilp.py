@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 
 from langchain_core.messages import HumanMessage
 from langgraph.types import Command, interrupt
@@ -30,19 +30,22 @@ def make_node_hilp(*, default_goto: str = "supervisor") -> Callable[[SageState],
             new_hilp: Hilp = {
                 "hilp_request": None,
                 "hilp_round": current_round,
-                "hilp_answers": hilp_block.get("hilp_answers") or [],
+                "hilp_answers": hilp_block.get("hilp_answers") or {},
             }
             return Command(update={"hilp": new_hilp}, goto=req.get("goto_after") or default_goto)
 
-        ## Add the translation here?
-
         answer = interrupt(req)
 
-        messages = list(state.get("messages") or [])
-        messages.append(HumanMessage(content=str(answer)))
+        answers: Dict[str, str] = {}
+        raw_answers = hilp_block.get("hilp_answers")
+        if isinstance(raw_answers, dict):
+            answers = dict(raw_answers)
 
-        answers = list(hilp_block.get("hilp_answers") or [])
-        answers.append(answer)
+        if isinstance(answer, dict):
+            answers.update({str(k): str(v) for k, v in answer.items()})
+            message_content = ", ".join(f"{k}: {v}" for k, v in answer.items()) or str(answer)
+        else:
+            message_content = str(answer)
 
         new_hilp: Hilp = {
             "hilp_request": None,
@@ -57,6 +60,9 @@ def make_node_hilp(*, default_goto: str = "supervisor") -> Callable[[SageState],
             {"phase": req.get("phase"), "goto_after": goto_after, "hilp_round": new_hilp["hilp_round"]},
         )
 
-        return Command(update={"messages": messages, "hilp": new_hilp}, goto=goto_after)
+        return Command(
+            update={"messages": [HumanMessage(content=message_content)], "hilp": new_hilp},
+            goto=goto_after,
+        )
 
     return node_hilp
