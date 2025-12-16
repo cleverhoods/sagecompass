@@ -1,0 +1,10 @@
+import os
+
+def maybe_attach_pycharm() -> None:
+    host = os.getenv("PYCHARM_DEBUG_HOST")
+    port = os.getenv("PYCHARM_DEBUG_PORT")
+    if not host or not port:
+        return
+
+    import pydevd_pycharm
+    pydevd_pycharm.settrace(host, port=int(port), suspend=False)

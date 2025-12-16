@@ -1,0 +1,10 @@
+# Provider
+module: langchain_anthropic
+class: ChatAnthropic
+key_env: ANTHROPIC_API_KEY
+
+# LLM defaults
+defaults:
+  model: claude-sonnet-4-5-20250929
+  temperature: 0.0
+  max_tokens: 1024

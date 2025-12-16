@@ -1,0 +1,28 @@
+---
+config:
+  layout: elk
+---
+flowchart TD
+  %% Top level
+  SUP[Supervisor] --> PF_NODE[problem_framing node]
+  PF_NODE --> PF_DECIDE{PF result}
+  PF_DECIDE -- ok --> SUP
+  PF_DECIDE -- low confidence or ambiguities --> HITL[HITL interrupt]
+  HITL --> SUP
+
+  %% Internals of problem_framing
+  subgraph PF_Internal problem_framing_internals
+    PF_NODE --> PF_START[state in]
+    PF_START --> RAG_CALL[run_rag for domain problem_framing]
+    RAG_CALL --> UPDATE_CTX[store in state.rag_contexts]
+    UPDATE_CTX --> AGENT[ProblemFramingLLMAgent]
+    AGENT --> BUILD_MSG[build messages with original_input and retrieved_context]
+    BUILD_MSG --> LLM_AGENT[LLM with tools]
+    LLM_AGENT -- tool calls --> TOOLNODE[ToolNode]
+    TOOLNODE --> RAG_TOOL_CALL[execute rag_tool]
+    RAG_TOOL_CALL --> TOOLNODE
+    TOOLNODE -- tool results --> LLM_AGENT
+    LLM_AGENT --> PF_OUT[ProblemFrame]
+    PF_OUT --> PF_END[state out]
+    PF_END --> PF_DECIDE
+  end

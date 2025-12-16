@@ -1,0 +1,101 @@
+flowchart TD
+
+  %% === TOP-LEVEL: SINGLE LANGGRAPH GRAPH ====================================
+  subgraph SageCompass["SageCompass Graph (app/graph.py)"]
+
+    %% ---------- LLM AGENTS (LLMAgent<T>) ----------
+    subgraph Agents["LLM Agents (app/agents/*)"]
+      PF_AGENT["ProblemFramingLLMAgent"]
+      BG_AGENT["BusinessGoalsLLMAgent"]
+      ELIG_AGENT["EligibilityLLMAgent"]
+      KPI_AGENT["KPILLMAgent"]
+      SD_AGENT["SolutionDesignLLMAgent"]
+      CE_AGENT["CostEstimationLLMAgent"]
+      OF_AGENT["OutputFormatterAgent"]
+    end
+
+    %% ---------- PIPELINE NODES (MAIN FLOW) ----------
+    subgraph Pipeline["Pipeline Nodes (app/nodes/*)"]
+      START([START])
+
+      PF_NODE["problem_framing\n(node_pf)"]
+      BG_NODE["business_goals\n(node_bg)"]
+      ELIG_NODE["eligibility\n(node_eligibility)"]
+      KPI_NODE["kpi\n(node_kpi)"]
+      SD_NODE["solution_design\n(node_sda)"]
+      CE_NODE["cost_estimation\n(node_cost_estimation)"]
+      OF_NODE["output_formatter\n(node_output_formatter)"]
+
+      END([END])
+
+      START --> PF_NODE
+      PF_NODE --> BG_NODE
+      BG_NODE --> ELIG_NODE
+      ELIG_NODE --> KPI_NODE
+      KPI_NODE --> SD_NODE
+      SD_NODE --> CE_NODE
+      CE_NODE --> OF_NODE
+      OF_NODE --> END
+    end
+
+    %% Agents stacked above their corresponding nodes
+    PF_AGENT --> PF_NODE
+    BG_AGENT --> BG_NODE
+    ELIG_AGENT --> ELIG_NODE
+    KPI_AGENT --> KPI_NODE
+    SD_AGENT --> SD_NODE
+    CE_AGENT --> CE_NODE
+    OF_AGENT --> OF_NODE
+
+    %% ---------- RAG TOOL + SUBGRAPH (still part of SAME graph) ----------
+    subgraph RAGLayer["RAG Layer (ToolNode + agentic_rag_graph)"]
+
+      RAG_NODE["rag\n(node_rag)\nToolNode wrapper"]
+      TOOLNODE["ToolNode(RAG)\n(langgraph.prebuilt.ToolNode)"]
+      RAG_NODE --> TOOLNODE
+
+      %% Inner agentic RAG subgraph from app/subgraphs/agentic_rag.py
+      subgraph AgenticRAG["agentic_rag_graph (agentic RAG subgraph)"]
+        RAG_START([RAG START])
+
+        ROUTER["Router\n(LLM chooses source:\nTechDocs / Generic / WebSearch)"]
+
+        RET_TECH["Retrieve_Tech\nVectorStoreService.search(phase)"]
+        RET_GENERIC["Retrieve_Generic\nVectorStoreService.search('generic')"]
+        WEB_SEARCH["Web_Search\n(stub / future real web)"]
+
+        REL["Relevance_Checker\nLLM: 'Yes' / 'No' + retry cap"]
+        BUILD_CTX["Build_Context\njoin chunks → context string"]
+
+        RAG_END(["RAG END\nreturn {context, source}"])
+
+        RAG_START --> ROUTER
+
+        ROUTER -->|TechDocs| RET_TECH
+        ROUTER -->|Generic| RET_GENERIC
+        ROUTER -->|WebSearch| WEB_SEARCH
+
+        RET_TECH --> REL
+        RET_GENERIC --> REL
+        WEB_SEARCH --> REL
+
+        REL -->|"Yes"| BUILD_CTX
+        REL -->|"No (retries left)"| WEB_SEARCH
+        REL -->|"No (max retries)"| BUILD_CTX
+
+        BUILD_CTX --> RAG_END
+      end
+
+      %% ToolNode ↔ inner RAG subgraph
+      TOOLNODE --> RAG_START
+      RAG_END --> TOOLNODE
+    end
+
+    %% ---------- HOW PIPELINE AGENTS USE RAG TOOL ----------
+    %% Dashed edges = tool calls; still inside same LangGraph
+    PF_AGENT -. "tool: rag(query,\nphase='problem_framing')" .-> RAG_NODE
+    KPI_AGENT -. "tool: rag(query,\nphase='kpi')" .-> RAG_NODE
+    SD_AGENT  -. "tool: rag(query,\nphase='solution_design')" .-> RAG_NODE
+    CE_AGENT  -. "tool: rag(query,\nphase='cost_estimation')" .-> RAG_NODE
+
+  end

@@ -1,0 +1,35 @@
+[project]
+name = "sagecompass"
+version = "1.0.0-alpha5"
+description = "AI reasoning runtime for SageCompass"
+authors = [{ name = "Gábor M." }]
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "langchain>=1.0.4,<2.0.0",
+    "langchain-chroma>=1.0.0,<2.0.0",
+    "langchain-community>=0.4.1,<0.5.0",
+    "langchain-openai",
+    "langchain-perplexity",
+    "langgraph>=1.0.3,<2.0.0",
+    "python-dotenv",
+    "pyyaml",
+    "jsonschema>=4.25.1,<5.0.0",
+    "ipython>=9.7.0,<10.0.0",
+    "pydantic>=2.12.4,<3.0.0",
+    "langgraph-cli[inmem]>=0.4.7",
+    "langchain-docling>=2.0.0",
+    "langchain-anthropic>=1.2.0",
+    "gradio>=6.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "debugpy>=1.8.19",
+    "pydevd-pycharm>=253.29346.46",
+    "pytest>=9.0.2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

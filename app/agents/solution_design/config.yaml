@@ -1,5 +1,0 @@
-provider: perplexity
-params:
-  model: sonar-pro
-  temperature: 0.15
-  max_tokens: 6000

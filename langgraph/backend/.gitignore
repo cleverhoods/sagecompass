@@ -1,0 +1,18 @@
+# IDE
+.idea
+
+# App level
+.env
+logs
+output/*
+!output/*/.gitkeep
+
+# Python
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+.venv
+
+# LangGraph API aggregates
+.langgraph_api
+data

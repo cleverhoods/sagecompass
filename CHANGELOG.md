@@ -1,4 +1,19 @@
 # SageCompass changelog
+## v6.0 – alpha1
+- Created enforced Contracts (via tests)
+- Added Added Agent Chat UI via DDev, 
+- added generic Tool and Middleware management 
+- Created convictions for agents, further separating responsibilities
+- Cleaned up folders
+- First approach to HILP
+- re-added gradio ui
+- Removed Langgraph Agent Chat experiments
+- Keeping the langgraph/backend-ui separation (eventually gradio should be separated from the backend)
+- added mermaids folder
+- updated READMEs
+- Added experimental translation agent with language detection and translation nodes
+- Added capability of step-debug (probably should remove eventually)
+
 ## v5.0 - alpha2
 - Project package management is done via 'uv' (poetry has been removed)
 - Restructured project
@@ -12,11 +27,12 @@
 - Created unstructured ingest service (using Doclinger)
 - Models have been updated with Descriptions, prompts are heavily relying on it
 - Added global_system.prompt
-- 
+ 
 ## v5.0 - alpha1
 - Implement LangGraph solution
 - Vastly reduce the size of the project
 - Reorganize agents
+ 
 ## v4.0 - alpha5
 - Reorganize project → each agent in its own folder (/agents/{agent}/)
 - Keep utils/ for infrastructure and drop DI concepts

@@ -54,3 +54,5 @@
 - observability - https://uptrace.dev/blog/langchain-observability
 - providers - https://docs.langchain.com/oss/python/integrations/providers/all_providers
 
+## Rag
+- https://www.gptbots.ai/blog/agentic-rag

@@ -1,5 +1,0 @@
-provider: openai
-params:
-  model: gpt-4.1-mini
-  temperature: 0.0
-  max_tokens: 5000

@@ -1,0 +1,12 @@
+#!/bin/bash
+## Description: Run pnpm commands inside the UI ddev (nextjs) container.
+## Usage: pnpm [args]
+## Example: "ddev pnpm dev -- -H 0.0.0.0 --port 3000"
+set -euo pipefail
+source "$(dirname "$0")/../../utils/common.sh"
+
+#PROJECT_DIRECTORY=${PWD}
+
+# UI path.
+#log "Active dir: ${PROJECT_DIRECTORY}"
+pnpm "$@"
