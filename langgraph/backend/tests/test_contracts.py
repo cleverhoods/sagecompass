@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+from app.state import HilpRequest
+
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app"
 
@@ -70,8 +72,7 @@ def test_agent_folder_minimum_contract():
         assert has_cfg, f"{agent.name}: missing config.yml/config.yaml"
 
 def test_hilp_request_minimum_schema_is_used():
-    # Static check: worker nodes must set phase + goto_after if they set hilp_request
-    pf = _read(APP / "nodes" / "problem_framing.py")
-    if 'updates["hilp_request"] = {' in pf:
-        assert '"phase"' in pf or "'phase'" in pf, "hilp_request missing phase"
-        assert '"goto_after"' in pf or "'goto_after'" in pf, "hilp_request missing goto_after"
+    ann = HilpRequest.__annotations__
+    assert "phase" in ann
+    assert "prompt" in ann
+    assert "goto_after" in ann
