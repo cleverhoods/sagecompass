@@ -38,6 +38,7 @@ def build_agent(
         placeholders=[
             "user_language",
             "message",
+            "format_instructions",
         ],
         output_schema=TranslationResult,
     )
