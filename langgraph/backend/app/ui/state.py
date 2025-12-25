@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import Dict
+from uuid import uuid4
+
 from app.state import SageState
 
 
@@ -11,6 +14,21 @@ def init_state() -> SageState:
         "user_lang": "en",  # UI fallback; graph may overwrite
         "errors": [],
     }
+
+
+def init_ui_meta() -> Dict:
+    return {
+        "thread_id": None,
+        "pending_interrupt": None,
+        "pending_interrupt_id": None,
+        "hilp_answers": {},
+    }
+
+
+def ensure_thread_id(ui_meta: Dict) -> str:
+    if not ui_meta.get("thread_id"):
+        ui_meta["thread_id"] = str(uuid4())
+    return ui_meta["thread_id"]
 
 
 def summarize_problem_frame(state: SageState) -> str:
