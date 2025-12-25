@@ -2,12 +2,16 @@
 
 ## [Unreleased]
 ### Added
+- [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
 
 ### Changed
+- [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
+- [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
 
 ### Fixed
 
 ### Removed
+- [langgraph/backend] Removed hilp.prompt-driven state machine and the hilp node in favor of middleware-first HITL handling.
 
 ### Security
 

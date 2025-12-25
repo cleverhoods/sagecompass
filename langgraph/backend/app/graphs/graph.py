@@ -16,7 +16,6 @@ def build_main_app(
     detect_language_node: NodeFn,
     supervisor_node: NodeFn,
     problem_framing_node: NodeFn,
-    hilp_node: NodeFn,
     translation_node: NodeFn,
 ) -> CompiledStateGraph:
     """
@@ -32,7 +31,6 @@ def build_main_app(
     graph.add_node("supervisor", supervisor_node)
 
     graph.add_node("problem_framing", problem_framing_node)
-    graph.add_node("hilp", hilp_node)
 
     graph.add_node("detect_language", detect_language_node)
     graph.add_node("translator", translation_node)

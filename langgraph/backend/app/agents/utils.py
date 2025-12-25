@@ -3,81 +3,13 @@ from __future__ import annotations
 import importlib
 import logging
 from functools import lru_cache
-from typing import Any, Callable, Sequence, Type, Mapping
+from typing import Any, Callable, Sequence, Type
 
-from docling_ibm_models.tableformer.models.common.base_model import LOG_LEVEL
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel
 
 from app.utils.file_loader import FileLoader
 
-from typing import Any, Mapping, Sequence
-import logging
-from app.utils.file_loader import FileLoader
-
-def build_hilp_clarifications(
-    hilp_meta: Mapping[str, Any] | None,
-    hilp_answers: Sequence[Any],
-    *,
-    max_items: int = 3,
-) -> str:
-    """Build human-readable ambiguity → clarification list."""
-    if not hilp_meta or not hilp_meta.get("ambiguities") or not hilp_answers:
-        return ""
-
-    ambiguities = list(hilp_meta.get("ambiguities") or [])
-
-    def _importance(a: Any) -> float:
-        if isinstance(a, dict):
-            return float(a.get("importance") or 0)
-        return float(getattr(a, "importance", 0) or 0)
-
-    ambiguities.sort(key=_importance, reverse=True)
-    lines: list[str] = []
-
-    for amb, ans in zip(ambiguities[:max_items], hilp_answers):
-        if isinstance(amb, dict):
-            desc = amb.get("description") or amb.get("key") or str(amb)
-        else:
-            desc = getattr(amb, "description", None) or getattr(amb, "key", None) or str(amb)
-        lines.append(f"Ambiguity: {desc}")
-        lines.append(f"Clarification: {ans}")
-        lines.append("")
-
-    return "\n".join(lines).strip()
-
-def render_hilp_prompt(
-    agent_name: str,
-    *,
-    context: Mapping[str, Any],
-) -> str:
-    template = FileLoader.load_prompt("hilp", agent_name)
-    try:
-        return template.format(**context)
-    except Exception:
-        logging.warning("HILP prompt formatting failed", exc_info=True)
-        return template
-
-def build_hilp_questions(
-    hilp_meta: Mapping[str, Any] | None,
-    *,
-    max_items: int = 3,
-) -> str:
-    if not hilp_meta or not hilp_meta.get("ambiguities"):
-        return ""
-    ambiguities = list(hilp_meta["ambiguities"])
-
-    def importance(a: Any) -> float:
-        if isinstance(a, dict):
-            return float(a.get("importance") or 0)
-        return float(getattr(a, "importance", 0) or 0)
-
-    ambiguities.sort(key=importance, reverse=True)
-    lines: list[str] = []
-    for amb in ambiguities[:max_items]:
-        desc = amb.get("description") if isinstance(amb, dict) else getattr(amb, "description", str(amb))
-        lines.append(f"- {desc}")
-    return "\n".join(lines)
 
 def build_agent_prompt(agent_name: str, prompt_names: Sequence[str], include_global: bool = True) -> ChatPromptTemplate:
     """
@@ -100,10 +32,8 @@ def build_agent_prompt(agent_name: str, prompt_names: Sequence[str], include_glo
             ("system", FileLoader.load_prompt(prompt_name, agent_name))
         )
 
-    # Final user input
-    #messages.append(("human", "{user_query}"))
-
     return ChatPromptTemplate.from_messages(messages)
+
 
 @lru_cache(maxsize=None)
 def load_agent_schema(agent_name: str) -> Type[BaseModel]:

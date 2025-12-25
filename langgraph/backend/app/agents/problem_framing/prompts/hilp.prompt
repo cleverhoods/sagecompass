@@ -1,7 +1,0 @@
-We’re refining your request:
-
-"{user_query}"
-
-Please answer each question with Yes, No, or “I’m not sure”:
-
-{questions_block}

@@ -2,31 +2,18 @@ flowchart TD
     Start([Thread Start]) --> Supervisor
 
     %% SUPERVISOR
-    Supervisor[supervisor node] -->|hilp.hilp_request exists & hilp_round < max_rounds|Hilp
-    Supervisor -->|hilp.hilp_request exists & hilp_round >= max_rounds|EndMax[END - HILP max rounds]
-    Supervisor -->|no hilp_request & PF incomplete| PF[problem_framing node]
-    Supervisor -->|no hilp_request & PF complete| NextOrEnd[[Next phase or END]]
+    Supervisor[supervisor node] -->|user_lang missing| DetectLang
+    Supervisor -->|problem_framing incomplete| PF[problem_framing node]
+    Supervisor -->|problem_framing complete| Translator
 
-    %% PROBLEM FRAMING
-    PF -->|invoke pf_agent user_query/messages/clarifications| PF_Agent[pf_agent]
-    PF_Agent -->|no structured_response| PF_Error[mark phase=error] --> Supervisor
-    PF_Agent -->|ProblemFrame ok| PF_HILP[compute_hilp_meta]
+    %% DETECT LANGUAGE
+    DetectLang --> Supervisor
 
-    PF_HILP -->|needs_hilp = true| PF_SetHILP[set hilp.hilp_request - prompt from hilp.prompt status=pending] --> Supervisor
-    PF_HILP -->|needs_hilp = false| PF_Done[status=complete,\nhilp.hilp_request=None] --> Supervisor
+    %% PROBLEM FRAMING + HILP
+    PF --> PF_Agent[pf_agent (middleware attached)]
+    PF_Agent -->|structured_response| HilpMW[boolean HILP middleware\n(runtime.human)]
+    HilpMW --> PF_Record[store phase data\n+ hilp_meta/clarifications]
+    PF_Record --> Supervisor
 
-    %% HILP NODE
-    Hilp[hilp node] -->|invalid hilp_request| Supervisor
-
-    Hilp -->|max_rounds reached| Hilp_Max[clear hilp_request] --> Supervisor
-
-    Hilp -->|interrupt - hilp_request| Human{{Human answers questions}}
-
-    Human --> Hilp_Process[append answer to hilp_answers,\nmessages, hilp_round+1]
-
-    Hilp_Process -->|answer ~= 'no more info'| Hilp_NoInfo[hilp_terminal='no_more_info'] --> PF
-    Hilp_Process -->|normal clarification| PF
-
-    %% TERMINALS
-    NextOrEnd --> End((END))
-    EndMax --> End
+    %% TRANSLATION / END
+    Translator --> End((END))

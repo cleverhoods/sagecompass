@@ -1,47 +1,16 @@
 from __future__ import annotations
 
-from typing import Any
+from app.middlewares.hilp import make_boolean_hilp_middleware
 
-from langchain.agents import AgentState
-from langchain.agents.middleware import after_agent
-from langgraph.runtime import Runtime
-
-from app.utils.logger import log
-
-from .schema import ProblemFrame
 from .hilp_policy import compute_hilp_meta
+from .schema import ProblemFrame
 
 PHASE_KEY = "problem_framing"
 
-@after_agent
-def problem_framing_hilp(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
-    pf = state.get("structured_response")
-
-    if pf is None:
-        log.warning(
-            "HILP middleware: missing structured_response",
-            extra={"phase": PHASE_KEY},
-        )
-        return None
-
-    if not isinstance(pf, ProblemFrame):
-        try:
-            pf = ProblemFrame.model_validate(pf)
-        except Exception as e:
-            log.exception(
-                "HILP middleware: invalid structured_response",
-                extra={"phase": PHASE_KEY, "error": str(e)},
-            )
-            return None
-
-    hilp_meta = compute_hilp_meta(pf)
-
-    log(
-        "HILP policy evaluated",
-        {"phase": PHASE_KEY, "hilp_meta": hilp_meta},
-    )
-
-    # IMPORTANT:
-    # - This returns metadata in the agent result (for observability).
-    # - Nodes still must persist routing signals into SageState explicitly.
-    return {"hilp_meta": hilp_meta}
+# Middleware that evaluates ambiguities and, when supported by the runtime,
+# uses the LangGraph human-in-the-loop hook to collect Yes/No/Unknown answers.
+problem_framing_hilp = make_boolean_hilp_middleware(
+    phase=PHASE_KEY,
+    output_schema=ProblemFrame,
+    compute_meta=compute_hilp_meta,
+)

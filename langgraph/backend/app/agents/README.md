@@ -14,7 +14,7 @@
 - `prompts/` folder:
   - MUST contain `system.prompt`
   - MAY contain `few-shots.prompt` (recommended)
-  - MAY contain `hilp.prompt` (recommended when this agent can trigger HILP)
+  - HILP interactions are middleware-driven (see `app/middlewares/hilp.py`) and should not rely on separate `hilp.prompt` files.
 - `mw.py`:
   - Contains middleware hooks/decorators (glue) for this agent.
   - Heavy logic must be delegated to pure modules inside the agent folder (e.g., `hilp_policy.py`) and invoked from `mw.py`.

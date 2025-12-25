@@ -13,21 +13,16 @@ For rationale and examples, see `app/README.md` and per-folder READMEs.
 
 ## Routing Contract
 - Routing decisions MUST be expressed via `Command(update=..., goto=...)`.
-- Supervisor routing MUST use canonical state locations:
-  - HITL: `state["hilp_request"]`
-  - phase completion/state: `state["phases"]`
+- Supervisor routing MUST use canonical state locations for phase completion (`state["phases"]`) and language detection; HILP clarifications are handled inside agents/middleware and do not require dedicated routing nodes.
 
 ## DI / Import-time Rules
 - Do not construct agents/models/tools/graphs at import time.
 - Nodes must receive dependencies via factories/build functions.
 
 ## HITL (HILP) Contract
-- HITL is triggered by setting `state["hilp_request"]` to a dict (see `HilpRequest`).
-- `interrupt()` MUST only be called from `app/nodes/hilp.py`.
-- `node_hilp` is responsible for:
-  - calling `answer = interrupt(hilp_request)` to stop execution and surface the prompt
-  - updating `hilp_round`, appending an answer-derived message, clearing `hilp_request`
-  - continuing to `goto = hilp_request["goto_after"]` (when resumed)
+- HITL is middleware-driven: use `app/middlewares/hilp.py` and `langgraph.types.interrupt(...)` to collect boolean clarifications.
+- Nodes MUST NOT call `interrupt()` directly or mutate ad-hoc HILP state; only middleware issues interrupts.
+- Nodes persist middleware outputs (`hilp_meta`, `hilp_clarifications`) alongside their phase data in `SageState["phases"][<phase>]`.
 
 ## Documentation + Tests
 - Keep README.md files present at: `app/`, `app/agents/`, `app/nodes/`, `app/graphs/`, `app/tools/`, `app/middlewares/`.

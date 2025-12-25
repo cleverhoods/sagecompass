@@ -4,16 +4,20 @@ from typing import Any, Dict, List, Optional, Tuple
 
 
 def build_hilp_markdown(req: Dict[str, Any], answers: Dict[str, str]) -> str:
-    user_prompt = (req.get("prompt") or "").strip()
+    phase = req.get("phase") or ""
+    reason = req.get("reason") or ""
+    confidence = req.get("confidence")
     questions: List[Dict[str, Any]] = req.get("questions") or []
 
     lines: List[str] = []
-    lines.append("### Clarification (HILP)\n")
-
-    if user_prompt:
-        lines.append("**We’re refining your request:**")
-        lines.append("")
-        lines.append(f"> {user_prompt}")
+    lines.append("### Clarification needed\n")
+    if phase:
+        lines.append(f"**Phase:** {phase}")
+    if reason:
+        lines.append(f"**Reason:** {reason}")
+    if confidence is not None:
+        lines.append(f"**Confidence:** {confidence}")
+    if phase or reason or confidence is not None:
         lines.append("")
 
     if not questions:
@@ -88,10 +92,3 @@ def pick_next_unanswered_question(req: Dict[str, Any], answers: Dict[str, str]) 
         return questions[-1].get("id")
 
     return None
-
-
-def status_labels_for_lang(user_lang: str) -> Dict[str, str]:
-    lang = (user_lang or "en").lower()
-    if lang.startswith("hu"):
-        return {"answered": "megválaszolva", "not_answered": "nincs megválaszolva"}
-    return {"answered": "answered", "not_answered": "not answered"}

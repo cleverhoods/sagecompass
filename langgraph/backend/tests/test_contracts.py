@@ -3,8 +3,6 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from app.state import HilpRequest
-
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app"
 
@@ -45,12 +43,6 @@ def test_no_import_time_agent_construction_in_nodes():
         for lineno, name in _top_level_call_names(py):
             assert name not in banned_calls, f"{py}: import-time call {name} at line {lineno}"
 
-def test_interrupt_only_in_hilp_node():
-    for py in APP.rglob("*.py"):
-        if py.name == "hilp.py":
-            continue
-        assert "interrupt(" not in _read(py), f"interrupt() used outside hilp node: {py}"
-
 def test_agent_folder_minimum_contract():
     agents_dir = APP / "agents"
     for agent in agents_dir.iterdir():
@@ -71,8 +63,8 @@ def test_agent_folder_minimum_contract():
         has_cfg = (agent / "config.yml").exists() or (agent / "config.yaml").exists()
         assert has_cfg, f"{agent.name}: missing config.yml/config.yaml"
 
-def test_hilp_request_minimum_schema_is_used():
-    ann = HilpRequest.__annotations__
-    assert "phase" in ann
-    assert "prompt" in ann
-    assert "goto_after" in ann
+def test_hilp_middleware_factory_exists():
+    import importlib
+
+    mw = importlib.import_module("app.middlewares.hilp")
+    assert hasattr(mw, "make_boolean_hilp_middleware"), "Missing HILP middleware factory"
