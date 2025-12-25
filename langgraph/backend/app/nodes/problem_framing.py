@@ -6,12 +6,9 @@ from typing_extensions import Literal
 from langgraph.types import Command
 from langchain_core.runnables import Runnable
 
-from app.state import SageState, Hilp, HilpRequest
+from app.state import SageState
 from app.agents.problem_framing.schema import ProblemFrame
-from app.agents.problem_framing.hilp_policy import compute_hilp_meta
-from app.agents.utils import render_hilp_prompt
-from app.utils.phases import set_phase_data_update, set_phase_status_update
-from app.utils.state_helpers import get_primary_user_query
+from app.utils.phases import set_phase_status_update
 
 
 def make_node_problem_framing(
@@ -22,16 +19,6 @@ def make_node_problem_framing(
 ) -> Callable[[SageState], Command[Literal["supervisor"]]]:
 
     def node_problem_framing(state: SageState) -> Command[Literal["supervisor"]]:
-        hilp_block: Hilp | None = state.get("hilp")  # type: ignore[assignment]
-        hilp_block = hilp_block or {}
-        hilp_round = int(hilp_block.get("hilp_round", 0) or 0)
-
-        raw_answers = hilp_block.get("hilp_answers")
-        if isinstance(raw_answers, dict):
-            hilp_answers: dict[str, Literal["yes", "no", "unknown"]] = raw_answers
-        else:
-            hilp_answers = {}
-
         agent_input: dict[str, Any] = {
             "user_query": state.get("user_query", ""),
             "messages": state.get("messages", []),
@@ -47,47 +34,27 @@ def make_node_problem_framing(
         if not isinstance(pf, ProblemFrame):
             pf = ProblemFrame.model_validate(pf)
 
-        hilp_meta = compute_hilp_meta(pf)
+        hilp_meta = None
+        clarifications: list[dict[str, Any]] = []
+        if isinstance(result, dict):
+            hilp_meta = result.get("hilp_meta")
+            clarifications = list(result.get("hilp_clarifications") or [])
 
-        updates: dict[str, Any] = {}
-        updates |= set_phase_data_update(state, phase, pf)
-        updates["problem_frame"] = pf
-        updates["hilp_meta"] = hilp_meta
+        phases = dict(state.get("phases") or {})
+        entry: dict[str, Any] = {
+            "data": pf.model_dump(),
+            "status": "complete",
+        }
+        if hilp_meta:
+            entry["hilp_meta"] = hilp_meta
+        if clarifications:
+            entry["hilp_clarifications"] = clarifications
+        phases[phase] = entry
 
-        if hilp_meta.get("needs_hilp"):
-            user_query = get_primary_user_query(state)
-            questions = hilp_meta.get("questions", [])
-            questions_block = "\n".join(f"- {q['text']}" for q in questions)
-
-            prompt = render_hilp_prompt(
-                agent_name="problem_framing",
-                context={
-                    "user_query": user_query,
-                    "questions_block": questions_block,
-                },
-            )
-
-            req: HilpRequest = {
-                "phase": phase,
-                "prompt": prompt,
-                "goto_after": goto_after,
-                "max_rounds": hilp_meta.get("max_rounds", 1),
-                "questions": questions,
-            }
-
-            updates["hilp"] = {
-                "hilp_request": req,
-                "hilp_round": hilp_round,
-                "hilp_answers": hilp_answers,
-            }
-            updates |= set_phase_status_update(state, phase, "pending")
-        else:
-            updates["hilp"] = {
-                "hilp_request": None,
-                "hilp_round": hilp_round,
-                "hilp_answers": hilp_answers,
-            }
-            updates |= set_phase_status_update(state, phase, "complete")
+        updates: dict[str, Any] = {
+            "phases": phases,
+            "problem_frame": pf,
+        }
 
         return Command(update=updates, goto=goto_after)
 

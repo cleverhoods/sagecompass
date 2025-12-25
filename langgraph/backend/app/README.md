@@ -57,7 +57,7 @@ If using `Command(goto=...)` as the routing mechanism:
 ### Required tests (current architecture)
 - **Routing unit tests**: supervisor decisions given `SageState` snapshots.
 - **Node unit tests**: each worker node tested with a stub/fake agent (no real LLM).
-- **Interrupt integration test**: a run that must produce an interrupt when `hilp_request` is set, plus a resume path.
+- **HILP middleware tests**: boolean clarification loops driven by `runtime.human(...)` must be validated with stubs/fakes.
 
 ### Required debugging primitives
 - **Single-node runner**: execute one node with a given `SageState`, return its `Command`.
@@ -77,9 +77,9 @@ app/
 │   └── graph.py                    -> Main graph of SageCompass.
 ├── middlewares/                    -> Generic middlewares, not bound to specific agent/tool.
 │   ├── dynamic_prompts.py          -> Creates dynamic system-prompt middleware from a prompt template.
+│   ├── hilp.py                     -> Boolean HILP middleware leveraging runtime.human for clarifications.
 │   └── tool_errors.py              -> Wraps tool calls and returns friendly tool error messages.
 ├── nodes/                          -> All node that are present in the system lives here.
-│   ├── hilp.py                     -> Generic HILP node.
 │   ├── problem_framing.py          -> Problem framing node.
 │   └── supervisor.py               -> SageCompass main supervisor node.
 ├── tools/                          -> Tools registry

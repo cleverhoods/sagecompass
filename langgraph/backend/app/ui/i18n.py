@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from app.state import SageState
 
@@ -62,20 +62,3 @@ class TranslationService:
         except Exception as e:
             (state.setdefault("errors", [])).append(f"ui_translation_error: {e}")
             return text
-
-    def translate_hilp_request(self, state: SageState, req: Dict[str, Any]) -> Dict[str, Any]:
-        user_lang = (state.get("user_lang") or "en").lower()
-        if not user_lang.startswith("hu"):
-            return req
-
-        req2 = dict(req)
-        req2["prompt"] = self.translate_text(state, req.get("prompt", ""))
-
-        qs = []
-        for q in (req.get("questions") or []):
-            q2 = dict(q)
-            q2["text"] = self.translate_text(state, q.get("text", ""))
-            qs.append(q2)
-
-        req2["questions"] = qs
-        return req2

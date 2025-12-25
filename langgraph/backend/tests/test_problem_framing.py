@@ -1,9 +1,19 @@
-from app.agents.problem_framing.schema import AmbiguityItem, ProblemFrame
+from app.agents.problem_framing.schema import (
+    AmbiguityItem,
+    AmbiguityResolution,
+    AmbiguityResolutionAssumption,
+    ProblemFrame,
+)
 from app.nodes.problem_framing import make_node_problem_framing
 
 
 class StubAgentNeedsHilp:
     def invoke(self, _):
+        resolution = AmbiguityResolution(
+            yes=AmbiguityResolutionAssumption(impact_direction="+", impact_value=0.8, assumption="Proceed"),
+            no=AmbiguityResolutionAssumption(impact_direction="-", impact_value=0.4, assumption="Hold"),
+            unknown=AmbiguityResolutionAssumption(impact_direction="0", impact_value=0.5, assumption="Re-evaluate"),
+        )
         return {
             "structured_response": ProblemFrame(
                 business_domain="test",
@@ -14,12 +24,14 @@ class StubAgentNeedsHilp:
                         key="criteria_for_tool_selection",
                         description="Missing criteria for tool selection.",
                         clarifying_question="?",
-                        resolution=None,
+                        resolution=resolution,
                         importance=0.9,
                         confidence=0.9,
                     )
                 ],
-            )
+            ),
+            "hilp_meta": {"needs_hilp": True},
+            "hilp_clarifications": [{"question_id": "criteria_for_tool_selection", "answer": "yes"}],
         }
 
 
@@ -35,24 +47,22 @@ class StubAgentNoHilp:
         }
 
 
-def test_pf_sets_hilp_request_when_needed():
+def test_pf_persists_hilp_metadata_when_present():
     node = make_node_problem_framing(StubAgentNeedsHilp(), goto_after="supervisor")
-    cmd = node({"user_query": "hi", "messages": [], "phases": {}, "hilp": {"hilp_round": 0}})
+    cmd = node({"user_query": "hi", "messages": [], "phases": {}})
 
     assert cmd.goto == "supervisor"
-    hilp_block = cmd.update["hilp"]
-    assert isinstance(hilp_block["hilp_request"], dict)
-    assert hilp_block["hilp_request"]["phase"] == "problem_framing"
-    assert hilp_block["hilp_request"]["goto_after"] == "supervisor"
-    assert hilp_block["hilp_round"] == 0
-    assert hilp_block["hilp_answers"] == {}
+    phase_entry = cmd.update["phases"]["problem_framing"]
+    assert phase_entry["status"] == "complete"
+    assert phase_entry["hilp_meta"]["needs_hilp"] is True
+    assert phase_entry["hilp_clarifications"][0]["answer"] == "yes"
 
 
 def test_pf_completes_when_hilp_not_needed():
     node = make_node_problem_framing(StubAgentNoHilp(), goto_after="supervisor")
-    cmd = node({"user_query": "hi", "messages": [], "phases": {}, "hilp": {"hilp_round": 2}})
+    cmd = node({"user_query": "hi", "messages": [], "phases": {}})
 
     assert cmd.goto == "supervisor"
-    hilp_block = cmd.update["hilp"]
-    assert hilp_block["hilp_request"] is None
-    assert hilp_block["hilp_round"] == 2
+    phase_entry = cmd.update["phases"]["problem_framing"]
+    assert phase_entry["status"] == "complete"
+    assert "hilp_meta" not in phase_entry

@@ -7,12 +7,51 @@ sys.modules.setdefault("langgraph", langgraph_pkg)
 
 graph_mod = types.ModuleType("langgraph.graph")
 graph_mod.END = "END"
+graph_mod.START = "START"
 
 def add_messages(existing, new):
     return (existing or []) + (new or [])
 
 graph_mod.add_messages = add_messages
+
+
+class StateGraph:
+    def __init__(self, state_type):
+        self.state_type = state_type
+        self.nodes = {}
+
+    def add_node(self, name, node):
+        self.nodes[name] = node
+
+    def add_edge(self, *_args, **_kwargs):
+        return None
+
+    def compile(self):
+        nodes = self.nodes
+
+        class _Compiled:
+            def invoke(self, state):
+                # Very small stub: run the requested node if provided.
+                if "supervisor" in nodes:
+                    cmd = nodes["supervisor"](state)
+                    next_state = dict(state)
+                    next_state.update(getattr(cmd, "update", {}) or {})
+                    goto = getattr(cmd, "goto", None)
+                    if goto in nodes:
+                        result = nodes[goto](next_state)
+                        return getattr(result, "update", None) or next_state
+                    return next_state
+                return state
+
+        return _Compiled()
+
+
+graph_mod.StateGraph = StateGraph
 sys.modules["langgraph.graph"] = graph_mod
+
+graph_state_mod = types.ModuleType("langgraph.graph.state")
+graph_state_mod.CompiledStateGraph = object
+sys.modules["langgraph.graph.state"] = graph_state_mod
 
 
 types_mod = types.ModuleType("langgraph.types")
@@ -31,6 +70,57 @@ def interrupt(payload):
 types_mod.Command = Command
 types_mod.interrupt = interrupt
 sys.modules["langgraph.types"] = types_mod
+
+# Stub langchain agents/modules
+langchain_pkg = types.ModuleType("langchain")
+sys.modules.setdefault("langchain", langchain_pkg)
+
+agents_mod = types.ModuleType("langchain.agents")
+
+
+class AgentState(dict):
+    pass
+
+
+class _FakeAgent:
+    def __init__(self, *, middleware=None, **kwargs):
+        self._middleware = middleware or []
+
+    def invoke(self, *_args, **_kwargs):
+        return {}
+
+
+def create_agent(*, model=None, tools=None, middleware=None, response_format=None):
+    return _FakeAgent(middleware=middleware)
+
+
+agents_mod.AgentState = AgentState
+agents_mod.create_agent = create_agent
+sys.modules["langchain.agents"] = agents_mod
+
+middleware_mod = types.ModuleType("langchain.agents.middleware")
+
+
+class AgentMiddleware:
+    pass
+
+
+class TodoListMiddleware(AgentMiddleware):
+    def __call__(self, *args, **kwargs):
+        return None
+
+
+def after_agent(fn):
+    return fn
+
+
+middleware_mod.AgentMiddleware = AgentMiddleware
+middleware_mod.TodoListMiddleware = TodoListMiddleware
+middleware_mod.after_agent = after_agent
+sys.modules["langchain.agents.middleware"] = middleware_mod
+
+agents_mod.middleware = middleware_mod
+langchain_pkg.agents = agents_mod
 
 # Stub langchain_core modules
 langchain_core_pkg = types.ModuleType("langchain_core")
@@ -85,6 +175,7 @@ class BaseModel:
 
 pydantic_mod.Field = Field
 pydantic_mod.BaseModel = BaseModel
+pydantic_mod.ValidationError = type("ValidationError", (Exception,), {})
 sys.modules["pydantic"] = pydantic_mod
 
 # Stub structlog
@@ -143,6 +234,16 @@ def ChatPromptTemplate(*args, **kwargs):
 prompts_mod.ChatPromptTemplate = ChatPromptTemplate
 sys.modules["langchain_core.prompts"] = prompts_mod
 
+tools_mod = types.ModuleType("langchain_core.tools")
+
+
+class BaseTool:
+    pass
+
+
+tools_mod.BaseTool = BaseTool
+sys.modules["langchain_core.tools"] = tools_mod
+
 # Extend structlog stdlib
 structlog_mod.stdlib = types.SimpleNamespace(add_log_level=lambda *args, **kwargs: None)
 
@@ -153,6 +254,9 @@ class _BoundLogger:
         return self
 
     def info(self, *args, **kwargs):
+        pass
+
+    def warning(self, *args, **kwargs):
         pass
 
 
