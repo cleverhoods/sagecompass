@@ -1,3 +1,5 @@
+> Scope: Applies to all files under `langgraph/` unless overridden by a deeper AGENTS.md.
+
 # LangGraph Contributions (Codex)
 
 For any changes under `langgraph/`, follow the architectural contracts documented in `backend/app/README.md` and the per-package READMEs under `backend/app/*/README.md`. Keep contributions aligned with the LangGraph-oriented layout described there and avoid introducing patterns that conflict with the stated state/graph/agent/tool separation.

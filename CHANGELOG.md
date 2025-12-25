@@ -1,5 +1,24 @@
 # SageCompass changelog
-## v6.0 – alpha1
+
+## [Unreleased]
+### Added
+
+### Changed
+
+### Fixed
+
+### Removed
+
+### Security
+
+---
+
+## Legacy releases
+
+### v6.0 – alpha2
+- Added AGENTS.md files
+
+### v6.0 – alpha1
 - Created enforced Contracts (via tests)
 - Added Added Agent Chat UI via DDev, 
 - added generic Tool and Middleware management 
@@ -14,7 +33,7 @@
 - Added experimental translation agent with language detection and translation nodes
 - Added capability of step-debug (probably should remove eventually)
 
-## v5.0 - alpha2
+### v5.0 - alpha2
 - Project package management is done via 'uv' (poetry has been removed)
 - Restructured project
   - Agents and Nodes have been separated
@@ -28,12 +47,12 @@
 - Models have been updated with Descriptions, prompts are heavily relying on it
 - Added global_system.prompt
  
-## v5.0 - alpha1
+### v5.0 - alpha1
 - Implement LangGraph solution
 - Vastly reduce the size of the project
 - Reorganize agents
  
-## v4.0 - alpha5
+### v4.0 - alpha5
 - Reorganize project → each agent in its own folder (/agents/{agent}/)
 - Keep utils/ for infrastructure and drop DI concepts
 - Redefine BaseAgent → now CoreAgent with full PRAL and hooks
@@ -50,7 +69,7 @@
 - Shared state dictionary for intermediate results
 - Schema validation between agent outputs/inputs
 
-## v4.0 - alpha4
+### v4.0 - alpha4
 - Moved provider config under config/
 - Added 'agent' config
 - Updated yaml configuration data structures
@@ -60,7 +79,7 @@
 - Rewrite agents/base.py to comply with generic agent abstraction (PRAL)
 - Rewrite agents/problem_framing.py to comply with base.py abstraction
 
-## v4.0 - alpha3
+### v4.0 - alpha3
 - Created BaseAgent abstract class
 - Implemented basic PRAL
 - Implemented *_shared* and *problem_framing* Schemas and their validation
@@ -73,18 +92,18 @@
 - Updated README.md
 - Created LEARNING.md to store certain learning materials
 
-## v4.0 - alpha2
+### v4.0 - alpha2
 - Rework ddev integration into a separate Python service
 - Replacing requirements.txt with Potery (pyproject.toml) to manage project requirements.
 - Added new ddev command: ddev poetry
 - Fine-tuning python compose to manage Poetry and Python cache
 
-## v4.0 - alpha1 
+### v4.0 - alpha1 
 - Adding DDev environment (generic, with python 3 installed on web)
 - Adding Python project necessities (requirements.txt)
 - Reorganising project setup (configs, prompts, providers, utils, main/logic and ui.py)
 
-## v1.0 - v3.3  
+### v1.0 - v3.3  
 - v3.3 – Pumping up version number 
 - v3.2 – Added decision_confidence, handling missing baseline 
 - v3.1 – Missed knowledge files references 
