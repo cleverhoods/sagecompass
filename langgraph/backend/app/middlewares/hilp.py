@@ -1,32 +1,38 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, TypedDict
 
 from langchain.agents import AgentState
 from langchain.agents.middleware import after_agent
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field, ValidationError
 
 from app.utils.hilp_core import HilpMeta
 from app.utils.logger import get_logger
 
 
-class HilpBooleanPrompt(BaseModel):
-    """
-    Schema for a single boolean HILP clarification prompt.
-    """
-
-    phase: str = Field(..., description="Phase that raised this clarification.")
-    question_id: str = Field(..., description="Stable identifier for the ambiguity.")
-    question: str = Field(..., description="Yes/No/Unknown question to ask the user.")
+class HilpBooleanQuestion(TypedDict):
+    id: str
+    text: str
+    type: Literal["boolean"]
 
 
 class HilpBooleanAnswer(BaseModel):
-    """
-    Schema for yes/no/unknown HILP answers collected from the user.
-    """
+    """Schema for yes/no/unknown HILP answers collected from the user."""
 
     question_id: str
     answer: Literal["yes", "no", "unknown"]
+
+
+class HilpClarificationRequest(TypedDict, total=False):
+    phase: str
+    questions: list[HilpBooleanQuestion]
+    reason: str
+    confidence: float
+
+
+class HilpClarificationResponse(TypedDict):
+    answers: list[dict[str, str]]
 
 
 def make_boolean_hilp_middleware(
@@ -40,8 +46,8 @@ def make_boolean_hilp_middleware(
 
     - Validates the agent's structured output using `output_schema`.
     - Computes HILP metadata via `compute_meta`.
-    - If boolean questions are present and the runtime exposes `human(...)`,
-      prompts for yes/no/unknown answers using `HilpBooleanPrompt` / `HilpBooleanAnswer`.
+    - If boolean questions are present, interrupts execution to collect
+      yes/no/unknown answers using `langgraph.types.interrupt`.
     - Returns a dict merged into the agent result with:
         - `structured_response`: validated model
         - `hilp_meta`: metadata + (optional) `clarifications`
@@ -74,36 +80,49 @@ def make_boolean_hilp_middleware(
 
         clarifications: list[HilpBooleanAnswer] = []
 
-        if questions and hasattr(runtime, "human"):
-            for q in questions:
-                prompt = HilpBooleanPrompt(
-                    phase=phase,
-                    question_id=str(q.get("id")),
-                    question=q.get("text") or "",
-                )
+        if questions:
+            request: HilpClarificationRequest = {
+                "phase": phase,
+                "questions": questions,  # type: ignore[list-item]
+            }
+            if reason := meta.get("reason"):
+                request["reason"] = reason
+            if (confidence := meta.get("confidence")) is not None:
                 try:
-                    raw_answer = runtime.human(prompt, schema=HilpBooleanAnswer)
-                    clarifications.append(HilpBooleanAnswer.model_validate(raw_answer))
+                    request["confidence"] = float(confidence)
+                except Exception:
+                    pass
+
+            response_raw = interrupt(request)
+
+            try:
+                response = HilpClarificationResponse(**response_raw)  # type: ignore[arg-type]
+            except Exception as exc:
+                logger.warning(
+                    "HILP middleware: invalid interrupt response",
+                    phase=phase,
+                    error=str(exc),
+                )
+                response = {"answers": []}
+
+            for ans in response.get("answers", []):
+                answer_val = ans.get("answer") if isinstance(ans, dict) else None
+                qid = ans.get("question_id") if isinstance(ans, dict) else None
+                if answer_val not in {"yes", "no", "unknown"} or not qid:
+                    logger.warning(
+                        "HILP middleware: invalid answer",
+                        phase=phase,
+                        error="invalid_choice",
+                    )
+                    continue
+                try:
+                    clarifications.append(HilpBooleanAnswer.model_validate(ans))
                 except ValidationError as exc:
                     logger.warning(
-                        "HILP middleware: invalid human response",
+                        "HILP middleware: invalid answer",
                         phase=phase,
                         error=str(exc),
-                        question_id=prompt.question_id,
                     )
-                except Exception as exc:
-                    logger.warning(
-                        "HILP middleware: runtime.human failed",
-                        phase=phase,
-                        error=str(exc),
-                        question_id=prompt.question_id,
-                    )
-        elif questions:
-            logger.warning(
-                "HILP middleware: runtime lacks human(); skipping clarifications",
-                phase=phase,
-                question_count=len(questions),
-            )
 
         meta_out: dict[str, Any] = dict(meta)
         if clarifications:

@@ -9,6 +9,6 @@
   - enforce execution policies,
   - attach metadata to the agent runtime result.
 - Middleware must not be the only location where routing decisions exist. Nodes must persist routing signals into `SageState`.
-- HILP interactions must be implemented via middleware (see `hilp.py`) using dedicated prompt/answer schemas and `runtime.human(...)` instead of stateful nodes.
+- HILP interactions must be implemented via middleware (see `hilp.py`) using dedicated prompt/answer schemas and `langgraph.types.interrupt(...)` instead of stateful nodes.
 
 ---

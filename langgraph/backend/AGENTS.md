@@ -20,8 +20,8 @@ For rationale and examples, see `app/README.md` and per-folder READMEs.
 - Nodes must receive dependencies via factories/build functions.
 
 ## HITL (HILP) Contract
-- HITL is middleware-driven: use `app/middlewares/hilp.py` and `runtime.human(...)` to collect boolean clarifications.
-- Nodes MUST NOT call `interrupt()` or mutate ad-hoc HILP state.
+- HITL is middleware-driven: use `app/middlewares/hilp.py` and `langgraph.types.interrupt(...)` to collect boolean clarifications.
+- Nodes MUST NOT call `interrupt()` directly or mutate ad-hoc HILP state; only middleware issues interrupts.
 - Nodes persist middleware outputs (`hilp_meta`, `hilp_clarifications`) alongside their phase data in `SageState["phases"][<phase>]`.
 
 ## Documentation + Tests

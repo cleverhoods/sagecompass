@@ -32,34 +32,31 @@ def _problem_frame() -> ProblemFrame:
     )
 
 
-class DummyRuntime:
-    def __init__(self, answer: str = "yes"):
-        self.answer = answer
-        self.prompts = []
-
-    def human(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        return {"question_id": prompt.question_id, "answer": self.answer}
-
-
-def test_middleware_collects_boolean_answers():
+def test_middleware_collects_boolean_answers(monkeypatch):
     state = {"structured_response": _problem_frame()}
-    runtime = DummyRuntime(answer="no")
 
-    result = problem_framing_hilp(state, runtime)
+    def fake_interrupt(payload):
+        assert payload["phase"] == "problem_framing"
+        assert payload["questions"][0]["id"] == "missing_details"
+        return {"answers": [{"question_id": "missing_details", "answer": "no"}]}
+
+    monkeypatch.setattr("app.middlewares.hilp.interrupt", fake_interrupt)
+
+    result = problem_framing_hilp(state, object())
 
     assert result["hilp_meta"]["needs_hilp"] is True
     assert result["hilp_clarifications"][0]["answer"] == "no"
-    assert runtime.prompts[0].question_id == "missing_details"
 
 
-def test_middleware_skips_when_runtime_missing_human():
+def test_middleware_handles_invalid_interrupt_payload(monkeypatch):
     state = {"structured_response": _problem_frame()}
 
-    class NoHumanRuntime:
-        pass
+    def fake_interrupt(_payload):
+        return {"answers": [{"question_id": "missing_details", "answer": "maybe"}]}
 
-    result = problem_framing_hilp(state, NoHumanRuntime())
+    monkeypatch.setattr("app.middlewares.hilp.interrupt", fake_interrupt)
+
+    result = problem_framing_hilp(state, object())
 
     assert result["hilp_meta"]["needs_hilp"] is True
     assert result["hilp_clarifications"] == []
