@@ -26,7 +26,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "debugpy>=1.8.19",
-    "pydevd-pycharm>=253.29346.46",
+    "pydevd-pycharm>=253.29346.142",
     "pytest>=9.0.2",
 ]
 
