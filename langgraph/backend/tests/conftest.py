@@ -1,6 +1,12 @@
 import importlib
 import sys
 import types
+from pathlib import Path
+
+# Ensure local offline stubs are discoverable before importing anything else.
+_STUBS_DIR = Path(__file__).resolve().parent / "stubs"
+if _STUBS_DIR.exists():
+    sys.path.insert(0, str(_STUBS_DIR))
 
 
 def _import_or_stub(module_name: str) -> types.ModuleType:
@@ -111,5 +117,7 @@ except ModuleNotFoundError:
 
 # ---------------------------------------------------------------------------
 # IMPORTANT:
-# Do NOT stub langchain/langgraph/langchain_core/pydantic/yaml here.
+# Offline LangChain/LangGraph/pydantic/yaml stubs live in tests/stubs; import
+# resolution is handled by the sys.path entry above. Avoid defining ad-hoc
+# stubs here to keep behavior consistent with those fixtures.
 # ---------------------------------------------------------------------------

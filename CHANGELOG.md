@@ -22,6 +22,8 @@
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
 - [langgraph/backend] Escaped Problem Framing few-shot rendering to avoid placeholder collisions and restored format instructions in the system prompt.
 - [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.
+- [langgraph/backend] Documented proxy and offline wheel install steps to unblock uv dependency downloads in restricted environments.
+- [langgraph/backend] Relocated offline dependency stubs to `tests/stubs` and documented their use so tests run without external downloads or sandbox network flags.
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares
