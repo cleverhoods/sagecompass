@@ -26,7 +26,7 @@ def build_app_for_cli():
 
 
 def main():
-    # maybe_attach_pycharm()
+    maybe_attach_pycharm()
     app = build_app_for_cli()
     ui = SageCompassUI(app)
     ui.launch()

@@ -10,6 +10,7 @@ For rationale and examples, see `app/README.md` and per-folder READMEs.
 - Phase outputs MUST be written under `state["phases"][<phase>]` as:
   - `{"status": "pending|complete|stale", "data": <schema dump>}`
 - Do not write phase outputs to ad-hoc top-level keys (e.g., `problem_frame`) unless explicitly added to `SageState` and covered by tests.
+- Phase failures should append to `state["errors"]`; per-phase error details may be stored under `state["phases"][<phase>]["error"]`.
 
 ## Routing Contract
 - Routing decisions MUST be expressed via `Command(update=..., goto=...)`.

@@ -48,4 +48,6 @@ def test_problem_framing_node_marks_error_on_missing_structured_response():
     cmd: Command = node({"user_query": "Q", "messages": []})
 
     assert cmd.goto == "supervisor"
-    assert cmd.update["phases"]["problem_framing"]["status"] == "error"
+    assert cmd.update["phases"]["problem_framing"]["status"] == "stale"
+    assert cmd.update["phases"]["problem_framing"]["error"]["code"] == "missing_structured_response"
+    assert cmd.update["errors"] == ["problem_framing: missing structured_response"]

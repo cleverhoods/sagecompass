@@ -27,8 +27,19 @@ def make_node_problem_framing(
         result = pf_agent.invoke(agent_input)
         pf = result.get("structured_response") if isinstance(result, dict) else None
         if pf is None:
-            updates: dict[str, Any] = {}
-            updates |= set_phase_status_update(state, phase, "error")
+            phases = dict(state.get("phases") or {})
+            phases[phase] = {
+                "status": "stale",
+                "error": {
+                    "code": "missing_structured_response",
+                    "message": "Agent response missing structured_response.",
+                },
+            }
+
+            errors = list(state.get("errors") or [])
+            errors.append(f"{phase}: missing structured_response")
+
+            updates: dict[str, Any] = {"phases": phases, "errors": errors}
             return Command(update=updates, goto=goto_after)
 
         if not isinstance(pf, ProblemFrame):

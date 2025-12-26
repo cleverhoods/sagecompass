@@ -49,6 +49,7 @@ If using `Command(goto=...)` as the routing mechanism:
 ### Canonical outputs
 - For every phase/agent, the project must define **one canonical place** in `SageState` where that phase’s result is written.
 - Supervisor routing must check this canonical location (no mixed conventions).
+- Phase failures must be recorded in `SageState["errors"]`; optional per-phase details may be stored in `SageState["phases"][<phase>]["error"]`.
 
 ---
 

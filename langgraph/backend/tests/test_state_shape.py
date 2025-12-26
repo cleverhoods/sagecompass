@@ -19,3 +19,4 @@ def test_phase_entry_accepts_hilp_metadata():
     assert "status" in ann
     assert "hilp_meta" in ann
     assert "hilp_clarifications" in ann
+    assert "error" in ann

@@ -22,6 +22,9 @@
 - [langgraph/backend] Reorganised `tests/` folder to resemble the `app/` folder convictions.
 - [langgraph/backend] Stopped stubbing langchain related items in `tests/conftest.py`.
 - [docs] Completed root README with directory layout, setup/run steps, and pointers to component docs.
+- [docs] Add architecture review milestones and milestone checklist to ROADMAP.
+- [langgraph/backend] Route phase failures into `SageState["errors"]` and keep phase status to `pending|complete|stale`.
+- [docs] Document phase error handling in app contracts and backend AGENTS.
 - [langgraph/backend] Cleaned Gradio UI handlers to preserve session state and centralize HILP control toggles.
 - [langgraph/backend] Stubbed Gradio for UI tests to avoid dependency downloads while exercising HILP flows.
 

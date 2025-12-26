@@ -389,7 +389,16 @@ class SageCompassUI:
         with gr.Blocks(title="SageCompass") as demo:
             gr.Markdown("# SageCompass")
 
-            chatbot = gr.Chatbot(label="Conversation", height=400)
+            chatbot = gr.Chatbot(
+                label="Conversation",
+                height=400,
+                examples=[
+                    "At Auping can we use support logs, product reviews, and return reasons to identify early signals of quality degradation in certain mattress models before defect rates rise?",
+                    "Am I cool?",
+                    "Could we build a single, agency-wide model in our digital marketing - web development agency that forecasts required developer capacity per client per sprint based on project history, tech stack, and ticket complexity, to optimize planning?"
+                ],
+                cache_examples=True,
+            )
             state = gr.State(init_state())
             ui_meta = gr.State(init_ui_meta())
 
