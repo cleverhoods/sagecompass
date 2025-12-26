@@ -1,6 +1,6 @@
 [
   {
-    "original_input": "We want to reduce customer churn in our subscription business, but aren't sure if AI would help.",
+    "user_query": "We want to reduce customer churn in our subscription business, but aren't sure if AI would help.",
     "output": {
       "business_domain": "Subscription retention",
       "primary_outcome": "Reduce customer churn",
@@ -40,7 +40,7 @@
     }
   },
   {
-    "original_input": "We want to use AI to improve warehouse efficiency.",
+    "user_query": "We want to use AI to improve warehouse efficiency.",
     "output": {
       "business_domain": "Logistics and warehousing",
       "primary_outcome": "Improve operational efficiency",

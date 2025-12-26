@@ -99,8 +99,23 @@ def test_prompt_contracts():
         prompt_names=["few-shots"],
         include_global=False,
         include_format_instructions=False,
-        include_few_shots=True,
     )
     assert "Input:" in rendered
     assert "{user_query}" in rendered, "Few-shot stub must include user placeholder for final turn"
     assert rendered.strip().endswith("Output:"), "Few-shot rendering must end with empty output stub"
+
+
+def test_tests_mirror_component_layout():
+    """tests/ should mirror app component layout for clarity."""
+
+    root = ROOT / "tests"
+    expected_dirs = [
+        root / "agents" / "problem_framing",
+        root / "graphs",
+        root / "middlewares" / "hilp",
+        root / "nodes",
+        root / "tools",
+        root / "utils",
+    ]
+    for d in expected_dirs:
+        assert d.exists(), f"Expected tests directory missing: {d}"

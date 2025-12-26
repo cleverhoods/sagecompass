@@ -14,6 +14,9 @@
 - [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
 - [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
 - [prompt] Added few shot examples for Problem Framing agent.
+- [langgraph/backend] Removed redundant few-shot toggle in agent config and aligned tests directory layout with app components (agents/, middlewares/, etc.).
+- [langgraph/backend] Reorganised `tests/` folder to resemble the `app/` folder convictions.
+- [langgraph/backend] Stopped stubbing langchain related items in `tests/conftest.py`.
 
 ### Fixed
 

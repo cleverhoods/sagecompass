@@ -6,7 +6,8 @@ from functools import lru_cache
 from typing import Any, Callable, Sequence, Type
 
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, FewShotPromptWithTemplates
+
 from pydantic import BaseModel
 
 from app.utils.file_loader import FileLoader
@@ -15,9 +16,16 @@ from app.utils.file_loader import FileLoader
 def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}") -> str:
     """Load and render few-shot examples via LangChain templates.
 
-    Enforces that both the template and examples file exist, contain valid
-    payloads, and produce at least one formatted example plus a final
-    user-input stub to guide the LLM response.
+    Contract:
+    - `few-shots.prompt` must exist and be non-empty.
+    - `examples.json` must exist and contain a list.
+    - The list must include:
+        - at least one *real* example, and
+        - a trailing user stub example that ends with an empty `output`
+          and uses `original_input == user_placeholder` (default: `{user_query}`).
+
+    The implementation uses `FewShotPromptWithTemplates` to keep the formatting
+    behavior consistent with LangChain prompt-template semantics.
     """
 
     template_file = FileLoader.resolve_agent_prompt_path("few-shots", agent_name)
@@ -29,29 +37,41 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}"
     if not examples_file.exists():
         raise FileNotFoundError(examples_file)
 
-    examples = json.loads(examples_file.read_text(encoding="utf-8"))
-    if not isinstance(examples, list):
+    raw = json.loads(examples_file.read_text(encoding="utf-8"))
+    if not isinstance(raw, list):
         raise ValueError(f"examples.json must contain a list for agent '{agent_name}'")
-    if not examples:
-        raise ValueError(f"examples.json must include at least one example for agent '{agent_name}'")
+    if len(raw) < 2:
+        raise ValueError(
+            f"examples.json must include at least one example + one trailing stub for agent '{agent_name}'"
+        )
 
-    example_prompt = PromptTemplate.from_template(
-        template_str,
-        template_format="jinja2",
-    )
-
-    formatted_examples: list[str] = []
-    for ex in examples:
+    examples: list[dict[str, Any]] = []
+    for idx, ex in enumerate(raw):
         if not isinstance(ex, dict):
-            raise ValueError(f"Invalid example payload for agent '{agent_name}': {ex!r}")
-        formatted_examples.append(example_prompt.format(**ex))
+            raise ValueError(f"Invalid example payload at index {idx} for agent '{agent_name}': {ex!r}")
+        examples.append(ex)
 
-    # Append final stub for the real user input with an empty assistant output
-    formatted_examples.append(
-        example_prompt.format(original_input=user_placeholder, output="")
+    example_prompt = PromptTemplate.from_template(template_str)
+
+    prefix = PromptTemplate.from_template(
+        "Frame the following problems:",
+    )
+    suffix = PromptTemplate.from_template(
+        "Input: { input }\nOutput:",
     )
 
-    return "\n\n".join(formatted_examples)
+    few_shot = FewShotPromptWithTemplates(
+        examples=examples,
+        example_prompt=example_prompt,
+        prefix=prefix,
+        suffix=suffix,
+        input_variables=["input"],
+    )
+
+    # Keep `{user_query}` as a *literal placeholder* in the final prompt so it can
+    # be substituted later at runtime (not during prompt assembly).
+    return few_shot.format(user_query=user_placeholder)
+
 
 def compose_agent_prompt(
     agent_name: str,
@@ -60,32 +80,28 @@ def compose_agent_prompt(
     include_global: bool = True,
     include_format_instructions: bool = False,
     output_schema: Type[BaseModel] | None = None,
-    include_few_shots: bool = True,
 ) -> str:
-    """
-    Compose a full agent prompt from global + agent-specific prompt files.
-    Optionally appends format_instructions if a schema is provided.
-    """
+    parts: list[str] = []
 
-    parts = []
+    # Treat "few-shots" as a directive, not a prompt file.
+    want_few_shots = ("few-shots" in prompt_names)
+    normal_prompt_names = [n for n in prompt_names if n != "few-shots"]
 
     if include_global:
         parts.append(FileLoader.load_prompt("global_system").strip())
 
-    for name in prompt_names:
-        if name == "few-shots":
-            if not include_few_shots:
-                continue
+    # Render normal prompts in the order the caller gave.
+    for name in normal_prompt_names:
+        parts.append(FileLoader.load_prompt(name, agent_name).strip())
 
-            parts.append(_render_few_shots(agent_name))
-            continue
-
-        else:
-            parts.append(FileLoader.load_prompt(name, agent_name).strip())
-
+    # Compute format instructions once; place them BEFORE few-shots so "Output:" remains last.
     if include_format_instructions and output_schema is not None:
         parser = PydanticOutputParser(pydantic_object=output_schema)
         parts.append(parser.get_format_instructions().strip())
+
+    # Append few-shots last, so the prompt ends with "Output:".
+    if want_few_shots:
+        parts.append(_render_few_shots(agent_name))
 
     return "\n\n".join(parts)
 

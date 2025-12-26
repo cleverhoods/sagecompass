@@ -1,2 +1,2 @@
-Input: {{ original_input }}
+Input: {{ user_query }}
 Output: {{ output }}

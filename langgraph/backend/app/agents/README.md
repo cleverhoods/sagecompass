@@ -26,7 +26,7 @@
 
 ### Prompt contract
 - `system.prompt` MUST contain `{format_instructions}`.
-- If `few-shots.prompt` exists, it SHOULD be wired via template rendering **paired with `examples.json` containing at least one example and a trailing user stub**.
+- If `few-shots.prompt` exists, it SHOULD be wired via `FewShotPromptWithTemplates` from `langchain_core.prompts` **and paired with `examples.json` containing at least one example and a trailing user stub**.
 - Prompt placeholders used by an agent must be explicitly declared and validated (a prompt contract test must fail on missing placeholders).
 - Agents must not hardcode prompt content or model references. These must be driven by prompt templates and agent config.
 

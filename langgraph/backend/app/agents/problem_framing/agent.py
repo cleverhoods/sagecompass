@@ -4,11 +4,11 @@ import logging
 from typing import Sequence, Any
 
 from langchain.agents import create_agent, AgentState
-from langchain.agents.middleware import AgentMiddleware, TodoListMiddleware
+from langchain.agents.middleware import AgentMiddleware
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, PrivateAttr
 
 from app.tools import get_tools
 from app.agents.utils import compose_agent_prompt
@@ -22,10 +22,11 @@ AGENT_NAME = "problem_framing"
 
 class ProblemFramingAgentConfig(BaseModel):
     model: BaseChatModel | None = None
-    tool_names: Sequence[str] = ["nothingizer_tool"]
-    include_few_shots: bool = True
-    extra_middleware: Sequence[AgentMiddleware] = []
+    tool_names: Sequence[str] = Field(default_factory=lambda: ("nothingizer_tool",))
+    _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)
 
+    def get_extra_middleware(self) -> tuple[AgentMiddleware, ...]:
+        return tuple(self._extra_middleware)
 
 def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
     """
@@ -53,16 +54,14 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         include_global=True,
         include_format_instructions=True,
         output_schema=ProblemFrame,
-        include_few_shots=config.include_few_shots,
     )
 
     middlewares: list[AgentMiddleware[AgentState, Any]] = [
-        TodoListMiddleware(),
         problem_framing_hilp,
     ]
 
-    if config.extra_middleware:
-        middlewares.extend(config.extra_middleware)
+    if config.get_extra_middleware():
+        middlewares.extend(config.get_extra_middleware())
 
     return create_agent(
         model=model,

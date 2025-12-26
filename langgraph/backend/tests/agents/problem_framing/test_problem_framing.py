@@ -77,11 +77,10 @@ def test_agent_config_can_toggle_few_shots():
 
     prompt_without = compose_agent_prompt(
         agent_name="problem_framing",
-        prompt_names=["system", "few-shots"],
+        prompt_names=["system"],
         include_global=True,
         include_format_instructions=True,
         output_schema=ProblemFrame,
-        include_few_shots=False,
     )
 
     prompt_with = compose_agent_prompt(
@@ -90,7 +89,6 @@ def test_agent_config_can_toggle_few_shots():
         include_global=True,
         include_format_instructions=True,
         output_schema=ProblemFrame,
-        include_few_shots=True,
     )
 
     assert "Input:" not in prompt_without

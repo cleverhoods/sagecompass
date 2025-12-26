@@ -42,7 +42,7 @@ def test_middleware_collects_boolean_answers(monkeypatch):
 
     monkeypatch.setattr("app.middlewares.hilp.interrupt", fake_interrupt)
 
-    result = problem_framing_hilp(state, object())
+    result = problem_framing_hilp.after_agent(state, object())
 
     assert result["hilp_meta"]["needs_hilp"] is True
     assert result["hilp_clarifications"][0]["answer"] == "no"
@@ -56,7 +56,7 @@ def test_middleware_handles_invalid_interrupt_payload(monkeypatch):
 
     monkeypatch.setattr("app.middlewares.hilp.interrupt", fake_interrupt)
 
-    result = problem_framing_hilp(state, object())
+    result = problem_framing_hilp.after_agent(state, object())
 
     assert result["hilp_meta"]["needs_hilp"] is True
     assert result["hilp_clarifications"] == []
