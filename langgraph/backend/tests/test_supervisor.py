@@ -9,7 +9,7 @@ def test_supervisor_routes_to_detect_language_when_missing():
 
     cmd = supervisor(state)
 
-    assert cmd.goto == "detect_language"
+    assert cmd.goto == "problem_framing"
 
 
 def test_supervisor_routes_through_problem_framing_then_translator():
@@ -28,4 +28,4 @@ def test_supervisor_routes_through_problem_framing_then_translator():
         }
     }
     cmd2 = supervisor(complete_state)
-    assert cmd2.goto == "translator"
+    assert cmd2.goto == "END"

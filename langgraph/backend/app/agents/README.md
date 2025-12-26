@@ -18,7 +18,7 @@
 - `schema.py`: contains **agent input/output schemas** and structured artifacts the LLM must produce (e.g., `ProblemFrame`, `KpiSet`, ambiguity structures).
 - `prompts/` folder:
   - MUST contain `system.prompt`
-  - MAY contain `few-shots.prompt` (recommended)
+  - MAY contain `few-shots.prompt` (recommended) **and a matching `examples.json`**.
   - HILP interactions are middleware-driven (see `app/middlewares/hilp.py`) and should not rely on separate `hilp.prompt` files.
 - `mw.py`:
   - Contains middleware hooks/decorators (glue) for this agent.
@@ -26,7 +26,7 @@
 
 ### Prompt contract
 - `system.prompt` MUST contain `{format_instructions}`.
-- If `few-shots.prompt` exists, it SHOULD be wired via `FewShotPromptWithTemplates` from `langchain_core.prompts`.
+- If `few-shots.prompt` exists, it SHOULD be wired via `FewShotPromptWithTemplates` from `langchain_core.prompts` **and paired with `examples.json` containing at least one example**.
 - Prompt placeholders used by an agent must be explicitly declared and validated (a prompt contract test must fail on missing placeholders).
 - Agents must not hardcode prompt content or model references. These must be driven by prompt templates and agent config.
 

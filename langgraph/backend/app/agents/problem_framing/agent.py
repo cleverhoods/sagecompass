@@ -52,7 +52,8 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         prompt_names=["system", "few-shots"],
         include_global=True,
         include_format_instructions=True,
-        output_schema=ProblemFrame
+        output_schema=ProblemFrame,
+        include_few_shots=config.include_few_shots,
     )
 
     middlewares: list[AgentMiddleware[AgentState, Any]] = [

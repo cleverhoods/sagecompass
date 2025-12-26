@@ -1,3 +1,5 @@
+import pytest
+
 from app.agents.problem_framing.schema import (
     AmbiguityItem,
     AmbiguityResolution,
@@ -66,3 +68,30 @@ def test_pf_completes_when_hilp_not_needed():
     phase_entry = cmd.update["phases"]["problem_framing"]
     assert phase_entry["status"] == "complete"
     assert "hilp_meta" not in phase_entry
+
+
+def test_agent_config_can_toggle_few_shots():
+    pytest.importorskip("langchain_core.output_parsers")
+
+    from app.agents.utils import compose_agent_prompt
+
+    prompt_without = compose_agent_prompt(
+        agent_name="problem_framing",
+        prompt_names=["system", "few-shots"],
+        include_global=True,
+        include_format_instructions=True,
+        output_schema=ProblemFrame,
+        include_few_shots=False,
+    )
+
+    prompt_with = compose_agent_prompt(
+        agent_name="problem_framing",
+        prompt_names=["system", "few-shots"],
+        include_global=True,
+        include_format_instructions=True,
+        output_schema=ProblemFrame,
+        include_few_shots=True,
+    )
+
+    assert "Input:" not in prompt_without
+    assert "Input:" in prompt_with

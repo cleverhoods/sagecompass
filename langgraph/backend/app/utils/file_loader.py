@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os, json, yaml
 from functools import lru_cache
+from pathlib import Path
 
 from app.utils.logger import log
 from app.utils.paths import APP_ROOT, AGENTS_DIR, CONFIG_DIR
@@ -64,6 +65,15 @@ class FileLoader:
                 AGENTS_DIR, agent_name, "prompts", f"{prompt_name}.prompt"
             )
         return cls._read_file(file_path, category="prompt")
+
+    @classmethod
+    def resolve_agent_prompt_path(cls, prompt_name: str, agent_name: str) -> Path:
+        """Resolve the path to an agent prompt and ensure it exists."""
+
+        prompt_path = AGENTS_DIR / agent_name / "prompts" / f"{prompt_name}.prompt"
+        if not prompt_path.exists():
+            raise FileNotFoundError(prompt_path)
+        return prompt_path
 
     @classmethod
     @lru_cache(maxsize=None)

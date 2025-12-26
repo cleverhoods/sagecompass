@@ -10,6 +10,30 @@ from pydantic import BaseModel
 
 from app.utils.file_loader import FileLoader
 
+
+def _render_few_shots(agent_name: str) -> str:
+    """Load and render few-shot examples via LangChain templates.
+
+    Enforces that both the template and examples file exist and produce
+    at least one formatted message.
+    """
+
+    template_file = FileLoader.resolve_agent_prompt_path("few-shots", agent_name)
+    examples_file = template_file.with_name("examples.json")
+    if not examples_file.exists():
+        raise FileNotFoundError(examples_file)
+
+    prompt_template = FewShotPromptWithTemplates.from_files(
+        template_file=str(template_file),
+        examples_file=str(examples_file),
+    )
+
+    formatted_messages = prompt_template.format_messages()
+    if not formatted_messages:
+        raise ValueError(f"No few-shot examples produced for agent '{agent_name}'")
+
+    return "\n".join([m.content for m in formatted_messages])
+
 def compose_agent_prompt(
     agent_name: str,
     prompt_names: Sequence[str],
@@ -17,6 +41,7 @@ def compose_agent_prompt(
     include_global: bool = True,
     include_format_instructions: bool = False,
     output_schema: Type[BaseModel] | None = None,
+    include_few_shots: bool = True,
 ) -> str:
     """
     Compose a full agent prompt from global + agent-specific prompt files.
@@ -29,25 +54,12 @@ def compose_agent_prompt(
         parts.append(FileLoader.load_prompt("global_system").strip())
 
     for name in prompt_names:
-        # Special handling for few-shots
         if name == "few-shots":
-            try:
-                # Load template and examples from agent-specific path
-                prompt_path = FileLoader.resolve_agent_prompt_path(name, agent_name)
-                prompt_dir = prompt_path.parent
-                template_file = prompt_dir / "few-shots.prompt"
-                examples_file = prompt_dir / "examples.json"
+            if not include_few_shots:
+                continue
 
-                prompt_template = FewShotPromptWithTemplates.from_files(
-                    template_file=str(template_file),
-                    examples_file=str(examples_file)
-                )
-
-                formatted = "\n".join([m.content for m in prompt_template.format_messages()])
-                parts.append(formatted)
-
-            except FileNotFoundError:
-                continue  # silently skip if no few-shots available
+            parts.append(_render_few_shots(agent_name))
+            continue
 
         else:
             parts.append(FileLoader.load_prompt(name, agent_name).strip())

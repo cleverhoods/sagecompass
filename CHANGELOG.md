@@ -7,11 +7,11 @@
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
 
 ### Changed
-- [langgraph/backend] 
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
 - [langgraph/backend] Refactored agent.py to support stateless, config-driven agent construction via agent specific AgentConfig. Enables LangGraph compatibility and improves testability.
 - [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
 - [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
+- [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
 
 ### Fixed
 
