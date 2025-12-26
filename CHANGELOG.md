@@ -13,6 +13,7 @@
 - [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
 - [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
 - [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
+- [prompt] Added few shot examples for Problem Framing agent.
 
 ### Fixed
 
