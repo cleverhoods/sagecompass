@@ -88,3 +88,19 @@ def test_prompt_contracts():
         data = json.load(f)
     assert isinstance(data, list), "examples.json must contain a list of examples"
     assert len(data) >= 1, "examples.json must include at least one example"
+
+    # Render few-shots to ensure template/examples compatibility and trailing stub
+    import pytest
+
+    pytest.importorskip("langchain_core.output_parsers")
+    from app.agents.utils import compose_agent_prompt
+    rendered = compose_agent_prompt(
+        agent_name="problem_framing",
+        prompt_names=["few-shots"],
+        include_global=False,
+        include_format_instructions=False,
+        include_few_shots=True,
+    )
+    assert "Input:" in rendered
+    assert "{user_query}" in rendered, "Few-shot stub must include user placeholder for final turn"
+    assert rendered.strip().endswith("Output:"), "Few-shot rendering must end with empty output stub"

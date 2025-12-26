@@ -12,6 +12,7 @@
 - [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
 - [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
 - [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
+- [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
 
 ### Fixed
 

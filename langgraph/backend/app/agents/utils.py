@@ -1,38 +1,57 @@
 from __future__ import annotations
 
 import importlib
+import json
 from functools import lru_cache
 from typing import Any, Callable, Sequence, Type
 
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import FewShotPromptWithTemplates
+from langchain_core.prompts import PromptTemplate
 from pydantic import BaseModel
 
 from app.utils.file_loader import FileLoader
 
 
-def _render_few_shots(agent_name: str) -> str:
+def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}") -> str:
     """Load and render few-shot examples via LangChain templates.
 
-    Enforces that both the template and examples file exist and produce
-    at least one formatted message.
+    Enforces that both the template and examples file exist, contain valid
+    payloads, and produce at least one formatted example plus a final
+    user-input stub to guide the LLM response.
     """
 
     template_file = FileLoader.resolve_agent_prompt_path("few-shots", agent_name)
+    template_str = template_file.read_text(encoding="utf-8").strip()
+    if not template_str:
+        raise ValueError(f"few-shots.prompt is empty for agent '{agent_name}'")
+
     examples_file = template_file.with_name("examples.json")
     if not examples_file.exists():
         raise FileNotFoundError(examples_file)
 
-    prompt_template = FewShotPromptWithTemplates.from_files(
-        template_file=str(template_file),
-        examples_file=str(examples_file),
+    examples = json.loads(examples_file.read_text(encoding="utf-8"))
+    if not isinstance(examples, list):
+        raise ValueError(f"examples.json must contain a list for agent '{agent_name}'")
+    if not examples:
+        raise ValueError(f"examples.json must include at least one example for agent '{agent_name}'")
+
+    example_prompt = PromptTemplate.from_template(
+        template_str,
+        template_format="jinja2",
     )
 
-    formatted_messages = prompt_template.format_messages()
-    if not formatted_messages:
-        raise ValueError(f"No few-shot examples produced for agent '{agent_name}'")
+    formatted_examples: list[str] = []
+    for ex in examples:
+        if not isinstance(ex, dict):
+            raise ValueError(f"Invalid example payload for agent '{agent_name}': {ex!r}")
+        formatted_examples.append(example_prompt.format(**ex))
 
-    return "\n".join([m.content for m in formatted_messages])
+    # Append final stub for the real user input with an empty assistant output
+    formatted_examples.append(
+        example_prompt.format(original_input=user_placeholder, output="")
+    )
+
+    return "\n\n".join(formatted_examples)
 
 def compose_agent_prompt(
     agent_name: str,
