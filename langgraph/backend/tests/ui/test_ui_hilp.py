@@ -15,6 +15,18 @@ class _InterruptingApp:
         yield {"event": "interrupt", "data": self.payload, "id": "hilp-1"}
 
 
+class _StreamEventsInterruptingApp:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def stream_events(self, runner_input, *, config):
+        yield {
+            "event": "interrupt",
+            "data": self.payload,
+            "metadata": {"interrupt_id": "hilp-meta"},
+        }
+
+
 class _CompletingApp:
     def stream(self, runner_input, *, config, stream_mode):
         return iter([])
@@ -73,6 +85,41 @@ def test_handle_user_question_surfaces_hilp_interrupt():
     assert submit_update.visible is False
     assert state["phases"] == {}
     assert state["user_query"] == "Hello"
+
+
+def test_handle_user_question_handles_stream_events_interrupt():
+    payload = {
+        "phase": "problem_framing",
+        "reason": "Need quick confirmation",
+        "questions": [{"id": "q1", "text": "Is this B2B?"}],
+    }
+    ui = SageCompassUI(_StreamEventsInterruptingApp(payload))
+
+    (
+        history,
+        state,
+        ui_meta,
+        hilp_md,
+        question_dropdown,
+        btn_yes,
+        btn_no,
+        btn_unknown,
+        run_btn,
+        msg_update,
+        submit_update,
+    ) = ui.handle_user_question("Hello", None, None, None)
+
+    assert ui_meta["pending_interrupt"] == payload
+    assert ui_meta["pending_interrupt_id"] == "hilp-meta"
+    assert history[-1]["role"] == "assistant"
+    assert hilp_md.visible is True
+    assert question_dropdown.visible is True
+    assert btn_yes.visible is True
+    assert btn_no.visible is True
+    assert btn_unknown.visible is True
+    assert run_btn.visible is True
+    assert msg_update.visible is False
+    assert submit_update.visible is False
 
 
 def test_handle_hilp_answer_tracks_answers_and_next_question():

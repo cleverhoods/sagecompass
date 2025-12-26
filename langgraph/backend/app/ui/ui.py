@@ -138,19 +138,30 @@ class SageCompassUI:
         if obj is None:
             return None, None
 
+        def _metadata_id(candidate: Any) -> Optional[str]:
+            meta = getattr(candidate, "metadata", None)
+            if isinstance(meta, dict):
+                return meta.get("interrupt_id") or meta.get("checkpoint_id")
+            return None
+
         # Exception-shaped
         for attr in ("interrupt", "interrupts", "value", "data", "payload"):
             if hasattr(obj, attr):
                 val = getattr(obj, attr)
                 if val:
-                    iid = getattr(obj, "interrupt_id", None) or getattr(obj, "id", None)
+                    iid = (
+                        getattr(obj, "interrupt_id", None)
+                        or getattr(obj, "id", None)
+                        or _metadata_id(obj)
+                    )
                     if isinstance(val, list) and val:
                         return val[0], iid
                     if isinstance(val, dict):
                         return val, iid
         # Dict-shaped events
         if isinstance(obj, dict):
-            iid = obj.get("interrupt_id") or obj.get("id")
+            metadata = obj.get("metadata") or {}
+            iid = obj.get("interrupt_id") or obj.get("id") or metadata.get("interrupt_id")
             for key in ("interrupt", "value", "data", "payload"):
                 if key in obj and obj[key]:
                     val = obj[key]
@@ -166,6 +177,26 @@ class SageCompassUI:
                     return data, iid
 
         return None, None
+
+    def _extract_state(self, event: Any, current: Optional[SageState]) -> Optional[SageState]:
+        """Extract state payloads from streaming events when available."""
+        if isinstance(event, dict):
+            if event.get("event") == "values":
+                data = event.get("data") or event.get("value")
+                if isinstance(data, dict):
+                    return data
+            for key in ("data", "value", "state"):
+                candidate = event.get(key)
+                if isinstance(candidate, dict):
+                    return candidate
+
+        for attr in ("data", "value", "state"):
+            if hasattr(event, attr):
+                candidate = getattr(event, attr)
+                if isinstance(candidate, dict):
+                    return candidate
+
+        return current
 
     def _run_graph_until_interrupt(
         self,
@@ -186,16 +217,26 @@ class SageCompassUI:
         runner_input = resume_value if resume_value is not None else state
 
         try:
-            if hasattr(self.app, "stream"):
+            if hasattr(self.app, "stream_events"):
                 final_state: Optional[SageState] = None
+                for event in self.app.stream_events(runner_input, config=config):
+                    payload, iid = self._extract_interrupt(event)
+                    if payload is not None:
+                        return final_state or state, payload, iid or config.get("interrupt_id")
+                    final_state = self._extract_state(event, final_state)
+                if final_state is not None:
+                    return final_state, None, None
+
+            if hasattr(self.app, "stream"):
+                final_state = None
                 for event in self.app.stream(runner_input, config=config, stream_mode="values"):
                     payload, iid = self._extract_interrupt(event)
                     if payload is not None:
                         return final_state or state, payload, iid or config.get("interrupt_id")
-                    if isinstance(event, dict):
-                        final_state = event  # best-effort for stream_mode="values"
+                    final_state = self._extract_state(event, final_state)
                 if final_state is not None:
                     return final_state, None, None
+
             result = self.app.invoke(runner_input, config=config)
             payload, iid = self._extract_interrupt(result)
             if payload is not None:
