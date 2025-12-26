@@ -1,13 +1,18 @@
 # Agents
 
 ## Agent-scoped contracts
+- Agents must be stateless and re-creatable per invocation.
 
 ### Folder contract
 - Each agent is encapsulated under: `app/agents/<agent_name>/`.
 
 ### Required files
-- `agent.py` (or `factory.py`): exposes `build_agent(...) -> Runnable` for the agent.
-  - Responsibilities: model selection, tool list selection, middleware wiring, response_format wiring.
+- `agent.py`: exposes `build_agent(config: AgentConfig) -> Runnable` for the agent.
+  - Responsibilities:
+    - Model selection (via config or default fallback)
+    - Tool and middleware wiring 
+    - Prompt composition using system/few-shot prompts 
+    - Response schema attachment (response_format)
 - `config.yml`: default configuration for this agent.
   - Responsibilities: default model/provider settings and **policy knobs** (e.g., HILP thresholds).
 - `schema.py`: contains **agent input/output schemas** and structured artifacts the LLM must produce (e.g., `ProblemFrame`, `KpiSet`, ambiguity structures).
@@ -23,6 +28,7 @@
 - `system.prompt` MUST contain `{format_instructions}`.
 - If `few-shots.prompt` exists, it SHOULD be wired via `FewShotPromptWithTemplates` from `langchain_core.prompts`.
 - Prompt placeholders used by an agent must be explicitly declared and validated (a prompt contract test must fail on missing placeholders).
+- Agents must not hardcode prompt content or model references. These must be driven by prompt templates and agent config.
 
 ---
 

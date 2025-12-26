@@ -2,15 +2,21 @@
 
 ## [Unreleased]
 ### Added
+- [prompt] Created `few-shots.prompt` and `example.json` for Problem Framing agent.
+- [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
 
 ### Changed
+- [langgraph/backend] 
+- [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
+- [langgraph/backend] Refactored agent.py to support stateless, config-driven agent construction via agent specific AgentConfig. Enables LangGraph compatibility and improves testability.
 - [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
 - [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
 
 ### Fixed
 
 ### Removed
+- [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares
 - [langgraph/backend] Removed hilp.prompt-driven state machine and the hilp node in favor of middleware-first HITL handling.
 - [langgraph/backend] Removed translation agent.
 

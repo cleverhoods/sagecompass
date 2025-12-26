@@ -55,4 +55,6 @@
 - providers - https://docs.langchain.com/oss/python/integrations/providers/all_providers
 
 ## Rag
-- https://www.gptbots.ai/blog/agentic-rag
+- https://www.simplekpi.com/Blog/smart-and-smarter-kpis-explained
+- https://www.smartsheet.com/content/business-goals
+- note: rethink how stages are constructed (what is the accuracy, how to ensure confidence)

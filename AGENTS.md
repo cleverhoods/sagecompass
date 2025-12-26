@@ -93,7 +93,7 @@ All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
 ### Entry rules
 - One change = one bullet.
 - Start with a component prefix in square brackets:
-  - `[langgraph/backend]`, `[langgraph/ui]`, `[langgraph]`, `[gradio]`, `[ddev]`, `[drupal]`, `[docs]`
+  - `[langgraph/backend]`, `[langgraph/ui]`, `[gradio]`, `[ddev]`, `[drupal]`, `[docs]`, `[prompts]`
 - Use imperative, user-facing phrasing (what changed and why it matters).
 - If applicable, include references at the end: `(PR #123)` / `(issue #456)` / `(ref: <id>)`.
 

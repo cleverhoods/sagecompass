@@ -1,38 +1,62 @@
 from __future__ import annotations
 
 import importlib
-import logging
 from functools import lru_cache
 from typing import Any, Callable, Sequence, Type
 
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.prompts import FewShotPromptWithTemplates
 from pydantic import BaseModel
 
 from app.utils.file_loader import FileLoader
 
+def compose_agent_prompt(
+    agent_name: str,
+    prompt_names: Sequence[str],
+    *,
+    include_global: bool = True,
+    include_format_instructions: bool = False,
+    output_schema: Type[BaseModel] | None = None,
+) -> str:
+    """
+    Compose a full agent prompt from global + agent-specific prompt files.
+    Optionally appends format_instructions if a schema is provided.
+    """
 
-def build_agent_prompt(agent_name: str, prompt_names: Sequence[str], include_global: bool = True) -> ChatPromptTemplate:
-    """
-    Build a chat prompt template from a variety of message formats.
-    :param agent_name:
-    :param prompt_names: file base names without extension e.g.: ["system", "few-shots"]
-    :param include_global:
-    :return:
-    """
-    messages = []
+    parts = []
 
     if include_global:
-        messages.append(
-            ("system", FileLoader.load_prompt("global_system"))
-        )
+        parts.append(FileLoader.load_prompt("global_system").strip())
 
-    for prompt_name in prompt_names:
-        logging.log(logging.INFO, f"Building prompt for | '{agent_name}' | '{prompt_name}' |")
-        messages.append(
-            ("system", FileLoader.load_prompt(prompt_name, agent_name))
-        )
+    for name in prompt_names:
+        # Special handling for few-shots
+        if name == "few-shots":
+            try:
+                # Load template and examples from agent-specific path
+                prompt_path = FileLoader.resolve_agent_prompt_path(name, agent_name)
+                prompt_dir = prompt_path.parent
+                template_file = prompt_dir / "few-shots.prompt"
+                examples_file = prompt_dir / "examples.json"
 
-    return ChatPromptTemplate.from_messages(messages)
+                prompt_template = FewShotPromptWithTemplates.from_files(
+                    template_file=str(template_file),
+                    examples_file=str(examples_file)
+                )
+
+                formatted = "\n".join([m.content for m in prompt_template.format_messages()])
+                parts.append(formatted)
+
+            except FileNotFoundError:
+                continue  # silently skip if no few-shots available
+
+        else:
+            parts.append(FileLoader.load_prompt(name, agent_name).strip())
+
+    if include_format_instructions and output_schema is not None:
+        parser = PydanticOutputParser(pydantic_object=output_schema)
+        parts.append(parser.get_format_instructions().strip())
+
+    return "\n\n".join(parts)
 
 
 @lru_cache(maxsize=None)

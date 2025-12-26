@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Any, Callable, Literal, TypedDict
 
 from langchain.agents import AgentState
-from langchain.agents.middleware import after_agent
+from langchain.agents.middleware import after_agent, AgentMiddleware
+from langchain_core.runnables import RunnableConfig
 from langgraph.types import interrupt
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.utils.hilp_core import HilpMeta
 from app.utils.logger import get_logger
@@ -40,7 +41,7 @@ def make_boolean_hilp_middleware(
     phase: str,
     output_schema: type[BaseModel],
     compute_meta: Callable[[Any], HilpMeta],
-):
+) -> AgentMiddleware[AgentState, Any]:
     """
     Build a LangGraph agent middleware that manages boolean HILP clarifications.
 
@@ -57,7 +58,10 @@ def make_boolean_hilp_middleware(
     logger = get_logger("hilp_middleware")
 
     @after_agent
-    def middleware(state: AgentState, runtime: Any) -> dict[str, Any] | None:
+    def middleware(
+            state: AgentState,
+            runtime: RunnableConfig
+    ) -> dict[str, Any] | None:
         raw = state.get("structured_response")
         if raw is None:
             logger.warning("HILP middleware: missing structured_response", phase=phase)

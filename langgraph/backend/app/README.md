@@ -76,9 +76,7 @@ app/
 ├── graphs/                         -> All graphs that are present in the system lives here. 
 │   └── graph.py                    -> Main graph of SageCompass.
 ├── middlewares/                    -> Generic middlewares, not bound to specific agent/tool.
-│   ├── dynamic_prompts.py          -> Creates dynamic system-prompt middleware from a prompt template.
-│   ├── hilp.py                     -> Boolean HILP middleware leveraging runtime.human for clarifications.
-│   └── tool_errors.py              -> Wraps tool calls and returns friendly tool error messages.
+│   └──  hilp.py                     -> Boolean HILP middleware leveraging runtime.human for clarifications.
 ├── nodes/                          -> All node that are present in the system lives here.
 │   ├── problem_framing.py          -> Problem framing node.
 │   └── supervisor.py               -> SageCompass main supervisor node.
