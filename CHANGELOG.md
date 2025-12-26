@@ -15,6 +15,8 @@
 - [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
 - [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
 - [langgraph/backend] Modularized Gradio UI layout with dedicated button builders and normalized state handling for user inputs.
+- [langgraph/backend] Align Gradio ChatInterface with LangChain message history and stream message events to the UI.
+- [langgraph/backend] Stream ChatInterface responses when the LangGraph app exposes a stream API.
 - [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
 - [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
 - [prompt] Added few shot examples for Problem Framing agent.
