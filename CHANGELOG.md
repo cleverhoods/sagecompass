@@ -5,6 +5,8 @@
 - [prompt] Created `few-shots.prompt` and `example.json` for Problem Framing agent.
 - [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
+- [langgraph/backend] Added offline behavioral tests for nodes, graph wiring, and HILP middleware to exercise core contracts.
+- [docs] Documented offline test invocation via `UV_NO_SYNC=1 uv run pytest` to avoid dependency downloads.
 
 ### Changed
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
@@ -17,6 +19,7 @@
 - [langgraph/backend] Removed redundant few-shot toggle in agent config and aligned tests directory layout with app components (agents/, middlewares/, etc.).
 - [langgraph/backend] Reorganised `tests/` folder to resemble the `app/` folder convictions.
 - [langgraph/backend] Stopped stubbing langchain related items in `tests/conftest.py`.
+- [docs] Completed root README with directory layout, setup/run steps, and pointers to component docs.
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
@@ -24,6 +27,7 @@
 - [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.
 - [langgraph/backend] Documented proxy and offline wheel install steps to unblock uv dependency downloads in restricted environments.
 - [langgraph/backend] Relocated offline dependency stubs to `tests/stubs` and documented their use so tests run without external downloads or sandbox network flags.
+- [langgraph/backend] Stopped writing phase outputs to ad-hoc top-level keys and ensured Problem Framing node updates only canonical `state['phases']`.
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares

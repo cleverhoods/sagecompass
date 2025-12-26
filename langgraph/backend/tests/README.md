@@ -11,5 +11,5 @@ This suite is designed to run **offline**. Lightweight stubs for critical depend
 ## Running
 
 ```bash
-uv run pytest
+UV_NO_SYNC=1 uv run pytest
 ```

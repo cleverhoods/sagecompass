@@ -34,7 +34,42 @@ before anyone spends time and money building it.
 
 ### Directory structure
 ```
-
+.
+├── langgraph/                # LangGraph workspace, configs, and UI/backend code
+│   ├── backend/              # Runnable LangGraph backend + Gradio UI (uv-managed)
+│   └── ui/                   # Planned dedicated UI surface (currently co-located)
+├── mermaids/                 # Mermaid exports/diagrams
+├── images/                   # Documentation assets
+└── CHANGELOG.md              # Required changelog (update under [Unreleased])
 ```
 
 ---
+
+## Getting started
+
+1) **Install tooling**
+   - Install [uv](https://github.com/astral-sh/uv) and Python 3.12+.
+   - Optional: install [ddev](https://ddev.com/) if you plan to run containerized services.
+
+2) **Create the virtual environment**
+   ```bash
+   cd langgraph/backend
+   uv sync
+   ```
+
+3) **Run the app (Gradio UI)**
+   ```bash
+   uv run python -m app.main
+   ```
+   The UI binds to `http://localhost:1111`.
+
+4) **Run tests (offline, using stubs)**
+   ```bash
+   cd langgraph/backend
+   UV_NO_SYNC=1 uv run pytest
+   ```
+
+## Component docs
+- **Monorepo guidance:** [`AGENTS.md`](./AGENTS.md)
+- **LangGraph workspace:** [`langgraph/AGENTS.md`](./langgraph/AGENTS.md)
+- **Backend contracts & architecture:** [`langgraph/backend/app/README.md`](./langgraph/backend/app/README.md) and per-folder READMEs under `app/agents`, `app/nodes`, `app/graphs`, `app/tools`, `app/middlewares`, `app/utils`.
