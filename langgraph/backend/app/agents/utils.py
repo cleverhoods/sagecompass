@@ -22,7 +22,7 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}"
     - The list must include:
         - at least one *real* example, and
         - a trailing user stub example that ends with an empty `output`
-          and uses `original_input == user_placeholder` (default: `{user_query}`).
+          and uses `user_query == user_placeholder` (default: `{user_query}`).
 
     The implementation uses `FewShotPromptWithTemplates` to keep the formatting
     behavior consistent with LangChain prompt-template semantics.
@@ -45,32 +45,47 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}"
             f"examples.json must include at least one example + one trailing stub for agent '{agent_name}'"
         )
 
+    def _is_empty(value: Any) -> bool:
+        return value is None or value == "" or value == {} or value == []
+
     examples: list[dict[str, Any]] = []
     for idx, ex in enumerate(raw):
         if not isinstance(ex, dict):
             raise ValueError(f"Invalid example payload at index {idx} for agent '{agent_name}': {ex!r}")
         examples.append(ex)
 
-    example_prompt = PromptTemplate.from_template(template_str)
+    stub = examples[-1]
+    real_examples = examples[:-1]
 
-    prefix = PromptTemplate.from_template(
-        "Frame the following problems:",
-    )
-    suffix = PromptTemplate.from_template(
-        "Input: { input }\nOutput:",
-    )
+    if stub.get("user_query") != user_placeholder:
+        raise ValueError(
+            f"Trailing stub must use placeholder {user_placeholder!r} for agent '{agent_name}'"
+        )
+    if not _is_empty(stub.get("output", "")):
+        raise ValueError(f"Trailing stub output must be empty for agent '{agent_name}'")
 
-    few_shot = FewShotPromptWithTemplates(
-        examples=examples,
-        example_prompt=example_prompt,
-        prefix=prefix,
-        suffix=suffix,
-        input_variables=["input"],
-    )
+    for idx, ex in enumerate(real_examples):
+        if "user_query" not in ex or "output" not in ex:
+            raise ValueError(f"Missing keys in example {idx} for agent '{agent_name}': {ex!r}")
+        if not str(ex["user_query"]).strip():
+            raise ValueError(f"Example {idx} for agent '{agent_name}' must include a user_query")
+        if _is_empty(ex["output"]):
+            raise ValueError(f"Example {idx} for agent '{agent_name}' must include a non-empty output")
 
-    # Keep `{user_query}` as a *literal placeholder* in the final prompt so it can
-    # be substituted later at runtime (not during prompt assembly).
-    return few_shot.format(user_query=user_placeholder)
+    def _render_example(user_query: str, output: Any) -> str:
+        rendered_output = output
+        if not isinstance(rendered_output, str):
+            rendered_output = json.dumps(rendered_output, ensure_ascii=False, indent=2)
+        # Avoid placeholder expansion by doing plain string replacement.
+        rendered = template_str.replace("{user_query}", user_query)
+        rendered = rendered.replace("{output}", rendered_output)
+        return rendered
+
+    prefix = "Frame the following problems:"
+    rendered_examples = [_render_example(ex["user_query"], ex["output"]) for ex in real_examples]
+
+    prompt_parts = [prefix, *rendered_examples, _render_example(user_placeholder, "")]
+    return "\n\n".join(prompt_parts)
 
 
 def compose_agent_prompt(

@@ -1,2 +1,2 @@
-Input: {{ user_query }}
-Output: {{ output }}
+Input: {user_query}
+Output: {output}

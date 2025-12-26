@@ -27,3 +27,10 @@ For rationale and examples, see `app/README.md` and per-folder READMEs.
 ## Documentation + Tests
 - Keep README.md files present at: `app/`, `app/agents/`, `app/nodes/`, `app/graphs/`, `app/tools/`, `app/middlewares/`.
 - Any change affecting these contracts MUST update/extend tests under `tests/`.
+
+## Troubleshooting: uv dependency downloads
+- If `uv run pytest` fails to fetch wheels (e.g., `pydantic-core`, CUDA wheels), set explicit indexes:
+  - `UV_INDEX_URL=https://pypi.org/simple UV_EXTRA_INDEX_URL=https://download.pydantic.dev/simple uv run pytest`
+  - For corporate mirrors, swap `UV_INDEX_URL`/`UV_EXTRA_INDEX_URL` to point at the mirror.
+- If the wheel is still unreachable, preinstall it into `.venv` with the same mirrors, then rerun tests:
+  - `UV_INDEX_URL=... UV_EXTRA_INDEX_URL=... uv pip install pydantic-core==<version>`

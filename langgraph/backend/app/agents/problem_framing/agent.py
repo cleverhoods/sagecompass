@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from app.tools import get_tools
 from app.agents.utils import compose_agent_prompt
+from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.utils.model_factory import get_model_for_agent
 
 from .mw import problem_framing_hilp
@@ -52,11 +53,15 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         agent_name=AGENT_NAME,
         prompt_names=["system", "few-shots"],
         include_global=True,
-        include_format_instructions=True,
-        output_schema=ProblemFrame,
+        include_format_instructions=False,
     )
 
     middlewares: list[AgentMiddleware[AgentState, Any]] = [
+        make_dynamic_prompt_middleware(
+            agent_prompt,
+            placeholders=("user_query", "format_instructions"),
+            output_schema=ProblemFrame,
+        ),
         problem_framing_hilp,
     ]
 
