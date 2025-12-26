@@ -23,8 +23,45 @@ class SageCompassUI:
     - Invoke the graph, surface interrupt payloads, and resume with user answers.
     """
 
-    def __init__(self, app):
+    def __init__(self, app: Any):
         self.app = app
+
+    # ----- UI helpers -----
+
+    def _hilp_hidden_updates(self) -> Tuple[gr.Update, gr.Update, gr.Update, gr.Update, gr.Update, gr.Update]:
+        """Return a consistent set of updates when HILP controls should be hidden."""
+        return (
+            gr.update(visible=False),  # HILP markdown
+            gr.update(choices=[], value=None, visible=False),  # dropdown
+            gr.update(visible=False),  # Yes
+            gr.update(visible=False),  # No
+            gr.update(visible=False),  # Unknown
+            gr.update(visible=False),  # Run with clarifications
+        )
+
+    def _hilp_visible_updates(
+        self,
+        *,
+        markdown: str,
+        choices: List[Tuple[str, str]],
+        selected_qid: Optional[str],
+    ) -> Tuple[gr.Update, gr.Update, gr.Update, gr.Update, gr.Update, gr.Update]:
+        """Return a consistent set of updates when HILP controls should be shown."""
+        return (
+            gr.update(value=markdown, visible=True),
+            gr.update(choices=choices, value=selected_qid, visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+        )
+
+    def _input_updates(self, *, enabled: bool) -> Tuple[gr.Update, gr.Update]:
+        """Toggle message textbox and submit button visibility."""
+        return (
+            gr.update(visible=enabled),
+            gr.update(visible=enabled),
+        )
 
     # ----- LangGraph helpers -----
 
@@ -124,18 +161,11 @@ class SageCompassUI:
                 history,
                 state,
                 ui_meta,
-                gr.update(visible=False),  # HILP markdown
-                gr.update(choices=[], value=None, visible=False),  # dropdown
-                gr.update(visible=False),  # Yes
-                gr.update(visible=False),  # No
-                gr.update(visible=False),  # Unknown
-                gr.update(visible=False),  # Run with clarifications
-                gr.update(visible=True),   # textbox
-                gr.update(visible=True),   # submit
+                *self._hilp_hidden_updates(),
+                *self._input_updates(enabled=True),
             )
 
-
-        state = init_state()
+        ensure_thread_id(ui_meta)
 
         history.append({"role": "user", "content": user_message})
         state, interrupt_payload, interrupt_id = self._run_graph_until_interrupt(state, ui_meta=ui_meta)
@@ -160,15 +190,13 @@ class SageCompassUI:
                 history,
                 state,
                 ui_meta,
-                gr.update(value=hilp_md, visible=True),
-                gr.update(choices=choices, value=selected_qid, visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=False),
-                gr.update(visible=False),
+                *self._hilp_visible_updates(markdown=hilp_md, choices=choices, selected_qid=selected_qid),
+                *self._input_updates(enabled=False),
             )
+
+        ui_meta["pending_interrupt"] = None
+        ui_meta["pending_interrupt_id"] = None
+        ui_meta["hilp_answers"] = {}
 
         assistant_text = summarize_problem_frame(state)
         history.append({"role": "assistant", "content": assistant_text})
@@ -177,14 +205,8 @@ class SageCompassUI:
             history,
             state,
             ui_meta,
-            gr.update(visible=False),
-            gr.update(choices=[], value=None, visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=True),
-            gr.update(visible=True),
+            *self._hilp_hidden_updates(),
+            *self._input_updates(enabled=True),
         )
 
     def handle_hilp_answer(
@@ -198,6 +220,7 @@ class SageCompassUI:
         history = history or []
         state = state or init_state()
         ui_meta = ui_meta or init_ui_meta()
+        ensure_thread_id(ui_meta)
         req = ui_meta.get("pending_interrupt") or {}
 
         answers: Dict[str, str] = dict(ui_meta.get("hilp_answers") or {})
@@ -217,8 +240,8 @@ class SageCompassUI:
             history,
             state,
             ui_meta,
-            gr.update(value=hilp_md, visible=True),
-            gr.update(choices=choices, value=next_qid or selected_qid, visible=True),
+            gr.update(value=hilp_md, visible=bool(hilp_md)),
+            gr.update(choices=choices, value=next_qid or selected_qid, visible=bool(choices)),
         )
 
     def handle_run_with_clarifications(
@@ -230,6 +253,7 @@ class SageCompassUI:
         history = history or []
         state = state or init_state()
         ui_meta = ui_meta or init_ui_meta()
+        ensure_thread_id(ui_meta)
 
         req = ui_meta.get("pending_interrupt") or {}
         answers: Dict[str, str] = dict(ui_meta.get("hilp_answers") or {})
@@ -261,14 +285,12 @@ class SageCompassUI:
                 history,
                 state,
                 ui_meta,
-                gr.update(value=hilp_md, visible=True),
-                gr.update(choices=choices, value=selected_qid, visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=True),
-                gr.update(visible=False),
-                gr.update(visible=False),
+                *self._hilp_visible_updates(
+                    markdown=hilp_md,
+                    choices=choices,
+                    selected_qid=selected_qid,
+                ),
+                *self._input_updates(enabled=False),
             )
 
         ui_meta["pending_interrupt"] = None
@@ -282,14 +304,8 @@ class SageCompassUI:
             history,
             state,
             ui_meta,
-            gr.update(visible=False),
-            gr.update(choices=[], value=None, visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=True),
-            gr.update(visible=True),
+            *self._hilp_hidden_updates(),
+            *self._input_updates(enabled=True),
         )
 
     # ----- Launch -----
