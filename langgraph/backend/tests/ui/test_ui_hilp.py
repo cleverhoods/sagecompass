@@ -20,11 +20,20 @@ class _CompletingApp:
         return iter([])
 
     def invoke(self, runner_input, config=None):
+        user_query = ""
+        if isinstance(runner_input, dict):
+            user_query = runner_input.get("user_query", "")
         return {
-            "phases": {},
-            "problem_frame": {
-                "business_domain": "logistics",
-                "primary_outcome": "fewer delays",
+            "messages": runner_input.get("messages", []) if isinstance(runner_input, dict) else [],
+            "user_query": user_query,
+            "phases": {
+                "problem_framing": {
+                    "status": "complete",
+                    "data": {
+                        "business_domain": "logistics",
+                        "primary_outcome": "fewer delays",
+                    },
+                }
             },
         }
 
@@ -63,6 +72,7 @@ def test_handle_user_question_surfaces_hilp_interrupt():
     assert msg_update.visible is False
     assert submit_update.visible is False
     assert state["phases"] == {}
+    assert state["user_query"] == "Hello"
 
 
 def test_handle_hilp_answer_tracks_answers_and_next_question():
@@ -131,8 +141,38 @@ def test_handle_run_with_clarifications_resumes_and_clears_interrupt():
     assert run_btn.visible is False
     assert msg_update.visible is True
     assert submit_update.visible is True
-    assert state["problem_frame"]["business_domain"] == "logistics"
-    assert state["problem_frame"]["primary_outcome"] == "fewer delays"
+    assert state["phases"]["problem_framing"]["data"]["business_domain"] == "logistics"
+    assert state["phases"]["problem_framing"]["data"]["primary_outcome"] == "fewer delays"
+
+
+def test_handle_user_question_sets_user_query_and_summarizes():
+    ui = SageCompassUI(_CompletingApp())
+
+    (
+        history,
+        state,
+        ui_meta,
+        hilp_md,
+        question_dropdown,
+        btn_yes,
+        btn_no,
+        btn_unknown,
+        run_btn,
+        msg_update,
+        submit_update,
+    ) = ui.handle_user_question("How can I improve logistics?", [], init_state(), init_ui_meta())
+
+    assert state["user_query"] == "How can I improve logistics?"
+    assert history[-1]["role"] == "assistant"
+    assert "Business domain: logistics" in history[-1]["content"]
+    assert hilp_md.visible is False
+    assert question_dropdown.visible is False
+    assert btn_yes.visible is False
+    assert btn_no.visible is False
+    assert btn_unknown.visible is False
+    assert run_btn.visible is False
+    assert msg_update.visible is True
+    assert submit_update.visible is True
 
 
 def test_markdown_and_dropdown_render_answers():

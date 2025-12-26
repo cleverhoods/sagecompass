@@ -14,6 +14,7 @@
 - [langgraph/backend] Refactored agent.py to support stateless, config-driven agent construction via agent specific AgentConfig. Enables LangGraph compatibility and improves testability.
 - [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
 - [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
+- [langgraph/backend] Modularized Gradio UI layout with dedicated button builders and normalized state handling for user inputs.
 - [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
 - [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
 - [prompt] Added few shot examples for Problem Framing agent.
@@ -28,9 +29,11 @@
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
 - [langgraph/backend] Escaped Problem Framing few-shot rendering to avoid placeholder collisions and restored format instructions in the system prompt.
 - [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.
+- [langgraph/backend] Ensured dynamic prompt middleware fills few-shot user stubs from request inputs so user queries reach agents.
 - [langgraph/backend] Documented proxy and offline wheel install steps to unblock uv dependency downloads in restricted environments.
 - [langgraph/backend] Relocated offline dependency stubs to `tests/stubs` and documented their use so tests run without external downloads or sandbox network flags.
 - [langgraph/backend] Stopped writing phase outputs to ad-hoc top-level keys and ensured Problem Framing node updates only canonical `state['phases']`.
+- [langgraph/backend] Updated Gradio UI to persist user queries and summarize problem framing from canonical phase data.
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares

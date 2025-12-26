@@ -15,6 +15,12 @@ from pydantic import BaseModel
 PromptLike = Union[str, ChatPromptTemplate, SystemMessagePromptTemplate, BasePromptTemplate]
 
 
+def _as_mapping(value: Any) -> Mapping[str, Any]:
+    if isinstance(value, Mapping):
+        return value
+    return {}
+
+
 def _apply_placeholders_to_string(template: str, values: Mapping[str, Any], keys: Sequence[str]) -> str:
     """Replace only the requested placeholder keys in a string template."""
     rendered = template
@@ -34,14 +40,15 @@ def make_dynamic_prompt_middleware(
     parser = PydanticOutputParser(pydantic_object=output_schema) if output_schema is not None else None
 
     def _values_from_request(request: ModelRequest) -> Mapping[str, Any]:
-        state = request.state or {}
+        state = _as_mapping(getattr(request, "state", None) or {})
+        inputs = _as_mapping(getattr(request, "inputs", None) or getattr(request, "input", None) or {})
         values: dict[str, Any] = {}
 
         for key in placeholders:
             if key == "format_instructions" and parser is not None:
                 values["format_instructions"] = parser.get_format_instructions()
             else:
-                values[key] = state.get(key)
+                values[key] = inputs.get(key, state.get(key))
 
         return values
 

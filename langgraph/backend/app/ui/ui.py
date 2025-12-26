@@ -1,17 +1,82 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import gradio as gr
 
 from app.state import SageState
 
-from app.ui.state import ensure_thread_id, init_state, init_ui_meta, summarize_problem_frame
+from app.ui.buttons import HilpButtons, build_hilp_buttons
+from app.ui.state import ensure_thread_id, init_state, init_ui_meta, normalize_state, summarize_problem_frame
 from app.ui.hilp import (
     build_hilp_markdown,
     pick_next_unanswered_question,
     question_dropdown_choices,
 )
+
+
+@dataclass
+class UIControls:
+    chatbot: gr.Chatbot
+    state: gr.State
+    ui_meta: gr.State
+    message: gr.Textbox
+    submit: gr.Button
+    hilp_md: gr.Markdown
+    question_dropdown: gr.Dropdown
+    hilp_buttons: HilpButtons
+
+
+def _build_input_row() -> Tuple[gr.Textbox, gr.Button]:
+    with gr.Row():
+        msg = gr.Textbox(
+            label="Your question",
+            placeholder="Ask SageCompass…",
+            scale=4,
+        )
+        submit_btn = gr.Button("Submit", variant="primary")
+    return msg, submit_btn
+
+
+def _build_hilp_section() -> Tuple[gr.Markdown, gr.Dropdown, HilpButtons]:
+    hilp_md = gr.Markdown(visible=False)
+
+    question_dropdown = gr.Dropdown(
+        label="Select question to answer",
+        choices=[],
+        value=None,
+        visible=False,
+    )
+
+    hilp_buttons = build_hilp_buttons()
+    return hilp_md, question_dropdown, hilp_buttons
+
+
+def _submit_outputs(ctrls: UIControls) -> List[Any]:
+    return [
+        ctrls.chatbot,
+        ctrls.state,
+        ctrls.ui_meta,
+        ctrls.hilp_md,
+        ctrls.question_dropdown,
+        ctrls.hilp_buttons.yes,
+        ctrls.hilp_buttons.no,
+        ctrls.hilp_buttons.unknown,
+        ctrls.hilp_buttons.run,
+        ctrls.message,
+        ctrls.submit,
+    ]
+
+
+def _hilp_answer_outputs(ctrls: UIControls) -> List[Any]:
+    return [
+        ctrls.chatbot,
+        ctrls.state,
+        ctrls.ui_meta,
+        ctrls.hilp_md,
+        ctrls.question_dropdown,
+    ]
 
 
 class SageCompassUI:
@@ -152,7 +217,7 @@ class SageCompassUI:
         ui_meta: Dict[str, Any] | None,
     ):
         history = history or []
-        state = state or init_state()
+        state = normalize_state(state)
         ui_meta = ui_meta or init_ui_meta()
 
         user_message = (user_message or "").strip()
@@ -167,8 +232,13 @@ class SageCompassUI:
 
         ensure_thread_id(ui_meta)
 
+        state["user_query"] = user_message
+        state["messages"] = list(state.get("messages") or [])
+        state["messages"].append({"role": "user", "content": user_message})
         history.append({"role": "user", "content": user_message})
         state, interrupt_payload, interrupt_id = self._run_graph_until_interrupt(state, ui_meta=ui_meta)
+        state = normalize_state(state)
+        state["user_query"] = state.get("user_query") or user_message
 
         if interrupt_payload:
             ui_meta["pending_interrupt"] = interrupt_payload
@@ -200,6 +270,7 @@ class SageCompassUI:
 
         assistant_text = summarize_problem_frame(state)
         history.append({"role": "assistant", "content": assistant_text})
+        state["messages"].append({"role": "assistant", "content": assistant_text})
 
         return (
             history,
@@ -218,7 +289,7 @@ class SageCompassUI:
         selected_qid: str | None,
     ):
         history = history or []
-        state = state or init_state()
+        state = normalize_state(state)
         ui_meta = ui_meta or init_ui_meta()
         ensure_thread_id(ui_meta)
         req = ui_meta.get("pending_interrupt") or {}
@@ -251,7 +322,7 @@ class SageCompassUI:
         ui_meta: Dict[str, Any] | None,
     ):
         history = history or []
-        state = state or init_state()
+        state = normalize_state(state)
         ui_meta = ui_meta or init_ui_meta()
         ensure_thread_id(ui_meta)
 
@@ -259,11 +330,14 @@ class SageCompassUI:
         answers: Dict[str, str] = dict(ui_meta.get("hilp_answers") or {})
         answers_list = [{"question_id": qid, "answer": ans} for qid, ans in answers.items()]
 
+        user_query = state.get("user_query", "")
         state, interrupt_payload, interrupt_id = self._run_graph_until_interrupt(
             state,
             ui_meta=ui_meta,
             resume_value={"answers": answers_list},
         )
+        state = normalize_state(state)
+        state["user_query"] = state.get("user_query") or user_query
 
         if interrupt_payload:
             ui_meta["pending_interrupt"] = interrupt_payload
@@ -299,6 +373,7 @@ class SageCompassUI:
 
         assistant_text = summarize_problem_frame(state)
         history.append({"role": "assistant", "content": assistant_text})
+        state["messages"].append({"role": "assistant", "content": assistant_text})
 
         return (
             history,
@@ -320,86 +395,48 @@ class SageCompassUI:
 
             gr.Markdown("---")
 
-            with gr.Row():
-                msg = gr.Textbox(
-                    label="Your question",
-                    placeholder="Ask SageCompass…",
-                    scale=4,
-                )
-                submit_btn = gr.Button("Submit", variant="primary")
+            msg, submit_btn = _build_input_row()
+            hilp_md, question_dropdown, hilp_buttons = _build_hilp_section()
 
-            hilp_md = gr.Markdown(visible=False)
-
-            question_dropdown = gr.Dropdown(
-                label="Select question to answer",
-                choices=[],
-                value=None,
-                visible=False,
-            )
-
-            with gr.Row():
-                btn_yes = gr.Button("Yes (Igen)", visible=False)
-                btn_no = gr.Button("No (Nem)", visible=False)
-                btn_unknown = gr.Button("I’m not sure (Nem tudom)", visible=False)
-
-            run_btn = gr.Button(
-                "Run with these clarifications",
-                variant="primary",
-                visible=False,
+            ctrls = UIControls(
+                chatbot=chatbot,
+                state=state,
+                ui_meta=ui_meta,
+                message=msg,
+                submit=submit_btn,
+                hilp_md=hilp_md,
+                question_dropdown=question_dropdown,
+                hilp_buttons=hilp_buttons,
             )
 
             submit_btn.click(
                 fn=self.handle_user_question,
                 inputs=[msg, chatbot, state, ui_meta],
-                outputs=[
-                    chatbot,
-                    state,
-                    ui_meta,
-                    hilp_md,
-                    question_dropdown,
-                    btn_yes,
-                    btn_no,
-                    btn_unknown,
-                    run_btn,
-                    msg,
-                    submit_btn,
-                ],
+                outputs=_submit_outputs(ctrls),
             )
 
-            btn_yes.click(
+            hilp_buttons.yes.click(
                 lambda h, s, meta, qid: self.handle_hilp_answer("yes", h, s, meta, qid),
                 inputs=[chatbot, state, ui_meta, question_dropdown],
-                outputs=[chatbot, state, ui_meta, hilp_md, question_dropdown],
+                outputs=_hilp_answer_outputs(ctrls),
             )
 
-            btn_no.click(
+            hilp_buttons.no.click(
                 lambda h, s, meta, qid: self.handle_hilp_answer("no", h, s, meta, qid),
                 inputs=[chatbot, state, ui_meta, question_dropdown],
-                outputs=[chatbot, state, ui_meta, hilp_md, question_dropdown],
+                outputs=_hilp_answer_outputs(ctrls),
             )
 
-            btn_unknown.click(
+            hilp_buttons.unknown.click(
                 lambda h, s, meta, qid: self.handle_hilp_answer("unknown", h, s, meta, qid),
                 inputs=[chatbot, state, ui_meta, question_dropdown],
-                outputs=[chatbot, state, ui_meta, hilp_md, question_dropdown],
+                outputs=_hilp_answer_outputs(ctrls),
             )
 
-            run_btn.click(
+            hilp_buttons.run.click(
                 fn=self.handle_run_with_clarifications,
                 inputs=[chatbot, state, ui_meta],
-                outputs=[
-                    chatbot,
-                    state,
-                    ui_meta,
-                    hilp_md,
-                    question_dropdown,
-                    btn_yes,
-                    btn_no,
-                    btn_unknown,
-                    run_btn,
-                    msg,
-                    submit_btn,
-                ],
+                outputs=_submit_outputs(ctrls),
             )
 
         demo.launch(
