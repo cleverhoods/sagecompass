@@ -7,6 +7,7 @@
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
 - [langgraph/backend] Added offline behavioral tests for nodes, graph wiring, and HILP middleware to exercise core contracts.
 - [docs] Documented offline test invocation via `UV_NO_SYNC=1 uv run pytest` to avoid dependency downloads.
+- [langgraph/backend] Added Gradio-specific UI contracts and HILP UI tests to govern clarification handling.
 
 ### Changed
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
@@ -20,6 +21,8 @@
 - [langgraph/backend] Reorganised `tests/` folder to resemble the `app/` folder convictions.
 - [langgraph/backend] Stopped stubbing langchain related items in `tests/conftest.py`.
 - [docs] Completed root README with directory layout, setup/run steps, and pointers to component docs.
+- [langgraph/backend] Cleaned Gradio UI handlers to preserve session state and centralize HILP control toggles.
+- [langgraph/backend] Stubbed Gradio for UI tests to avoid dependency downloads while exercising HILP flows.
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
