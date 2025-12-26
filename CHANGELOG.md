@@ -34,6 +34,7 @@
 - [langgraph/backend] Relocated offline dependency stubs to `tests/stubs` and documented their use so tests run without external downloads or sandbox network flags.
 - [langgraph/backend] Stopped writing phase outputs to ad-hoc top-level keys and ensured Problem Framing node updates only canonical `state['phases']`.
 - [langgraph/backend] Updated Gradio UI to persist user queries and summarize problem framing from canonical phase data.
+- [langgraph/backend] Made UI interrupt extraction resilient to stream_events payloads so HILP clarifications surface instead of silent framing messages.
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares
