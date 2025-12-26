@@ -92,6 +92,8 @@ def test_agent_config_can_toggle_few_shots():
     )
 
     assert "Input:" not in prompt_without
+    assert "{user_query}" not in prompt_without
     assert "Input:" in prompt_with
+    assert "reduce customer churn" in prompt_with
     assert "{user_query}" in prompt_with
     assert prompt_with.strip().endswith("Output:")

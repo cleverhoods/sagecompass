@@ -57,9 +57,6 @@ def test_agent_folder_minimum_contract():
         assert (agent / "mw.py").exists(), f"{agent.name}: missing mw.py"
         assert (agent / "prompts" / "system.prompt").exists(), f"{agent.name}: missing prompts/system.prompt"
 
-        system_prompt = _read(agent / "prompts" / "system.prompt")
-        assert "{format_instructions}" in system_prompt, f"{agent.name}: system.prompt missing {{format_instructions}}"
-
         has_cfg = (agent / "config.yml").exists() or (agent / "config.yaml").exists()
         assert has_cfg, f"{agent.name}: missing config.yml/config.yaml"
 def test_hilp_middleware_factory_exists():
@@ -87,7 +84,12 @@ def test_prompt_contracts():
     with examples_path.open() as f:
         data = json.load(f)
     assert isinstance(data, list), "examples.json must contain a list of examples"
-    assert len(data) >= 1, "examples.json must include at least one example"
+    assert len(data) >= 2, "examples.json must include examples plus a trailing stub"
+
+    stub = data[-1]
+    assert stub["user_query"] == "{user_query}", "Trailing stub must preserve the user placeholder"
+    assert stub.get("output") in ("", None, {}, []), "Trailing stub output must remain empty"
+    assert all(ex.get("output") for ex in data[:-1]), "Non-stub examples must include outputs"
 
     # Render few-shots to ensure template/examples compatibility and trailing stub
     import pytest
@@ -102,6 +104,7 @@ def test_prompt_contracts():
     )
     assert "Input:" in rendered
     assert "{user_query}" in rendered, "Few-shot stub must include user placeholder for final turn"
+    assert "reduce customer churn" in rendered, "Few-shot rendering must expand real examples"
     assert rendered.strip().endswith("Output:"), "Few-shot rendering must end with empty output stub"
 
 

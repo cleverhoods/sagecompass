@@ -19,6 +19,9 @@
 - [langgraph/backend] Stopped stubbing langchain related items in `tests/conftest.py`.
 
 ### Fixed
+- [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
+- [langgraph/backend] Escaped Problem Framing few-shot rendering to avoid placeholder collisions and restored format instructions in the system prompt.
+- [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares

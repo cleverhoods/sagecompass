@@ -21,4 +21,5 @@ def test_compose_agent_prompt_places_output_stub_last_when_few_shots_enabled():
 
     assert "Input:" in prompt_with
     assert "{user_query}" in prompt_with
+    assert "reduce customer churn" in prompt_with
     assert prompt_with.strip().endswith("Output:")
