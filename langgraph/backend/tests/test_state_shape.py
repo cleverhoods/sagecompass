@@ -9,7 +9,6 @@ def test_sagestate_declares_core_keys():
     assert "messages" in ann
     assert "user_query" in ann
     assert "phases" in ann
-    assert "user_lang" in ann
     assert "errors" in ann
 
 

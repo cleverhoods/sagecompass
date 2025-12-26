@@ -4,7 +4,6 @@ from typing import Any, Callable, Literal, TypedDict
 
 from langchain.agents import AgentState
 from langchain.agents.middleware import after_agent, AgentMiddleware
-from langchain_core.runnables import RunnableConfig
 from langgraph.types import interrupt
 from pydantic import BaseModel, ValidationError
 
@@ -60,7 +59,7 @@ def make_boolean_hilp_middleware(
     @after_agent
     def middleware(
             state: AgentState,
-            runtime: RunnableConfig
+            runtime: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         raw = state.get("structured_response")
         if raw is None:

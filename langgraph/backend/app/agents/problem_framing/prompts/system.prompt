@@ -6,9 +6,5 @@ General rules:
 
 - Use only information from the JSON input you receive. Do not invent data, metrics, or organizational structure.
 - Prefer conservative, business-friendly language over technical ML jargon.
-- If information is missing or conflicting, do not guess. Keep the affected field generic and record the issue in `ambiguity_flags`.
+- If information is missing or conflicting, do not guess. Keep the affected field generic and record the issue in `ambiguities`.
 - Do not offer concrete AI/ML solutions here. Focus on what problem to solve, not how to solve it.
-
-You MUST return output that follows this JSON schema and respect all field descriptions:
-
-{format_instructions}
