@@ -51,10 +51,7 @@ def make_node_problem_framing(
             entry["hilp_clarifications"] = clarifications
         phases[phase] = entry
 
-        updates: dict[str, Any] = {
-            "phases": phases,
-            "problem_frame": pf,
-        }
+        updates: dict[str, Any] = {"phases": phases}
 
         return Command(update=updates, goto=goto_after)
 
