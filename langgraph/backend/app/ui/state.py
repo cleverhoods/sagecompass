@@ -11,7 +11,6 @@ def init_state() -> SageState:
         "messages": [],
         "user_query": "",
         "phases": {},
-        "user_lang": "en",  # UI fallback; graph may overwrite
         "errors": [],
     }
 

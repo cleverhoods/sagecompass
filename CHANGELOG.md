@@ -12,6 +12,7 @@
 
 ### Removed
 - [langgraph/backend] Removed hilp.prompt-driven state machine and the hilp node in favor of middleware-first HITL handling.
+- [langgraph/backend] Removed translation agent.
 
 ### Security
 

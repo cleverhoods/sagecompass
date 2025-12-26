@@ -12,12 +12,8 @@ from app.utils.logger import log
 def make_node_supervisor(
     *,
     pf_phase: str = "problem_framing",
-    detect_lang_phase: str = "detect_language",
 ) -> Callable[[SageState], Command[str]]:
-    def node_supervisor(state: SageState) -> Command[Literal["problem_framing", "translator", "detect_language", END]]:
-        # Detect language.
-        if (state.get("user_query") or state.get("messages")) and not state.get("user_lang"):
-            return Command(goto=detect_lang_phase)
+    def node_supervisor(state: SageState) -> Command[Literal["problem_framing", END]]:
 
         phases = state.get("phases") or {}
         pf_entry = phases.get(pf_phase) or {}
@@ -29,6 +25,6 @@ def make_node_supervisor(
         if pf_status != "complete" or pf_data is None:
             return Command(goto=pf_phase)
 
-        return Command(goto="translator")
+        return Command(goto=END)
 
     return node_supervisor

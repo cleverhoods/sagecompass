@@ -7,8 +7,6 @@ from langgraph.graph import add_messages
 from pydantic import BaseModel
 
 from app.agents.problem_framing.schema import ProblemFrame
-from app.agents.translator.schema import TranslationResult
-
 
 PhaseStatus = Literal["pending", "complete", "stale", "error"]
 
@@ -16,7 +14,6 @@ PhaseStatus = Literal["pending", "complete", "stale", "error"]
 # Mapping phase key -> Pydantic schema for that phase's output
 PHASE_SCHEMAS: dict[str, Type[BaseModel]] = {
     "problem_framing": ProblemFrame,
-    "translation":     TranslationResult,
     # "business_goals": BusinessGoals,
 }
 
@@ -45,6 +42,4 @@ class SageState(TypedDict, total=False):
     user_query: str
     # e.g. phases["problem_framing"] = {...}, phases["business_goals"] = {...}
     phases: Dict[str, PhaseEntry]
-    user_lang: str
     errors: list[str]
-    problem_frame: ProblemFrame

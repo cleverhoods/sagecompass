@@ -12,7 +12,6 @@ from app.ui.hilp import (
     pick_next_unanswered_question,
     question_dropdown_choices,
 )
-from app.ui.i18n import TranslationService
 
 
 class SageCompassUI:
@@ -26,7 +25,6 @@ class SageCompassUI:
 
     def __init__(self, app):
         self.app = app
-        self.i18n = TranslationService()
 
     # ----- LangGraph helpers -----
 
@@ -136,24 +134,18 @@ class SageCompassUI:
                 gr.update(visible=True),   # submit
             )
 
-        inferred_lang = self.i18n.infer_user_lang(user_message)
 
         state = init_state()
-        state["user_query"] = user_message
-        state["user_lang"] = inferred_lang  # fallback; graph may overwrite
 
         history.append({"role": "user", "content": user_message})
         state, interrupt_payload, interrupt_id = self._run_graph_until_interrupt(state, ui_meta=ui_meta)
-
-        if not (state.get("user_lang") or "").strip():
-            state["user_lang"] = inferred_lang
 
         if interrupt_payload:
             ui_meta["pending_interrupt"] = interrupt_payload
             ui_meta["pending_interrupt_id"] = interrupt_id
             ui_meta["hilp_answers"] = {}
 
-            hilp_md = self.i18n.translate_text(state, build_hilp_markdown(interrupt_payload, {}))
+            hilp_md = build_hilp_markdown(interrupt_payload, {})
             choices = question_dropdown_choices(interrupt_payload, {})
             selected_qid = choices[0][1] if choices else None
 
@@ -178,7 +170,7 @@ class SageCompassUI:
                 gr.update(visible=False),
             )
 
-        assistant_text = self.i18n.translate_text(state, summarize_problem_frame(state))
+        assistant_text = summarize_problem_frame(state)
         history.append({"role": "assistant", "content": assistant_text})
 
         return (
@@ -217,7 +209,7 @@ class SageCompassUI:
             answers[selected_qid] = answer_value
         ui_meta["hilp_answers"] = answers
 
-        hilp_md = self.i18n.translate_text(state, build_hilp_markdown(req, answers))
+        hilp_md = build_hilp_markdown(req, answers)
         choices = question_dropdown_choices(req, answers)
         next_qid = pick_next_unanswered_question(req, answers)
 
@@ -254,7 +246,7 @@ class SageCompassUI:
             ui_meta["pending_interrupt_id"] = interrupt_id
             ui_meta["hilp_answers"] = answers  # keep existing
 
-            hilp_md = self.i18n.translate_text(state, build_hilp_markdown(interrupt_payload, answers))
+            hilp_md = build_hilp_markdown(interrupt_payload, answers)
             choices = question_dropdown_choices(interrupt_payload, answers)
             selected_qid = pick_next_unanswered_question(interrupt_payload, answers)
 
@@ -283,7 +275,7 @@ class SageCompassUI:
         ui_meta["pending_interrupt_id"] = None
         ui_meta["hilp_answers"] = {}
 
-        assistant_text = self.i18n.translate_text(state, summarize_problem_frame(state))
+        assistant_text = summarize_problem_frame(state)
         history.append({"role": "assistant", "content": assistant_text})
 
         return (
