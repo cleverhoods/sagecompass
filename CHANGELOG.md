@@ -29,6 +29,7 @@
 - [docs] Document phase error handling in app contracts and backend AGENTS.
 - [langgraph/backend] Cleaned Gradio UI handlers to preserve session state and centralize HILP control toggles.
 - [langgraph/backend] Stubbed Gradio for UI tests to avoid dependency downloads while exercising HILP flows.
+- [langgraph/ui] Relocated Gradio UI to `app/ui/` and added `app/ui/tests/` for offline tests.
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.

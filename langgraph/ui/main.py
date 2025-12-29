@@ -89,3 +89,6 @@ class SageCompassUI:
             share=False,
             inbrowser=self.inbrowser,
         )
+
+if __name__ == "__main__":
+    main()
