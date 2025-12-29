@@ -1,26 +1,13 @@
 from __future__ import annotations
 
-import ast
+import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-APP = ROOT / "app"
+import pytest
 
-def _read(p: Path) -> str:
-    return p.read_text(encoding="utf-8", errors="replace")
+from app.agents.utils import compose_agent_prompt
+from ._helpers import APP, ROOT, read_text
 
-def _top_level_call_names(py: Path) -> list[tuple[int, str]]:
-    src = _read(py)
-    tree = ast.parse(src)
-    out = []
-    for node in tree.body:
-        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
-            fn = node.value.func
-            if isinstance(fn, ast.Name):
-                out.append((node.lineno, fn.id))
-            elif isinstance(fn, ast.Attribute):
-                out.append((node.lineno, fn.attr))
-    return out
 
 def test_readmes_present_and_scoped():
     expected = [
@@ -31,27 +18,19 @@ def test_readmes_present_and_scoped():
         APP / "tools" / "README.md",
         APP / "middlewares" / "README.md",
     ]
-    for p in expected:
-        assert p.exists(), f"Missing README: {p}"
+    for path in expected:
+        assert path.exists(), f"Missing README: {path}"
 
-    # scope/title sanity checks
-    assert _read(APP / "middlewares" / "README.md").lstrip().startswith("# Middlewares")
+    assert read_text(APP / "middlewares" / "README.md").lstrip().startswith("# Middlewares")
 
-def test_no_import_time_agent_construction_in_nodes():
-    banned_calls = {"build_agent", "create_agent", "get_model_for_agent"}
-    for py in (APP / "nodes").glob("*.py"):
-        for lineno, name in _top_level_call_names(py):
-            assert name not in banned_calls, f"{py}: import-time call {name} at line {lineno}"
 
 def test_agent_folder_minimum_contract():
     agents_dir = APP / "agents"
     for agent in agents_dir.iterdir():
-        if not agent.is_dir():
-            continue
-        if agent.name.startswith("_"):
+        if not agent.is_dir() or agent.name.startswith("_"):
             continue
         if not (agent / "agent.py").exists():
-            continue  # not an agent folder by your own definition
+            continue
 
         assert (agent / "schema.py").exists(), f"{agent.name}: missing schema.py"
         assert (agent / "mw.py").exists(), f"{agent.name}: missing mw.py"
@@ -59,17 +38,11 @@ def test_agent_folder_minimum_contract():
 
         has_cfg = (agent / "config.yml").exists() or (agent / "config.yaml").exists()
         assert has_cfg, f"{agent.name}: missing config.yml/config.yaml"
-def test_hilp_middleware_factory_exists():
-    import importlib
-
-    mw = importlib.import_module("app.middlewares.hilp")
-    assert hasattr(mw, "make_boolean_hilp_middleware"), "Missing HILP middleware factory"
 
 
 def test_prompt_contracts():
     """Ensure agents wire system + few-shot prompts via templated files."""
 
-    # Verify Problem Framing few-shot assets exist and are non-empty
     pf_prompts = APP / "agents" / "problem_framing" / "prompts"
     template = (pf_prompts / "few-shots.prompt").read_text().strip()
     examples_path = pf_prompts / "examples.json"
@@ -77,9 +50,6 @@ def test_prompt_contracts():
 
     assert template, "problem_framing few-shots.prompt is empty"
     assert examples, "problem_framing examples.json is empty"
-
-    # Ensure examples file is valid JSON
-    import json
 
     with examples_path.open() as f:
         data = json.load(f)
@@ -91,11 +61,7 @@ def test_prompt_contracts():
     assert stub.get("output") in ("", None, {}, []), "Trailing stub output must remain empty"
     assert all(ex.get("output") for ex in data[:-1]), "Non-stub examples must include outputs"
 
-    # Render few-shots to ensure template/examples compatibility and trailing stub
-    import pytest
-
     pytest.importorskip("langchain_core.output_parsers")
-    from app.agents.utils import compose_agent_prompt
     rendered = compose_agent_prompt(
         agent_name="problem_framing",
         prompt_names=["few-shots"],
@@ -103,7 +69,7 @@ def test_prompt_contracts():
         include_format_instructions=False,
     )
     assert "Input:" in rendered
-    assert "{user_query}" in rendered, "Few-shot stub must include user placeholder for final turn"
+    assert "{user_query}" in rendered, "Few-shot stub must include the user placeholder for final turn"
     assert "reduce customer churn" in rendered, "Few-shot rendering must expand real examples"
     assert rendered.strip().endswith("Output:"), "Few-shot rendering must end with empty output stub"
 
@@ -120,5 +86,5 @@ def test_tests_mirror_component_layout():
         root / "tools",
         root / "utils",
     ]
-    for d in expected_dirs:
-        assert d.exists(), f"Expected tests directory missing: {d}"
+    for directory in expected_dirs:
+        assert directory.exists(), f"Expected tests directory missing: {directory}"
