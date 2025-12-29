@@ -8,6 +8,8 @@ This suite is designed to run **offline**. Lightweight stubs for critical depend
 
 `tests/conftest.py` prepends `tests/stubs/` to `sys.path` so imports resolve to these shims before falling back to real packages. If you need to adjust stub behavior, edit the modules in `tests/stubs/` instead of adding ad-hoc monkeypatches elsewhere.
 
+Architecture and system-level invariants live under `tests/contracts/` (layout/import boundaries/state/graph/interrupt semantics). Component-level behaviour stays alongside the code under `tests/nodes`, `tests/middlewares`, etc.
+
 ## Running
 
 ```bash
