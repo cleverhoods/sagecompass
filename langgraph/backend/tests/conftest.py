@@ -14,6 +14,11 @@ _STUBS_DIR = Path(__file__).resolve().parent / "stubs"
 if USE_STUBS and _STUBS_DIR.exists():
     sys.path.insert(0, str(_STUBS_DIR))
 
+# Make the backend package importable when running tests from the monorepo root.
+_BACKEND_ROOT = Path(__file__).resolve().parent.parent
+if str(_BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_ROOT))
+
 
 def _import_or_stub(module_name: str) -> types.ModuleType:
     """

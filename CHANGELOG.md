@@ -48,6 +48,7 @@
 - [langgraph/backend] Updated Gradio UI to persist user queries and summarize problem framing from canonical phase data.
 - [langgraph/backend] Made UI interrupt extraction resilient to stream_events payloads so HILP clarifications surface instead of silent framing messages.
 - [langgraph/backend] Fixed runtime import and fixed test scrip running tasks
+- [langgraph/backend] Unblocked backend contract tests by making the app package importable and adding a stub for `langgraph.runtime`.
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares
