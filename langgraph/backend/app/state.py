@@ -45,3 +45,6 @@ class SageState(TypedDict, total=False):
     # e.g. phases["problem_framing"] = {...}, phases["business_goals"] = {...}
     phases: Dict[str, PhaseEntry]
     errors: list[str]
+
+
+SAGESTATE_KEYS: set[str] = {"messages", "user_query", "phases", "errors"}

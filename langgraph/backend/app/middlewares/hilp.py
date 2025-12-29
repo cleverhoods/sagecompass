@@ -4,11 +4,12 @@ from typing import Any, Callable, Literal, TypedDict
 
 from langchain.agents import AgentState
 from langchain.agents.middleware import after_agent, AgentMiddleware
-from langgraph.types import interrupt
+from langgraph.types import Runtime, interrupt
 from pydantic import BaseModel, ValidationError
 
 from app.utils.hilp_core import HilpMeta
 from app.utils.logger import get_logger
+from app.runtime import SageRuntimeContext
 
 
 class HilpBooleanQuestion(TypedDict):
@@ -58,9 +59,13 @@ def make_boolean_hilp_middleware(
 
     @after_agent
     def middleware(
-            state: AgentState,
-            runtime: dict[str, Any] | None = None,
+        state: AgentState,
+        runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> dict[str, Any] | None:
+        ctx = (getattr(runtime, "context", None) if runtime else {}) or {}
+        if ctx.get("hilp_enabled", True) is False:
+            return None
+
         raw = state.get("structured_response")
         if raw is None:
             logger.warning("HILP middleware: missing structured_response", phase=phase)
@@ -80,6 +85,9 @@ def make_boolean_hilp_middleware(
         questions = [
             q for q in (meta.get("questions") or []) if isinstance(q, dict) and q.get("type") == "boolean"
         ]
+        max_q = ctx.get("hilp_max_questions")
+        if isinstance(max_q, int) and max_q >= 0:
+            questions = questions[:max_q]
 
         clarifications: list[HilpBooleanAnswer] = []
 
@@ -130,11 +138,15 @@ def make_boolean_hilp_middleware(
         meta_out: dict[str, Any] = dict(meta)
         if clarifications:
             meta_out["clarifications"] = [c.model_dump() for c in clarifications]
+        audit = ctx.get("hilp_audit_mode", True)
 
-        return {
+        output: dict[str, Any] = {
             "structured_response": structured,
-            "hilp_meta": meta_out,
-            "hilp_clarifications": [c.model_dump() for c in clarifications],
         }
+        if audit:
+            output["hilp_meta"] = meta_out
+            output["hilp_clarifications"] = [c.model_dump() for c in clarifications]
+
+        return output
 
     return middleware

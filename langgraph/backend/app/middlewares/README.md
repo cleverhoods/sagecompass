@@ -10,5 +10,6 @@
   - attach metadata to the agent runtime result.
 - Middleware must not be the only location where routing decisions exist. Nodes must persist routing signals into `SageState`.
 - HILP interactions must be implemented via middleware (see `hilp.py`) using dedicated prompt/answer schemas and `langgraph.types.interrupt(...)` instead of stateful nodes.
+- Respect LangGraph runtime context (`hilp_enabled`, `hilp_max_questions`, `hilp_audit_mode`) and avoid writing runtime knobs into `SageState`.
 
 ---

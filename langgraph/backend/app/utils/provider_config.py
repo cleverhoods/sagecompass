@@ -5,8 +5,6 @@ from app.utils.logger import log
 from app.utils.paths import CONFIG_DIR
 from app.utils.env import load_project_env
 
-load_project_env()
-
 PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
 
 
@@ -22,6 +20,7 @@ class ProviderFactory:
     @staticmethod
     def for_agent(agent_name: str = None):
         try:
+            load_project_env()
             # --- Load configurations ---
             if agent_name is None:
                 agent_cfg = {}

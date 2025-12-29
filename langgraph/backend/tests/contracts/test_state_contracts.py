@@ -5,7 +5,7 @@ from typing import Annotated, get_args, get_origin, get_type_hints
 from langgraph.graph import add_messages
 from pydantic import BaseModel
 
-from app.state import PHASE_SCHEMAS, PhaseEntry, SageState
+from app.state import PHASE_SCHEMAS, PhaseEntry, SAGESTATE_KEYS, SageState
 
 
 def test_sagestate_declares_core_keys():
@@ -41,3 +41,7 @@ def test_phase_schema_whitelist_and_models():
     assert "problem_framing" in PHASE_SCHEMAS, "Phase whitelist must include problem_framing"
     for phase, schema in PHASE_SCHEMAS.items():
         assert issubclass(schema, BaseModel), f"{phase}: PHASE_SCHEMAS must map to BaseModel subclasses"
+
+
+def test_state_key_whitelist_matches_declared_contract():
+    assert SAGESTATE_KEYS == {"messages", "user_query", "phases", "errors"}

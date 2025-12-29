@@ -13,3 +13,4 @@ Shared helpers used across graphs/nodes/agents/tools/middlewares.
 - Errors: raise explicit exceptions; do not `print()`. Use logging only via the shared logger helper.
 - Testability: every util module must have unit tests for a happy path + at least one failure path.
 - Dependencies: keep to stdlib unless a project-wide dependency is clearly justified.
+- `configure_logging()` and `load_project_env()` MUST be called by runtime/bootstrap code, not at module import time. This keeps import-time contracts clean for both stub and real dependency lanes.
