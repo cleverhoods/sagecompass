@@ -10,7 +10,7 @@ from app.agents.problem_framing.schema import ProblemFrame
 from app.nodes.problem_framing import make_node_problem_framing
 from app.nodes.supervisor import make_node_supervisor
 from app.runtime import build_runtime_context, SageRuntimeContext
-from app.state import SAGESTATE_KEYS, SageState
+from app.state import SAGESTATE_KEYS
 
 
 def _runtime(ctx: SageRuntimeContext | None = None) -> Runtime[SageRuntimeContext]:

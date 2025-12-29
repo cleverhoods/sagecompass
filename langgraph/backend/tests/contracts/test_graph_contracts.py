@@ -3,6 +3,7 @@ from __future__ import annotations
 import app.graphs.graph as graphs
 from app.graphs.graph import build_main_app
 from app.runtime import SageRuntimeContext
+from langgraph.types import Runtime
 
 
 class _FakeCompiledGraph(dict):

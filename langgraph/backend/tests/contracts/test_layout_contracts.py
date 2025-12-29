@@ -81,7 +81,7 @@ def test_tests_mirror_component_layout():
     expected_dirs = [
         root / "agents" / "problem_framing",
         root / "graphs",
-        root / "middlewares" / "hilp",
+        root / "middlewares",
         root / "nodes",
         root / "tools",
         root / "utils",

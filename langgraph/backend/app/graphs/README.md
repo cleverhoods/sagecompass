@@ -2,7 +2,7 @@
 
 This folder contains graph factories built with `StateGraph(SageState)`.
 
-## Convictions
+## Contracts
 
 ### Rules
 - Graphs are **composition only** (they wire nodes + control flow).

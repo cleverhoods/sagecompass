@@ -14,15 +14,14 @@
     - Prompt composition using system/few-shot prompts 
     - Response schema attachment (response_format)
 - `config.yml`: default configuration for this agent.
-  - Responsibilities: default model/provider settings and **policy knobs** (e.g., HILP thresholds).
+  - Responsibilities: default model/provider settings and **policy knobs** (e.g., middleware thresholds).
 - `schema.py`: contains **agent input/output schemas** and structured artifacts the LLM must produce (e.g., `ProblemFrame`, `KpiSet`, ambiguity structures).
 - `prompts/` folder:
   - MUST contain `system.prompt`
   - MAY contain `few-shots.prompt` (recommended) **and a matching `examples.json`**; few-shot rendering must end with a final user-input stub (empty assistant output) to guide completions.
-  - HILP interactions are middleware-driven (see `app/middlewares/hilp.py`) and should not rely on separate `hilp.prompt` files.
 - `mw.py`:
   - Contains middleware hooks/decorators (glue) for this agent.
-  - Heavy logic must be delegated to pure modules inside the agent folder (e.g., `hilp_policy.py`) and invoked from `mw.py`.
+  - Heavy logic must be delegated to pure modules inside the agent folder (e.g., `{business_logic}_mw.py`) and invoked from `mw.py`.
 
 ### Prompt contract
 - If `few-shots.prompt` exists, it SHOULD be wired via `FewShotPromptWithTemplates` from `langchain_core.prompts` **and paired with `examples.json` containing at least one example and a trailing user stub**.

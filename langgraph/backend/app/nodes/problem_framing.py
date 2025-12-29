@@ -48,28 +48,13 @@ def make_node_problem_framing(
         if not isinstance(pf, ProblemFrame):
             pf = ProblemFrame.model_validate(pf)
 
-        hilp_meta = None
-        clarifications: list[dict[str, Any]] = []
-        if isinstance(result, dict):
-            hilp_meta = result.get("hilp_meta")
-            clarifications = list(result.get("hilp_clarifications") or [])
-
-        ctx = (getattr(runtime, "context", None) if runtime else {}) or {}
-        hilp_audit_mode = ctx.get("hilp_audit_mode", True)
-
         phases = dict(state.get("phases") or {})
-        entry: dict[str, Any] = {
+        phases[phase] = {
             "data": pf.model_dump(),
             "status": "complete",
         }
-        if hilp_meta and hilp_audit_mode:
-            entry["hilp_meta"] = hilp_meta
-        if clarifications and hilp_audit_mode:
-            entry["hilp_clarifications"] = clarifications
-        phases[phase] = entry
 
         updates: dict[str, Any] = {"phases": phases}
-
         return Command(update=updates, goto=goto_after)
 
     return node_problem_framing

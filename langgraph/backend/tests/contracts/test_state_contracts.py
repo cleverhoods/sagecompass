@@ -17,16 +17,6 @@ def test_sagestate_declares_core_keys():
     assert "errors" in ann
 
 
-def test_phase_entry_accepts_hilp_metadata():
-    ann = get_type_hints(PhaseEntry, include_extras=True)
-
-    assert "data" in ann
-    assert "status" in ann
-    assert "hilp_meta" in ann
-    assert "hilp_clarifications" in ann
-    assert "error" in ann
-
-
 def test_state_messages_are_reducer_annotated():
     ann = get_type_hints(SageState, include_extras=True)["messages"]
     assert get_origin(ann) is Annotated, "messages must be Annotated for LangGraph reducers"

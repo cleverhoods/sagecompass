@@ -1,11 +1,8 @@
 # Nodes
----
 
-## HILP contracts (middleware-first)
+## Contracts (orchestration-first)
 
-- There is **no dedicated HILP node**. Clarifications are collected by agent middleware via `langgraph.types.interrupt(...)`.
-- Nodes must not call `interrupt()` directly or mutate global HILP state.
-- Worker nodes should persist middleware outputs (e.g., `hilp_meta`, `hilp_clarifications`) alongside their phase data (see `app/state.py` `PhaseEntry` extras).
-- The supervisor routes to problem framing only.
-
----
+- Nodes are orchestration units: they wire agent invocation, validate outputs, and persist phase results.
+- Nodes must not embed heavy business logic; delegate to pure modules under the relevant agent folder.
+- Nodes must only update declared `SageState` keys and persist phase outputs under `phases[phase_name]`.
+- The supervisor routes to **problem framing** first; subsequent phases (e.g., ambiguity resolution) are routed only when their prerequisites are met.

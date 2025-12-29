@@ -25,8 +25,6 @@ PHASE_SCHEMAS: dict[str, Type[BaseModel]] = {
 class PhaseEntry(TypedDict, total=False):
     # Pydantic .model_dump() of the phase's output schema
     data: Dict[str, Any]
-    hilp_meta: Dict[str, Any]
-    hilp_clarifications: list[Dict[str, Any]]
     error: Dict[str, Any]
     status: PhaseStatus
 
@@ -41,7 +39,6 @@ class SageState(TypedDict, total=False):
     """
     messages: Annotated[list[AnyMessage], add_messages]
     user_query: str
-    # e.g. phases["problem_framing"] = {...}, phases["business_goals"] = {...}
     phases: Dict[str, PhaseEntry]
     errors: list[str]
 
