@@ -8,6 +8,10 @@ from pydantic import BaseModel
 
 from app.agents.problem_framing.schema import ProblemFrame
 
+# Lifecycle of this phase's result.
+# - "pending" – never run or invalidated
+# - "complete" – last run is considered valid
+# - "stale" – upstream changes mean this phase should be re-run
 PhaseStatus = Literal["pending", "complete", "stale"]
 
 
@@ -24,11 +28,6 @@ class PhaseEntry(TypedDict, total=False):
     hilp_meta: Dict[str, Any]
     hilp_clarifications: list[Dict[str, Any]]
     error: Dict[str, Any]
-
-    # Lifecycle of this phase's result.
-    # - "pending"  – never run or invalidated
-    # - "complete" – last run is considered valid
-    # - "stale"    – upstream changes mean this phase should be re-run
     status: PhaseStatus
 
 class SageState(TypedDict, total=False):

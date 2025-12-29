@@ -3,7 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from langgraph.types import Command, Runtime
+from langgraph.types import Command
+from langgraph.runtime import Runtime
 
 from app.agents.problem_framing.schema import ProblemFrame
 from app.nodes.problem_framing import make_node_problem_framing

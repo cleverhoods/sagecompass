@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from langgraph.types import Runtime
+from langgraph.runtime import Runtime
 
 from app.agents.problem_framing.schema import ProblemFrame
 from app.middlewares.hilp import make_boolean_hilp_middleware

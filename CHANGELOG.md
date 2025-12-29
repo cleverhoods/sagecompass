@@ -46,6 +46,7 @@
 - [langgraph/backend] Stopped writing phase outputs to ad-hoc top-level keys and ensured Problem Framing node updates only canonical `state['phases']`.
 - [langgraph/backend] Updated Gradio UI to persist user queries and summarize problem framing from canonical phase data.
 - [langgraph/backend] Made UI interrupt extraction resilient to stream_events payloads so HILP clarifications surface instead of silent framing messages.
+- [langgraph/backend] Fixed runtime import and fixed test scrip running tasks
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares

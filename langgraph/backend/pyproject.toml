@@ -26,15 +26,48 @@ dependencies = [
 dev = [
     "debugpy>=1.8.19",
     "pydevd-pycharm>=253.29346.142",
-    "pytest>=9.0.2",
-    "langchain-tests==0.1.0",
+    "langchain-tests==1.1.2",
+    "pytest>=8.4.2",
+    "poethepoet>=0.39.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
 
-[tool.uv.scripts]
-"test:unit" = "pytest"
-"test:real" = "SAGECOMPASS_USE_STUBS=0 pytest -m real_deps"
-"test:integration" = "pytest -m integration"
+[tool.poe]
+# Optional: load env files automatically for tasks (supports list too)
+# envfile = [".env", ".env.local"]
+
+[tool.poe.tasks]
+
+# ---- Test lanes (matches your contract-first plan) ----
+test = { ref = "test_unit", help = "Default: run stubbed unit test lane" }
+
+[tool.poe.tasks.test_unit]
+cmd = "pytest -m \"not real_deps and not integration\""
+env = { SAGECOMPASS_USE_STUBS = "1" }
+help = "Unit lane (fast, stubs enabled)"
+
+[tool.poe.tasks.test_real]
+cmd = "pytest -m real_deps"
+env = { SAGECOMPASS_USE_STUBS = "0" }
+help = "Real-deps lane (no stubs; offline)"
+
+[tool.poe.tasks.test_integration]
+cmd = "pytest -m integration"
+env = { SAGECOMPASS_USE_STUBS = "0" }
+help = "Integration lane (may require credentials)"
+
+# ---- Linting/Styling ----
+[tool.poe.tasks.lint]
+cmd = "ruff check ."
+help = "Run ruff lint"
+
+[tool.poe.tasks.fmt]
+cmd = "ruff format ."
+help = "Run ruff formatter"
+
+[tool.poe.tasks.type]
+cmd = "mypy ."
+help = "Run mypy type checks"

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 from app.tools import get_tools
 from app.agents.utils import compose_agent_prompt
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
+from langchain.agents.middleware import TodoListMiddleware
 from app.utils.model_factory import get_model_for_agent
 
 from .mw import problem_framing_hilp
@@ -57,6 +58,7 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
     )
 
     middlewares: list[AgentMiddleware[AgentState, Any]] = [
+        TodoListMiddleware(),
         make_dynamic_prompt_middleware(
             agent_prompt,
             placeholders=("user_query", "format_instructions"),

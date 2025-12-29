@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Callable, Literal
 
 from langgraph.graph import END
-from langgraph.types import Command, Runtime
+from langgraph.types import Command
+from langgraph.runtime import Runtime
 
 from app.state import SageState
 from app.runtime import SageRuntimeContext

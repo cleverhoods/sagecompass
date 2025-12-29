@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any, Callable
 from typing_extensions import Literal
 
-from langgraph.types import Command, Runtime
+from langgraph.types import Command
+from langgraph.runtime import Runtime
 from langchain_core.runnables import Runnable
 
 from app.state import SageState

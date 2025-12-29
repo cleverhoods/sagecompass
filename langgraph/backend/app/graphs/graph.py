@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 from langgraph.graph import START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import Runtime
+from langgraph.runtime import Runtime
 from app.state import SageState
 from app.runtime import SageRuntimeContext
 

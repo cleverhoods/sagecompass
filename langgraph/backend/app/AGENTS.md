@@ -36,6 +36,7 @@ If the graph uses `Command(goto=...)`:
 - Editing `app/graphs/*` -> read `app/graphs/README.md`
 - Editing `app/middlewares/*` -> read `app/middlewares/README.md`
 - Editing `app/nodes/*` -> read `app/nodes/README.md`
+- Editing `app/schemas/*` -> read `app/schemas/README.md`
 - Editing `app/tools/*` -> read `app/tools/README.md`
 - Editing `app/utils/*` -> read `app/utils/README.md`
 

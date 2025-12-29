@@ -4,7 +4,8 @@ from typing import Any, Callable, Literal, TypedDict
 
 from langchain.agents import AgentState
 from langchain.agents.middleware import after_agent, AgentMiddleware
-from langgraph.types import Runtime, interrupt
+from langgraph.types import interrupt
+from langgraph.runtime import Runtime
 from pydantic import BaseModel, ValidationError
 
 from app.utils.hilp_core import HilpMeta
