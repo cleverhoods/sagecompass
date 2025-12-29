@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Callable, Literal
 
 from langgraph.graph import END
-from langgraph.types import Command
+from langgraph.types import Command, Runtime
 
 from app.state import SageState
+from app.runtime import SageRuntimeContext
 from app.utils.logger import log
 
 
@@ -13,7 +14,9 @@ def make_node_supervisor(
     *,
     pf_phase: str = "problem_framing",
 ) -> Callable[[SageState], Command[str]]:
-    def node_supervisor(state: SageState) -> Command[Literal["problem_framing", END]]:
+    def node_supervisor(
+        state: SageState, runtime: Runtime[SageRuntimeContext] | None = None
+    ) -> Command[Literal["problem_framing", END]]:
 
         phases = state.get("phases") or {}
         pf_entry = phases.get(pf_phase) or {}

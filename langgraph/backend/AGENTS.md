@@ -25,6 +25,11 @@ For rationale and examples, see `app/README.md` and per-folder READMEs.
 - Nodes MUST NOT call `interrupt()` directly or mutate ad-hoc HILP state; only middleware issues interrupts.
 - Nodes persist middleware outputs (`hilp_meta`, `hilp_clarifications`) alongside their phase data in `SageState["phases"][<phase>]`.
 
+## Backend test lanes
+- **Stub lane (default):** `SAGECOMPASS_USE_STUBS=1 uv run pytest`
+- **Real-deps lane:** `SAGECOMPASS_USE_STUBS=0 uv run pytest -m real_deps`
+- **Integration lane (opt-in):** `uv run pytest -m integration` (requires any needed API keys)
+
 ## Documentation + Tests
 - Keep README.md files present at: `app/`, `app/agents/`, `app/nodes/`, `app/graphs/`, `app/tools/`, `app/middlewares/`.
 - Any change affecting these contracts MUST update/extend tests under `tests/`.

@@ -18,3 +18,15 @@ def test_runtime_surfaces_avoid_env_logging_and_io_at_import():
     banned = {"load_project_env", "log", "open", "read_text", "write_text", "basicConfig"}
     for surface in ("agents", "nodes", "graphs"):
         _assert_no_banned_calls(APP / surface, banned)
+
+
+def test_utils_avoid_import_time_env_and_io_calls():
+    banned = {
+        "load_dotenv",
+        "load_project_env",
+        "basicConfig",
+        "open",
+        "read_text",
+        "write_text",
+    }
+    _assert_no_banned_calls(APP / "utils", banned)

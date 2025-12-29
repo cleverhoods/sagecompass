@@ -27,8 +27,14 @@ dev = [
     "debugpy>=1.8.19",
     "pydevd-pycharm>=253.29346.142",
     "pytest>=9.0.2",
+    "langchain-tests==0.1.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.uv.scripts]
+"test:unit" = "pytest"
+"test:real" = "SAGECOMPASS_USE_STUBS=0 pytest -m real_deps"
+"test:integration" = "pytest -m integration"

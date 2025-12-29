@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import app.graphs.graph as graphs
 from app.graphs.graph import build_main_app
+from app.runtime import SageRuntimeContext
 
 
 class _FakeCompiledGraph(dict):
@@ -9,8 +10,9 @@ class _FakeCompiledGraph(dict):
 
 
 class _FakeStateGraph:
-    def __init__(self, state_type):
+    def __init__(self, state_type, context_schema=None):
         self.state_type = state_type
+        self.context_schema = context_schema
         self.nodes: list[tuple[str, object]] = []
         self.edges: list[tuple[str, str]] = []
 
@@ -21,7 +23,14 @@ class _FakeStateGraph:
         self.edges.append((start, end))
 
     def compile(self) -> _FakeCompiledGraph:
-        return _FakeCompiledGraph({"state_type": self.state_type, "nodes": self.nodes, "edges": self.edges})
+        return _FakeCompiledGraph(
+            {
+                "state_type": self.state_type,
+                "context_schema": self.context_schema,
+                "nodes": self.nodes,
+                "edges": self.edges,
+            }
+        )
 
 
 def test_build_main_app_wires_nodes_and_edges(monkeypatch):
@@ -37,6 +46,7 @@ def test_build_main_app_wires_nodes_and_edges(monkeypatch):
 
     assert isinstance(compiled, _FakeCompiledGraph)
     assert compiled["state_type"] is graphs.SageState
+    assert compiled["context_schema"] is SageRuntimeContext
     assert ("supervisor", supervisor) in compiled["nodes"]
     assert ("problem_framing", problem_framing) in compiled["nodes"]
     assert (fake_start, "supervisor") in compiled["edges"]

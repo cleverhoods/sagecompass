@@ -12,6 +12,13 @@ class Command(Generic[T]):
     goto: T | None = None
 
 
+@dataclass
+class Runtime(Generic[T]):
+    context: T | None = None
+    checkpointer: Any | None = None
+    config: dict[str, Any] = field(default_factory=dict)
+
+
 def interrupt(value: Any | None = None) -> Any:
     """Stub interrupt that simply returns the provided value."""
     return value

@@ -15,15 +15,35 @@ def read_text(path: Path) -> str:
 def top_level_call_names(py: Path) -> list[tuple[int, str]]:
     src = read_text(py)
     tree = ast.parse(src)
-    out: list[tuple[int, str]] = []
+    calls: list[tuple[int, str]] = []
+
+    class _TopLevelCallVisitor(ast.NodeVisitor):
+        def visit_FunctionDef(self, node):
+            # Do not traverse into functions/classes; only import-time effects matter.
+            return
+
+        visit_AsyncFunctionDef = visit_FunctionDef
+        visit_ClassDef = visit_FunctionDef
+
+        def visit_Call(self, node: ast.Call):
+            func = node.func
+            name = None
+            if isinstance(func, ast.Name):
+                name = func.id
+            elif isinstance(func, ast.Attribute):
+                name = func.attr
+            if name:
+                calls.append((node.lineno, name))
+            # Traverse arguments to catch nested calls at top-level expressions.
+            for child in ast.iter_child_nodes(node):
+                if not isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+                    self.visit(child)
+
+    visitor = _TopLevelCallVisitor()
     for node in tree.body:
-        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
-            fn = node.value.func
-            if isinstance(fn, ast.Name):
-                out.append((node.lineno, fn.id))
-            elif isinstance(fn, ast.Attribute):
-                out.append((node.lineno, fn.attr))
-    return out
+        visitor.visit(node)
+
+    return calls
 
 
 def collect_import_modules(py: Path) -> set[str]:

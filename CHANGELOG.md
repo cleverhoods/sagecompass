@@ -6,6 +6,9 @@
 - [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
 - [langgraph/backend] Added offline behavioral tests for nodes, graph wiring, and HILP middleware to exercise core contracts.
+- [langgraph/backend] Added dual pytest lanes (stub vs real-deps) with markers and commands to exercise contract suites across dependency modes.
+- [langgraph/backend] Added contract coverage for runtime context, state update whitelists, and LangGraph interrupt/resume behavior with real checkpointers.
+- [langgraph/backend] Added `langchain-tests` dev dependency and placeholder standard test lanes for future LangChain component wrappers.
 - [docs] Documented offline test invocation via `UV_NO_SYNC=1 uv run pytest` to avoid dependency downloads.
 - [langgraph/backend] Added Gradio-specific UI contracts and HILP UI tests to govern clarification handling.
 
@@ -18,6 +21,7 @@
 - [langgraph/backend] Align Gradio ChatInterface with LangChain message history and stream message events to the UI.
 - [langgraph/backend] Stream ChatInterface responses when the LangGraph app exposes a stream API.
 - [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
+- [langgraph/backend] Shifted HILP controls into LangGraph runtime context, stripped import-time env/logging side effects, and enforced util-side AST guards.
 - [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
 - [langgraph/backend] Consolidated architecture contract tests under `tests/contracts/` with topic-specific modules for layout, imports, state, graphs, and interrupts.
 - [prompt] Added few shot examples for Problem Framing agent.

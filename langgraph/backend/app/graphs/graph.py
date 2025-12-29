@@ -2,13 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from langgraph.graph import StateGraph, START
+from langgraph.graph import START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import Runtime
 from app.state import SageState
+from app.runtime import SageRuntimeContext
 
 
 # Type alias for node callables operating on SageState.
-NodeFn = Callable[[SageState], object]
+NodeFn = Callable[[SageState, Runtime[SageRuntimeContext] | None], object]
 
 
 def build_main_app(
@@ -24,7 +26,7 @@ def build_main_app(
     - Receives fully dependency-injected node callables.
     - Only static edge is START -> entry node ("supervisor").
     """
-    graph = StateGraph(SageState)
+    graph = StateGraph(SageState, context_schema=SageRuntimeContext)
 
     graph.add_node("supervisor", supervisor_node)
 

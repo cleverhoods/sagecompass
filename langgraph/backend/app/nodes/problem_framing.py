@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any, Callable
 from typing_extensions import Literal
 
-from langgraph.types import Command
+from langgraph.types import Command, Runtime
 from langchain_core.runnables import Runnable
 
 from app.state import SageState
 from app.agents.problem_framing.schema import ProblemFrame
-from app.utils.phases import set_phase_status_update
+from app.runtime import SageRuntimeContext
 
 
 def make_node_problem_framing(
@@ -18,7 +18,9 @@ def make_node_problem_framing(
     goto_after: str = "supervisor",
 ) -> Callable[[SageState], Command[Literal["supervisor"]]]:
 
-    def node_problem_framing(state: SageState) -> Command[Literal["supervisor"]]:
+    def node_problem_framing(
+        state: SageState, runtime: Runtime[SageRuntimeContext] | None = None
+    ) -> Command[Literal["supervisor"]]:
         agent_input: dict[str, Any] = {
             "user_query": state.get("user_query", ""),
             "messages": state.get("messages", []),
@@ -51,14 +53,17 @@ def make_node_problem_framing(
             hilp_meta = result.get("hilp_meta")
             clarifications = list(result.get("hilp_clarifications") or [])
 
+        ctx = (getattr(runtime, "context", None) if runtime else {}) or {}
+        hilp_audit_mode = ctx.get("hilp_audit_mode", True)
+
         phases = dict(state.get("phases") or {})
         entry: dict[str, Any] = {
             "data": pf.model_dump(),
             "status": "complete",
         }
-        if hilp_meta:
+        if hilp_meta and hilp_audit_mode:
             entry["hilp_meta"] = hilp_meta
-        if clarifications:
+        if clarifications and hilp_audit_mode:
             entry["hilp_clarifications"] = clarifications
         phases[phase] = entry
 

@@ -5,36 +5,41 @@ from typing import Any, Mapping, Optional
 
 import structlog
 
-
-# --- stdlib logging base config -----------------------------------------
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(message)s",  # structlog will format the final message
-)
+_CONFIGURED = False
+_logger: structlog.stdlib.BoundLogger | None = None
 
 
-# --- structlog configuration --------------------------------------------
+def configure_logging() -> structlog.stdlib.BoundLogger:
+    """Configure logging lazily to avoid import-time side effects."""
+    global _CONFIGURED, _logger
+    if _CONFIGURED and _logger is not None:
+        return _logger
 
-structlog.configure(
-    processors=[
-        # Merge stdlib log record (level, logger name, etc.) into the event dict.
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
-        structlog.processors.TimeStamper(key="ts", fmt="iso"),
-        # Keep tracebacks as structured data when logging exceptions.
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.dict_tracebacks,
-        # Render final event as JSON string.
-        structlog.processors.JSONRenderer(),
-    ],
-    wrapper_class=structlog.stdlib.BoundLogger,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    cache_logger_on_first_use=True,
-)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",  # structlog will format the final message
+    )
 
+    structlog.configure(
+        processors=[
+            # Merge stdlib log record (level, logger name, etc.) into the event dict.
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.add_logger_name,
+            structlog.processors.TimeStamper(key="ts", fmt="iso"),
+            # Keep tracebacks as structured data when logging exceptions.
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.dict_tracebacks,
+            # Render final event as JSON string.
+            structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
 
-_logger = structlog.get_logger("sagecompass")
+    _logger = structlog.get_logger("sagecompass")
+    _CONFIGURED = True
+    return _logger
 
 
 def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
@@ -45,9 +50,10 @@ def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
         logger = get_logger("problem_framing")
         logger.info("agent.node.start", agent="problem_framing")
     """
+    base_logger = _logger or configure_logging()
     if name:
-        return _logger.bind(component=name)
-    return _logger
+        return base_logger.bind(component=name)
+    return base_logger
 
 
 def log(event: str, payload: Mapping[str, Any] | None = None) -> None:
@@ -62,4 +68,5 @@ def log(event: str, payload: Mapping[str, Any] | None = None) -> None:
         payload = {}
 
     # `event` is the message; payload becomes structured fields on the log.
-    _logger.info(event, **payload)
+    logger = _logger or configure_logging()
+    logger.info(event, **payload)

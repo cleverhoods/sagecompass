@@ -1,11 +1,17 @@
 import importlib
+import os
 import sys
 import types
 from pathlib import Path
 
+import pytest
+
+# Stub lane is enabled by default; disable with SAGECOMPASS_USE_STUBS=0 for real-deps lane.
+USE_STUBS = os.getenv("SAGECOMPASS_USE_STUBS", "1") not in {"0", "false", "False"}
+
 # Ensure local offline stubs are discoverable before importing anything else.
 _STUBS_DIR = Path(__file__).resolve().parent / "stubs"
-if _STUBS_DIR.exists():
+if USE_STUBS and _STUBS_DIR.exists():
     sys.path.insert(0, str(_STUBS_DIR))
 
 
@@ -121,3 +127,22 @@ except ModuleNotFoundError:
 # resolution is handled by the sys.path entry above. Avoid defining ad-hoc
 # stubs here to keep behavior consistent with those fixtures.
 # ---------------------------------------------------------------------------
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "unit: default lane with stubs and fakes")
+    config.addinivalue_line("markers", "real_deps: runs against pinned uv.lock deps (no stubs)")
+    config.addinivalue_line("markers", "integration: exercises external services; opt-in only")
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    skip_real = pytest.mark.skip(reason="real-deps lane requires SAGECOMPASS_USE_STUBS=0")
+    skip_integration = pytest.mark.skip(reason="integration lane must be explicitly selected via -m integration")
+    for item in items:
+        if "unit" in item.keywords and not USE_STUBS:
+            # Unit tests are designed for stub lane; still run if USE_STUBS=0 unless explicitly skipped.
+            continue
+        if "real_deps" in item.keywords and USE_STUBS:
+            item.add_marker(skip_real)
+        if "integration" in item.keywords and "integration" not in config.getoption("-m", default=""):
+            item.add_marker(skip_integration)

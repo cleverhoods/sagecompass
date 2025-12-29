@@ -18,8 +18,9 @@ def add_messages(messages: Iterable[T]) -> List[T]:
 
 
 class StateGraph:
-    def __init__(self, state_type: type) -> None:
+    def __init__(self, state_type: type, context_schema: type | None = None) -> None:
         self.state_type = state_type
+        self.context_schema = context_schema
         self.nodes: list[tuple[str, Callable]] = []
         self.edges: list[tuple[str, str]] = []
 
@@ -30,4 +31,6 @@ class StateGraph:
         self.edges.append((start, end))
 
     def compile(self) -> CompiledStateGraph:
-        return CompiledStateGraph({"state_type": self.state_type, "nodes": self.nodes, "edges": self.edges})
+        return CompiledStateGraph(
+            {"state_type": self.state_type, "context_schema": self.context_schema, "nodes": self.nodes, "edges": self.edges}
+        )
