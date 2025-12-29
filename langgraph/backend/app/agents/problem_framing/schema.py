@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import List, Literal
+from typing import List, Literal, Annotated
 from pydantic import BaseModel, Field
+from decimal import Decimal
 
 # --- Problem framing ---
 
@@ -10,12 +11,13 @@ class AmbiguityResolutionAssumption(BaseModel):
         ...,
         description="Direction and rough magnitude of impact."
     )
-    impact_value: float = Field(
+    impact_value: Annotated[Decimal, Field(
         ...,
         ge=0.0,
         le=1.0,
+        decimal_places=1,
         description="Normalized strength (0–1) of this impact."
-    )
+    )]
     assumption: str = Field(
         ...,
         description="Short internal note: what the frame should assume in this case."
@@ -62,18 +64,20 @@ class AmbiguityItem(BaseModel):
             "user answer (YES / NO / UNKNOWN)."
         ),
     )
-    importance: float = Field(
+    importance: Annotated[Decimal, Field(
         ...,
         ge=0.01,
         le=0.99,
+        decimal_places=2,
         description="How critical this ambiguity is for framing the problem (0.99 = critical)."
-    )
-    confidence: float = Field(
+    )]
+    confidence: Annotated[Decimal, Field(
         ...,
         ge=0.01,
         le=0.99,
+        decimal_places=2,
         description="How confident you are that this ambiguity is real and worth clarifying."
-    )
+    )]
 
 
 class ProblemFrame(BaseModel):
@@ -101,12 +105,13 @@ class ProblemFrame(BaseModel):
         default_factory=list,
         description="List of ambiguities where critical information is missing, conflicting, or underspecified."
     )
-    confidence: float = Field(
+    confidence: Annotated[Decimal, Field(
         ...,
         ge=0.01,
         le=0.99,
+        decimal_places=2,
         description="Overall confidence (0.01–0.99) that this ProblemFrame correctly captures the situation."
-    )
+    )]
 
 # Generic loader convention
 OutputSchema = ProblemFrame
