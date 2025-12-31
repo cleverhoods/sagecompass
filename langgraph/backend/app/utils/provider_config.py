@@ -1,12 +1,12 @@
-import os
 import importlib
+import os
+
 from app.utils.file_loader import FileLoader
-from app.utils.logger import log
-from app.utils.paths import CONFIG_DIR
 from app.utils.env import load_project_env
+from app.utils.logger import get_logger
+from app.utils.paths import CONFIG_DIR
 
 PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
-
 
 
 class ProviderFactory:
@@ -19,6 +19,7 @@ class ProviderFactory:
 
     @staticmethod
     def for_agent(agent_name: str = None):
+        logger = get_logger("utils.provider_config")
         try:
             load_project_env()
             # --- Load configurations ---
@@ -32,7 +33,7 @@ class ProviderFactory:
             if not prov_cfg:
                 raise FileNotFoundError(f"Provider config missing for '{provider_name}'")
 
-            log("provider.load.start", {"agent": agent_name, "provider": provider_name})
+            logger.info("provider.load.start", agent=agent_name, provider=provider_name)
 
             # --- Merge parameters (provider.defaults <- agent.yaml) ---
             provider_defaults = prov_cfg.get("defaults", {}) or {}
@@ -58,14 +59,15 @@ class ProviderFactory:
             # ChatOpenAI → api_key=..., model=..., temperature=...
             instance = provider_class(api_key=api_key, **params)
 
-            log("provider.load.success", {
-                "agent": agent_name,
-                "provider": provider_name,
-                "params": list(params.keys())
-            })
+            logger.info(
+                "provider.load.success",
+                agent=agent_name,
+                provider=provider_name,
+                params=list(params.keys()),
+            )
 
             return instance, params
 
         except Exception as e:
-            log("provider.load.error", {"agent": agent_name, "error": str(e)})
+            logger.error("provider.load.error", agent=agent_name, error=str(e))
             raise
