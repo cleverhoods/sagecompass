@@ -39,6 +39,7 @@
 - [langgraph/backend] Followed up on missed HILP mentions in the langgraph related segments.
 - [docs] Refined the architecture review playbook to rely on the knowledge base and current framework docs for maintainability.
 - [docs] Linked the knowledge base from the global AGENTS guide for discoverability.
+- [langgraph/backend] Normalized structlog helpers to avoid global state and applied structured logging across app modules.
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.

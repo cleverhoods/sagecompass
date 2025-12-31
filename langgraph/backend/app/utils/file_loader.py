@@ -5,12 +5,16 @@ import os, json, yaml
 from functools import lru_cache
 from pathlib import Path
 
-from app.utils.logger import log
+from app.utils.logger import get_logger
 from app.utils.paths import APP_ROOT, AGENTS_DIR, CONFIG_DIR
 
 
 class FileLoader:
     DEV_MODE = os.getenv("SAGECOMPASS_ENV", "prod").lower() == "dev"
+
+    @staticmethod
+    def _logger():
+        return get_logger("utils.file_loader")
 
     @classmethod
     def _read_file(
@@ -20,21 +24,20 @@ class FileLoader:
         loader=None,
         category: str = "file",
     ):
+        logger = cls._logger()
         try:
             with open(file_path, mode, encoding="utf-8") as f:
                 data = loader(f) if loader else f.read()
                 if cls.DEV_MODE:
-                    log(f"{category}.load.success", {"path": file_path})
+                    logger.info(f"{category}.load.success", path=file_path)
                 return data
         except FileNotFoundError:
-            log(f"{category}.load.missing", {"path": file_path})
-        except PermissionError:
-            log(f"{category}.load.denied", {"path": file_path})
+            logger.warning(f"{category}.load.missing", path=file_path)
+        except PermissionError as exc:
+            logger.error(f"{category}.load.denied", path=file_path, error=str(exc))
         except Exception as e:
-            log(f"{category}.load.error", {"path": file_path, "error": str(e)})
+            logger.error(f"{category}.load.error", path=file_path, error=str(e))
 
-        # Fallback log (you can drop this if you feel it's too noisy)
-        log(f"{category}.load.error", {"path": file_path, "error": "unknown error"})
         return False
 
     # --- Generic helpers -------------------------------------------------

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from typing import Sequence, Any
 
 from langchain.agents import create_agent, AgentState
@@ -14,10 +13,15 @@ from app.tools import get_tools
 from app.agents.utils import compose_agent_prompt
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.utils.model_factory import get_model_for_agent
+from app.utils.logger import get_logger
 
 from .schema import ProblemFrame
 
 AGENT_NAME = "problem_framing"
+
+
+def _logger():
+    return get_logger(f"agents.{AGENT_NAME}")
 
 
 class ProblemFramingAgentConfig(BaseModel):
@@ -27,6 +31,7 @@ class ProblemFramingAgentConfig(BaseModel):
 
     def get_extra_middleware(self) -> tuple[AgentMiddleware, ...]:
         return tuple(self._extra_middleware)
+
 
 def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
     """
@@ -44,8 +49,12 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
     model = config.model or get_model_for_agent(AGENT_NAME)
     tools: Sequence[BaseTool] = get_tools(config.tool_names)
 
-    logging.info(f"[{AGENT_NAME}] Using model: {model}")
-    logging.info(f"[{AGENT_NAME}] Tools: {tools}")
+    _logger().info(
+        "agent.build",
+        agent=AGENT_NAME,
+        model=str(model),
+        tools=[tool.name for tool in tools],
+    )
 
     # Build the system+few-shot prompt
     agent_prompt = compose_agent_prompt(

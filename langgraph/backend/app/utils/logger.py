@@ -1,20 +1,20 @@
 from __future__ import annotations
 
 import logging
+from functools import lru_cache
 from typing import Any, Mapping, Optional
 
 import structlog
 
-_CONFIGURED = False
-_logger: structlog.stdlib.BoundLogger | None = None
 
-
+@lru_cache(maxsize=1)
 def configure_logging() -> structlog.stdlib.BoundLogger:
-    """Configure logging lazily to avoid import-time side effects."""
-    global _CONFIGURED, _logger
-    if _CONFIGURED and _logger is not None:
-        return _logger
+    """
+    Configure structlog to render structured JSON while honoring stdlib logging.
 
+    We keep structlog for structured, machine-readable events and rely on the
+    stdlib logging pipeline for interoperability (handlers, log levels, etc.).
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(message)s",  # structlog will format the final message
@@ -22,14 +22,11 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
 
     structlog.configure(
         processors=[
-            # Merge stdlib log record (level, logger name, etc.) into the event dict.
             structlog.stdlib.add_log_level,
             structlog.stdlib.add_logger_name,
             structlog.processors.TimeStamper(key="ts", fmt="iso"),
-            # Keep tracebacks as structured data when logging exceptions.
             structlog.processors.StackInfoRenderer(),
             structlog.processors.dict_tracebacks,
-            # Render final event as JSON string.
             structlog.processors.JSONRenderer(),
         ],
         wrapper_class=structlog.stdlib.BoundLogger,
@@ -37,36 +34,30 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
         cache_logger_on_first_use=True,
     )
 
-    _logger = structlog.get_logger("sagecompass")
-    _CONFIGURED = True
-    return _logger
+    return structlog.get_logger("sagecompass")
 
 
 def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
     """
-    Optional helper for modules that want their own bound logger.
+    Helper for modules that want their own bound logger without using globals.
 
     Example:
         logger = get_logger("problem_framing")
         logger.info("agent.node.start", agent="problem_framing")
     """
-    base_logger = _logger or configure_logging()
+    base_logger = configure_logging()
     if name:
         return base_logger.bind(component=name)
     return base_logger
 
 
-def log(event: str, payload: Mapping[str, Any] | None = None) -> None:
+def log(event: str, payload: Mapping[str, Any] | None = None, *, component: str | None = None) -> None:
     """
     Project-wide logging helper.
 
     Usage:
         log("agent.node.start", {"agent": "problem_framing"})
-        log("provider.load.success", {"provider": "perplexity"})
+        log("provider.load.success", {"provider": "perplexity"}, component="provider")
     """
-    if payload is None:
-        payload = {}
-
-    # `event` is the message; payload becomes structured fields on the log.
-    logger = _logger or configure_logging()
-    logger.info(event, **payload)
+    logger = get_logger(component)
+    logger.info(event, **(payload or {}))
