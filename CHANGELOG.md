@@ -11,6 +11,7 @@
 - [langgraph/backend] Added `langchain-tests` dev dependency and placeholder standard test lanes for future LangChain component wrappers.
 - [docs] Documented offline test invocation via `UV_NO_SYNC=1 uv run pytest` to avoid dependency downloads.
 - [langgraph/backend] Added Gradio-specific UI contracts and HILP UI tests to govern clarification handling.
+- [docs] Added knowledge base with framework documentation links and contract map for reviewers.
 
 ### Changed
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
@@ -36,6 +37,8 @@
 - [langgraph/backend] Stubbed Gradio for UI tests to avoid dependency downloads while exercising HILP flows.
 - [langgraph/ui] Relocated Gradio UI to `app/ui/` and added `app/ui/tests/` for offline tests.
 - [langgraph/backend] Followed up on missed HILP mentions in the langgraph related segments.
+- [docs] Refined the architecture review playbook to rely on the knowledge base and current framework docs for maintainability.
+- [docs] Linked the knowledge base from the global AGENTS guide for discoverability.
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
