@@ -76,6 +76,7 @@ This monorepo contains multiple `AGENTS.md` files.
 - `PROJECT_ROOT/langgraph/backend/AGENTS.md` - Python runtime/server conventions (uv, langgraph-api, tests, debugging).
 - `PROJECT_ROOT/langgraph/backend/app/AGENTS.md` - Application architecture contracts (state/DI/routing, node/agent/tool/middleware separation); defers details to `PROJECT_ROOT/langgraph/backend/app/**/README.md`.
 - `PROJECT_ROOT/drupal/AGENTS.md` - (planned) Drupal layer conventions.
+- Knowledge base for quick navigation and external docs: see `PROJECT_ROOT/DOCS_KB.md`.
 
 ## Architectural Refactors (Cross-cutting Changes)
 
