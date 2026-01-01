@@ -72,25 +72,36 @@ If using `Command(goto=...)` as the routing mechanism:
 ```
 app/
 ├── agents/                         -> Read provided app/agents/README.md
-│   └── ...                         
+│   └── ...
 ├── graphs/                         -> All graphs that are present in the system lives here. 
-│   └── graph.py                    -> Main graph of SageCompass.
-├── middlewares/                    -> Generic middlewares, not bound to specific agent/tool.
-│   └──  dynamic_prompt.py          -> Prompt middleware for few-shots generation.
-├── nodes/                          -> All node that are present in the system lives here.
-│   ├── problem_framing.py          -> Problem framing node.
-│   └── supervisor.py               -> SageCompass main supervisor node.
-├── tools/                          -> Tools registry
-│   ├── __init__.py                 -> Contains registry level logic (register/get tools)
-│   └── nothingizer.py              -> The famous nothingizer tool (does absolutely nothing) 
-├── utils/                          -> System scoped utility script.
+│   ├── README.md
+│   ├── graph.py                    -> Main graph of SageCompass
+│   └── write_graph.py              -> VectorStore writer graph
+├── middlewares/
+│   └── dynamic_prompt.py           -> Prompt middleware for few-shots generation.
+├── nodes/
+│   ├── problem_framing.py          -> Problem framing node for the Problem Framing Agent.
+│   ├── retrieve_context.py         -> Context retrieval node, retriewes data from the Vector Storage.
+│   ├── supervisor.py               -> SageCompass main supervisor node.
+│   └── write_vector_content.py     -> VectorStore writer node.
+├── state/                          -> All state definitions in the system lives here.
+│   ├── state.py                    -> Main state for the system.
+│   └── write_state.py              -> Vector writing state.
+├── tools/                          -> Available Tools for the system.
+│   ├── __init__.py                 -> Constrains via "__all__ = []".
+│   ├── context_lookup.py           -> Retrieve agent-scoped context relevant to a query from long-term memory.
+│   ├── nothingizer.py              -> The famous nothingizer tool (does absolutely nothing)
+│   └── vector_writer.py            -> Core logic for writing content to the LangGraph Store.
+├── utils/
+│   ├── debug.py                    -> Debugging utilities.
 │   ├── env.py                      -> Loads environment variables from the backend .env file exactly once.
 │   ├── file_loader.py              -> Loads prompts/config ymls. 
-│   ├── logger.py                   -> Lightweight specific python logger.
+│   ├── logger.py                   -> Lightweight configured python logger.
 │   ├── model_factory.py            -> Returns a configured model instance for a given agent.
 │   ├── paths.py                    -> Defines folder locations.
-│   ├── phases.py                   -> Phase helper methods.
-│   └── provider_config.py          -> Instantiates an LLM provider for a given agent
-├── README.md
-└── state.py                        -> Manages global state information 
+│   ├── phases.py                   -> Helper methods around Phases.
+│   ├── provider_config.py          -> Instantiates an LLM provider for a given agent
+│   └── state_helpers.py            -> Helper methods around State.
+├── main.py                         -> Centralized entrypoint for the application.
+└── runtime.py                      -> Defines SageRuntimeContext, the runtime context for the main application.
 ```

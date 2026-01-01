@@ -15,6 +15,11 @@
 - [drupal] Added Drupal instance.
 - [drupal] Added Context management (endpoints, forms, content type and taxonomy vocabs).
 - [langgraph/backend] Added RAG via the built-in LangGraph store. Added corresponding nodes/graphs/schemas.
+- [langgraph/backend] Introduced `detect_ambiguity` node and proposed dual-entry architecture to enable ambiguity detection before and after `problem_framing`. Supports richer routing control and early user clarification. (ref: ambiguity roadmap)
+- [langgraph/backend] Added `gating_guardrail` node with scoped config for `allowed_topics` and `blocked_keywords`, allowing early filtering of unsafe or off-topic input. (ref: Gating Layer Roadmap)
+- [langgraph/backend] Added `make_dynamic_prompt_middleware()` with placeholder resolution and support for runtime prompt injection. (ref: middleware updates)
+- [langgraph/backend] Enabled support for FewShotPromptWithTemplates in middleware, allowing `few-shots.prompt` to be appended as the final agent instruction. (ref: ambiguity agent prompt contract)
+
 
 ### Changed
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
@@ -44,6 +49,11 @@
 - [docs] Linked the knowledge base from the global AGENTS guide for discoverability.
 - [langgraph/backend] Normalized structlog helpers to avoid global state and applied structured logging across app modules.
 - [langgraph/backend] Settled on the @tool decorator for agent-specific tools.
+- [langgraph/backend] Enforced all `SageState` and `PhaseEntry` models to use Pydantic with field-level metadata for stronger type safety and LLM schema introspection. (ref: Pydantic migration)
+- [langgraph/backend] Replaced legacy `user_query` dependency with state-derived `task_input`, making agent invocation more robust and context-aware. (ref: remove user_query)
+- [langgraph/backend] Refactored `supervisor` logic to cleanly read phase state via structured methods and avoid defensive dict access. (ref: supervisor cleanup)
+- [langgraph/backend] Moved few-shot prompt composition out of `compose_agent_prompt()` and into middleware to separate prompt rendering from prompt injection. (ref: prompt layering policy)
+
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
@@ -57,12 +67,17 @@
 - [langgraph/backend] Made UI interrupt extraction resilient to stream_events payloads so HILP clarifications surface instead of silent framing messages.
 - [langgraph/backend] Fixed runtime import and fixed test scrip running tasks
 - [langgraph/backend] Unblocked backend contract tests by making the app package importable and adding a stub for `langgraph.runtime`.
+- [langgraph/backend] Resolved bug where few-shot `task_input` placeholder was not preserved due to early formatting. Now injected only at runtime. (ref: dynamic prompt bug)
+- [langgraph/backend] Fixed error when returning FewShotPromptWithTemplates directly to `create_agent()` by converting to rendered SystemMessage before injection. (ref: agent build crash)
+
 
 ### Removed
 - [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares
 - [langgraph/backend] Removed hilp.prompt-driven state machine and the hilp node in favor of middleware-first HITL handling.
 - [langgraph/backend] Removed translation agent.
 - [langgraph/backend] Removed HILP middleware.
+- [langgraph/backend] Removed unused `mw.py` file from agents that had no agent-specific middleware logic. (ref: folder contract cleanup)
+
 
 ### Security
 

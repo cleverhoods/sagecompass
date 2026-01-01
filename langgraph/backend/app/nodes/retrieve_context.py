@@ -8,6 +8,7 @@ from langgraph.runtime import Runtime
 
 from app.state import SageState, EvidenceItem, PhaseEntry
 from app.tools.context_lookup import context_lookup
+from app.utils.state_helpers import get_latest_user_input
 
 
 def make_node_retrieve_context(
@@ -17,10 +18,15 @@ def make_node_retrieve_context(
 ) -> Callable[[SageState], Command[Literal["supervisor"]]]:
     def node_retrieve_context(
         state: SageState, runtime: Runtime | None = None
-    ) -> Command[Literal["problem_framing"]]:
-        user_query = state.get("user_query", "") or ""
+    ) -> Command[Literal["supervisor"]]:
 
-        docs = context_lookup.invoke({"query": user_query, "collection": collection}) or []
+        # NEW: Use canonical source of user input
+        query = get_latest_user_input(state.messages) or ""
+
+        docs = context_lookup.invoke({
+            "query": query,
+            "collection": collection
+        }) or []
 
         evidence: List[EvidenceItem] = []
         for d in docs:
@@ -28,15 +34,17 @@ def make_node_retrieve_context(
             ns = md.get("store_namespace")
             key = md.get("store_key")
             score = md.get("score")
+
             if ns and key:
                 e: EvidenceItem = {"namespace": ns, "key": key}
                 if isinstance(score, (int, float)):
                     e["score"] = float(score)
                 evidence.append(e)
 
-        phases = dict(state.get("phases") or {})
-        entry: PhaseEntry = dict(phases.get(phase) or {})
-        entry["evidence"] = evidence  # IMPORTANT: set even if empty list
+        # Update relevant phase
+        phases = dict(state.phases)
+        entry: PhaseEntry = phases.get(phase, PhaseEntry())
+        entry.evidence = evidence
         phases[phase] = entry
 
         return Command(update={"phases": phases}, goto="supervisor")

@@ -1,4 +1,3 @@
-# app/utils/file_loader.py
 from __future__ import annotations
 
 import os, json, yaml
@@ -110,4 +109,15 @@ class FileLoader:
         file_path = provider_dir / f"{provider}.yaml"
         return cls._read_file(
             str(file_path), loader=yaml.safe_load, category=category
+        )
+
+    @classmethod
+    @lru_cache(maxsize=None)
+    def load_guardrails_config(cls):
+        """
+        Loads guardrails.yaml from the top-level config/ dir.
+        """
+        file_path = CONFIG_DIR / "guardrails.yaml"
+        return cls._read_file(
+            str(file_path), loader=yaml.safe_load, category="config"
         )

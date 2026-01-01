@@ -1,51 +1,77 @@
 from __future__ import annotations
 
-from typing import Annotated, Dict, Literal, TypedDict, Type, Any
-
+from typing import Dict, Literal, Type, Annotated
+from pydantic import BaseModel, Field
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages
-from pydantic import BaseModel
 
 from app.agents.problem_framing.schema import ProblemFrame
-
-# Lifecycle of this phase's result.
-# - "pending" – never run or invalidated
-# - "complete" – last run is considered valid
-# - "stale" – upstream changes mean this phase should be re-run
-PhaseStatus = Literal["pending", "complete", "stale"]
+from app.state.gating import GatingContext
 
 
-# Mapping phase key -> Pydantic schema for that phase's output
-PHASE_SCHEMAS: dict[str, Type[BaseModel]] = {
-    "problem_framing": ProblemFrame,
-    # "business_goals": BusinessGoals,
-}
+class EvidenceItem(BaseModel):
+    """
+    Represents evidence used by a phase to generate its output.
 
-class EvidenceItem(TypedDict, total=False):
+    - `namespace`: logical category or storage domain
+    - `key`: identifier within the namespace
+    - `score`: relevance or match score (e.g., vector search or heuristic)
+    """
     namespace: list[str]
     key: str
     score: float
 
-class PhaseEntry(TypedDict, total=False):
-    # Pydantic .model_dump() of the phase's output schema
-    data: Dict[str, Any]
-    error: Dict[str, Any]
-    status: PhaseStatus
-    evidence: list[EvidenceItem]
 
-class SageState(TypedDict, total=False):
+PhaseStatus = Literal["pending", "complete", "stale"]
+"""
+Lifecycle marker for each agentic phase result:
+- "pending": never run or needs rerun
+- "complete": valid and up-to-date
+- "stale": outdated due to upstream changes
+"""
+
+
+class PhaseEntry(BaseModel):
     """
-    Shared state for the 'agent' graph.
+    Container for a single phase (agent) result.
 
-    - `messages`: canonical conversation timeline (UI + agents).
-    - `user_query`: current main question for the active phase.
-    - `phases`: per-phase structured results, keyed by phase/agent name.
-    - `errors`: error summaries for failed phase executions.
+    - `data`: Serialized output of the agent (Pydantic model)
+    - `error`: Structured failure information if execution failed
+    - `status`: Lifecycle status of the phase result
+    - `evidence`: Inputs or support retrieved from memory/vector store
     """
-    messages: Annotated[list[AnyMessage], add_messages]
-    user_query: str
-    phases: Dict[str, PhaseEntry]
-    errors: list[str]
+    data: Dict[str, object] = Field(default_factory=dict)
+    error: Dict[str, object] = Field(default_factory=dict)
+    status: PhaseStatus = "pending"
+    evidence: list[EvidenceItem] = Field(default_factory=list)
 
 
-SAGESTATE_KEYS: set[str] = {"messages", "user_query", "phases", "errors"}
+class SageState(BaseModel):
+    """
+    Shared global state for the LangGraph agent runtime.
+
+    This object is passed between all nodes. It stores:
+    - `gating`: Gating decision metadata (safety, scope, etc.)
+    - `messages`: Full conversation history (user + agents)
+    - `phases`: Structured outputs of each processing phase (e.g., problem_framing)
+    - `errors`: Global error log
+    """
+    gating: GatingContext = Field(
+        default_factory=lambda: GatingContext(original_input=""),
+        description="All gating-related validation, scope, and ambiguity information."
+    )
+
+    messages: Annotated[list[AnyMessage], add_messages] = Field(
+        default_factory=list,
+        description="Conversation history including user inputs and agent replies."
+    )
+
+    phases: Dict[str, PhaseEntry] = Field(
+        default_factory=dict,
+        description="Per-phase results keyed by agent name (e.g. problem_framing)."
+    )
+
+    errors: list[str] = Field(
+        default_factory=list,
+        description="List of global or phase-level error summaries."
+    )

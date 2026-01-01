@@ -1,6 +1,6 @@
 [
   {
-    "user_query": "We want to reduce customer churn in our subscription business, but aren't sure if AI would help.",
+    "task_input": "We want to reduce customer churn in our subscription business, but aren't sure if AI would help.",
     "output": {
       "business_domain": "Subscription retention",
       "primary_outcome": "Reduce customer churn",
@@ -10,37 +10,11 @@
         "Hard to identify reasons for cancellation"
       ],
       "constraints": ["Only email-based customer interactions", "Small data team"],
-      "ambiguities": [
-        {
-          "key": "churn_definition",
-          "description": "It's unclear whether churn includes passive cancellations or failed payments.",
-          "clarifying_question": "Should failed payments be counted as churn?",
-          "resolution": {
-            "yes": {
-              "impact_direction": "-",
-              "impact_value": 0.4,
-              "assumption": "Include failed payments as churn"
-            },
-            "no": {
-              "impact_direction": "+",
-              "impact_value": 0.6,
-              "assumption": "Exclude failed payments"
-            },
-            "unknown": {
-              "impact_direction": "0",
-              "impact_value": 0.2,
-              "assumption": "Use general churn definition"
-            }
-          },
-          "importance": 0.84,
-          "confidence": 0.64
-        }
-      ],
       "confidence": 0.65
     }
   },
   {
-    "user_query": "We want to use AI to improve warehouse efficiency.",
+    "task_input": "We want to use AI to improve warehouse efficiency.",
     "output": {
       "business_domain": "Logistics and warehousing",
       "primary_outcome": "Improve operational efficiency",
@@ -50,37 +24,11 @@
         "Inefficient storage layout"
       ],
       "constraints": ["Limited sensor coverage", "Tight peak-season schedules"],
-      "ambiguities": [
-        {
-          "key": "efficiency_metric",
-          "description": "No clear definition of 'efficiency' is provided.",
-          "clarifying_question": "Is picking speed the main measure of warehouse efficiency?",
-          "resolution": {
-            "yes": {
-              "impact_direction": "+",
-              "impact_value": 0.72,
-              "assumption": "Optimize for picking speed"
-            },
-            "no": {
-              "impact_direction": "-",
-              "impact_value": 0.43,
-              "assumption": "Focus on layout optimization"
-            },
-            "unknown": {
-              "impact_direction": "0",
-              "impact_value": 0.34,
-              "assumption": "Assume general efficiency improvement"
-            }
-          },
-          "importance": 0.71,
-          "confidence": 0.51
-        }
-      ],
       "confidence": 0.62
     }
   },
   {
-    "user_query": "{user_query}",
+    "task_input": "{task_input}",
     "output": ""
   }
 ]

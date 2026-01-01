@@ -13,19 +13,14 @@ from pydantic import BaseModel
 from app.utils.file_loader import FileLoader
 
 
-def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}") -> str:
+def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}") -> str:
     """Load and render few-shot examples via LangChain templates.
 
     Contract:
-    - `few-shots.prompt` must exist and be non-empty.
-    - `examples.json` must exist and contain a list.
-    - The list must include:
-        - at least one *real* example, and
-        - a trailing user stub example that ends with an empty `output`
-          and uses `user_query == user_placeholder` (default: `{user_query}`).
-
-    The implementation uses `FewShotPromptWithTemplates` to keep the formatting
-    behavior consistent with LangChain prompt-template semantics.
+    - `few-shots.prompt` must exist and contain placeholders.
+    - `examples.json` must include:
+        - ≥1 real example
+        - 1 stub example that ends with an empty output and uses `task_input == user_placeholder`
     """
 
     template_file = FileLoader.resolve_agent_prompt_path("few-shots", agent_name)
@@ -40,24 +35,16 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}"
     raw = json.loads(examples_file.read_text(encoding="utf-8"))
     if not isinstance(raw, list):
         raise ValueError(f"examples.json must contain a list for agent '{agent_name}'")
-    if len(raw) < 2:
-        raise ValueError(
-            f"examples.json must include at least one example + one trailing stub for agent '{agent_name}'"
-        )
 
     def _is_empty(value: Any) -> bool:
-        return value is None or value == "" or value == {} or value == []
+        return value in (None, "", {}, [])
 
-    examples: list[dict[str, Any]] = []
-    for idx, ex in enumerate(raw):
-        if not isinstance(ex, dict):
-            raise ValueError(f"Invalid example payload at index {idx} for agent '{agent_name}': {ex!r}")
-        examples.append(ex)
+    examples: list[dict[str, Any]] = list(raw)
 
     stub = examples[-1]
     real_examples = examples[:-1]
 
-    if stub.get("user_query") != user_placeholder:
+    if stub.get("task_input") != user_placeholder:
         raise ValueError(
             f"Trailing stub must use placeholder {user_placeholder!r} for agent '{agent_name}'"
         )
@@ -65,24 +52,21 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{user_query}"
         raise ValueError(f"Trailing stub output must be empty for agent '{agent_name}'")
 
     for idx, ex in enumerate(real_examples):
-        if "user_query" not in ex or "output" not in ex:
+        if "task_input" not in ex or "output" not in ex:
             raise ValueError(f"Missing keys in example {idx} for agent '{agent_name}': {ex!r}")
-        if not str(ex["user_query"]).strip():
-            raise ValueError(f"Example {idx} for agent '{agent_name}' must include a user_query")
+        if not str(ex["task_input"]).strip():
+            raise ValueError(f"Example {idx} for agent '{agent_name}' must include a task_input")
         if _is_empty(ex["output"]):
             raise ValueError(f"Example {idx} for agent '{agent_name}' must include a non-empty output")
 
-    def _render_example(user_query: str, output: Any) -> str:
-        rendered_output = output
-        if not isinstance(rendered_output, str):
-            rendered_output = json.dumps(rendered_output, ensure_ascii=False, indent=2)
-        # Avoid placeholder expansion by doing plain string replacement.
-        rendered = template_str.replace("{user_query}", user_query)
+    def _render_example(task_input: str, output: Any) -> str:
+        rendered_output = output if isinstance(output, str) else json.dumps(output, indent=2)
+        rendered = template_str.replace("{task_input}", task_input)
         rendered = rendered.replace("{output}", rendered_output)
         return rendered
 
     prefix = "Frame the following problems:"
-    rendered_examples = [_render_example(ex["user_query"], ex["output"]) for ex in real_examples]
+    rendered_examples = [_render_example(ex["task_input"], ex["output"]) for ex in real_examples]
 
     prompt_parts = [prefix, *rendered_examples, _render_example(user_placeholder, "")]
     return "\n\n".join(prompt_parts)

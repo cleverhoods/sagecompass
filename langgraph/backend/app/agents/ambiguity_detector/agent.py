@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Sequence, Any
+from typing import Any, List
 
 from langchain.agents import create_agent, AgentState
 from langchain.agents.middleware import AgentMiddleware
@@ -15,16 +15,16 @@ from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.utils.model_factory import get_model_for_agent
 from app.utils.logger import get_logger
 
-from .schema import ProblemFrame
+from .schema import AmbiguityItem
 
-AGENT_NAME = "problem_framing"
+AGENT_NAME = "ambiguity_detector"
 
 
 def _logger():
     return get_logger(f"agents.{AGENT_NAME}")
 
 
-class ProblemFramingAgentConfig(BaseModel):
+class AmbiguityDetectorAgentConfig(BaseModel):
     model: BaseChatModel | None = None
 
     _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)
@@ -33,7 +33,7 @@ class ProblemFramingAgentConfig(BaseModel):
         return tuple(self._extra_middleware)
 
 
-def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
+def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
     """
     Builds a LangChain agent runnable for use in LangGraph or standalone.
 
@@ -44,7 +44,7 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         Runnable agent ready for invocation.
     """
     if config is None:
-        config = ProblemFramingAgentConfig()
+        config = AmbiguityDetectorAgentConfig()
 
     model = config.model or get_model_for_agent(AGENT_NAME)
 
@@ -68,8 +68,8 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
     middlewares: list[AgentMiddleware[AgentState, Any]] = [
         make_dynamic_prompt_middleware(
             agent_prompt,
-            placeholders=("user_query"),
-            output_schema=ProblemFrame,
+            placeholders="task_input",
+            output_schema=AmbiguityItem,
         )
     ]
 
@@ -81,5 +81,5 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         tools=tools,
         system_prompt=agent_prompt,
         middleware=middlewares,
-        response_format=ProblemFrame,
+        response_format=List[AmbiguityItem],
     )

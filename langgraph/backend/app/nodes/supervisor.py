@@ -20,35 +20,35 @@ def make_node_supervisor(
 
     def node_supervisor(
         state: SageState, runtime: Runtime[SageRuntimeContext] | None = None
-    ) -> Command[Literal["retrieve_context", "problem_framing", END]]:
+    ) -> Command[Literal["guardrails_check", "retrieve_context", "problem_framing", "__end__"]]:
 
-        phases = state.get("phases") or {}
-        pf_entry = phases.get(pf_phase) or {}
-        pf_status = pf_entry.get("status")
-        pf_data = pf_entry.get("data")
+        if state.gating.guardrail is None:
+            return Command(goto="guardrails_check")
 
-        # Retrieval gate: we consider retrieval "done" if evidence exists (even if empty list).
-        # If key missing entirely, retrieval likely hasn't run.
-        evidence_present = "evidence" in pf_entry
-        evidence = pf_entry.get("evidence") or []
-        has_evidence = evidence_present  # set to `bool(evidence)` if you require non-empty results
+        pf_entry = state.phases.get("problem_framing")
+        pf_status = pf_entry.status if pf_entry else "pending"
+        pf_data = pf_entry.data if pf_entry else None
+        evidence = pf_entry.evidence if pf_entry else []
+
+        # Optional: enforce "must be non-empty evidence" instead of just present
+        has_evidence = True if pf_entry and pf_entry.evidence is not None else False
 
         logger.info(
             "supervisor.phase.status",
-            phase=pf_phase,
+            phase="problem_framing",
             status=pf_status,
-            has_data=pf_data is not None,
-            evidence_present=evidence_present,
+            has_data=bool(pf_data),
+            evidence_present=has_evidence,
             evidence_count=len(evidence),
         )
 
-        # 1) Ensure retrieval runs before framing (only when PF isn't already complete)
-        if pf_status != "complete" or pf_data is None:
+        # 1. Retrieval must run before framing (unless PF is complete)
+        if pf_status != "complete" or not pf_data:
             if not has_evidence:
-                return Command(goto=retrieve_node)
-            return Command(goto=pf_phase)
+                return Command(goto="retrieve_context")
+            return Command(goto="problem_framing")
 
-        # 2) PF complete
+        # 2. PF complete → finish graph
         return Command(goto=END)
 
     return node_supervisor

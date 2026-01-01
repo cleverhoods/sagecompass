@@ -15,15 +15,15 @@ from app.state import SageState, PhaseEntry
 from app.utils.state_helpers import get_latest_user_input
 
 
-def make_node_problem_framing(
-    pf_agent: Runnable,
+def make_node_ambiguity_detection(
+    ad_agent: Runnable,
     *,
     phase: str = "problem_framing",
     goto_after: str = "supervisor",
     max_context_items: int = 8,
 ) -> Callable[[SageState], Command[Literal["supervisor"]]]:
 
-    def node_problem_framing(
+    def node_ambiguity_detection(
         state: SageState, runtime: Runtime[SageRuntimeContext] | None = None
     ) -> Command[Literal["supervisor"]]:
 
@@ -84,7 +84,7 @@ def make_node_problem_framing(
             "context_docs": context_docs,
         }
 
-        result = pf_agent.invoke(agent_input)
+        result = ad_agent.invoke(agent_input)
         pf = result.get("structured_response") if isinstance(result, dict) else None
 
         if pf is None:
@@ -111,4 +111,4 @@ def make_node_problem_framing(
 
         return Command(update={"phases": phases}, goto=goto_after)
 
-    return node_problem_framing
+    return node_ambiguity_detection

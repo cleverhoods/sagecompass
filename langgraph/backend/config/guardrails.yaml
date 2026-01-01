@@ -1,0 +1,18 @@
+# Allowed topics.
+allowed_topics:
+  - "business problem"
+  - "AI feasibility"
+  - automation
+  - kpi
+  - optimization
+  - "cost savings"
+  - efficiency
+
+# Blocked keywords.
+blocked_keywords:
+  - hack
+  - exploit
+  - malware
+  - illegal
+  - bypass
+  - gambling

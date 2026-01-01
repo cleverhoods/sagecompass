@@ -10,6 +10,7 @@ from app.graphs.write_graph import build_write_graph
 from app.nodes.problem_framing import make_node_problem_framing
 from app.nodes.retrieve_context import make_node_retrieve_context
 from app.nodes.supervisor import make_node_supervisor
+from app.nodes.gating_guardrails import make_node_guardrails_check
 from app.utils.env import load_project_env
 from app.utils.logger import configure_logging
 
@@ -33,9 +34,11 @@ def build_app() -> CompiledStateGraph:
     node_problem_framing = make_node_problem_framing(pf_agent=pf_agent)
     node_supervisor = make_node_supervisor()
     node_retrive_context = make_node_retrieve_context()
+    node_guardrails_check = make_node_guardrails_check()
 
     return build_main_app(
         supervisor_node=node_supervisor,
+        guardrails_node=node_guardrails_check,
         problem_framing_node=node_problem_framing,
         retrieve_context_node=node_retrive_context,
     )

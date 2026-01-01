@@ -16,6 +16,7 @@ NodeFn = Callable[[SageState, Runtime[SageRuntimeContext] | None], object]
 def build_main_app(
     *,
     supervisor_node: NodeFn,
+    guardrails_node: NodeFn,
     problem_framing_node: NodeFn,
     retrieve_context_node: NodeFn,
 ) -> CompiledStateGraph:
@@ -30,6 +31,8 @@ def build_main_app(
     graph = StateGraph(SageState, context_schema=SageRuntimeContext)
 
     graph.add_node("supervisor", supervisor_node)
+
+    graph.add_node("guardrails_check", guardrails_node)
 
     graph.add_node("retrieve_context", retrieve_context_node)
 
