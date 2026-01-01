@@ -12,6 +12,9 @@
 - [docs] Documented offline test invocation via `UV_NO_SYNC=1 uv run pytest` to avoid dependency downloads.
 - [langgraph/backend] Added Gradio-specific UI contracts and HILP UI tests to govern clarification handling.
 - [docs] Added knowledge base with framework documentation links and contract map for reviewers.
+- [drupal] Added Drupal instance.
+- [drupal] Added Context management (endpoints, forms, content type and taxonomy vocabs).
+- [langgraph/backend] Added RAG via the built-in LangGraph store. Added corresponding nodes/graphs/schemas.
 
 ### Changed
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
@@ -32,7 +35,7 @@
 - [docs] Completed root README with directory layout, setup/run steps, and pointers to component docs.
 - [docs] Add architecture review milestones and milestone checklist to ROADMAP.
 - [langgraph/backend] Route phase failures into `SageState["errors"]` and keep phase status to `pending|complete|stale`.
-- [docs] Document phase error handling in app contracts and backend AGENTS.
+- [docs] Document phase error handling in-app contracts and backend AGENTS.
 - [langgraph/backend] Cleaned Gradio UI handlers to preserve session state and centralize HILP control toggles.
 - [langgraph/backend] Stubbed Gradio for UI tests to avoid dependency downloads while exercising HILP flows.
 - [langgraph/ui] Relocated Gradio UI to `app/ui/` and added `app/ui/tests/` for offline tests.
@@ -40,6 +43,7 @@
 - [docs] Refined the architecture review playbook to rely on the knowledge base and current framework docs for maintainability.
 - [docs] Linked the knowledge base from the global AGENTS guide for discoverability.
 - [langgraph/backend] Normalized structlog helpers to avoid global state and applied structured logging across app modules.
+- [langgraph/backend] Settled on the @tool decorator for agent-specific tools.
 
 ### Fixed
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.

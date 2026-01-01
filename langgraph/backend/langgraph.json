@@ -2,8 +2,16 @@
   "$schema": "https://langgra.ph/schema.json",
   "dependencies": ["."],
   "graphs": {
-    "agent": "./app/main.py:get_app"
+    "agent": "./app/main.py:get_app",
+    "vector_writer": "./app/main.py:get_vector_write_graph"
   },
   "env": ".env",
-  "image_distro": "wolfi"
+  "image_distro": "wolfi",
+  "store": {
+    "index": {
+      "embed": "openai:text-embedding-3-small",
+      "dims": 1536,
+      "fields": ["text"]
+    }
+  }
 }

@@ -1,0 +1,27 @@
+sagecompass.admin:
+  title: 'SageCompass'
+  description: 'Main menu for SageCompass tools'
+  route_name: vector_sync.settings
+  parent: system.admin_config
+  weight: 0
+
+vector_sync.settings:
+  title: 'Vector Sync Settings'
+  description: 'Configure API key and endpoint for vector sync.'
+  parent: sagecompass.admin
+  route_name: vector_sync.settings
+  weight: 1
+
+vector_sync.send:
+  title: 'Send Context Nodes'
+  description: 'Send Context content to the external vector endpoint.'
+  parent: sagecompass.admin
+  route_name: vector_sync.send
+  weight: 2
+
+vector_sync.import:
+  title: 'Import Context Items'
+  description: 'Manually import items into Context content type.'
+  parent: sagecompass.admin
+  route_name: vector_sync.import
+  weight: 3

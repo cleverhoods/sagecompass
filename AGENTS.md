@@ -16,12 +16,12 @@ SageCompass is an augmented decision system that evaluates business ideas and de
 This repository is a **monorepo** with multiple layers of responsibility:
 
 - **.ddev (ddev orchestration)**: local orchestration for containers and service dependencies (e.g., databases, caches, vector DBs). The intent is to add infra services via **ddev**, not via Python tooling.
-- **drupal layer (planned / not yet implemented)**: the “brain and memory” layer used for curated data, RAG inputs, structured storage (e.g., logs, decisions, artifacts), and long-lived domain knowledge for the system.
+- **drupal layer**: the “brain and memory” layer used for curated data, RAG inputs, structured storage (e.g., logs, decisions, artifacts), and long-lived domain knowledge for the system.
 - **langgraph layer**: LangGraph workspace (graphs, UI, configs).
 - **langgraph/backend layer**: LangGraph runtime/API server.
-- **langgraph/ui layer (planned / not yet implemented)**: a separate Gradio-based UI surface (currently co-located with backend, but conceptually a distinct UI component).
+- **langgraph/ui layer**: a separate Gradio-based UI surface (currently co-located with backend, but conceptually a distinct UI component).
 
-Today, the runnable LangGraph server (and any UI wiring) live under `langgraph/backend/`.
+Today, the runnable LangGraph server lives under `langgraph/backend/`.
 
 The global `AGENTS.md` documents only the **monorepo shape and boundaries**. Component-specific behavior belongs in each component’s own `AGENTS.md` and `README.md`.
 

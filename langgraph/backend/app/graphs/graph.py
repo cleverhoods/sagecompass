@@ -17,6 +17,7 @@ def build_main_app(
     *,
     supervisor_node: NodeFn,
     problem_framing_node: NodeFn,
+    retrieve_context_node: NodeFn,
 ) -> CompiledStateGraph:
     """
     Graph factory for the main SageCompass graph.
@@ -29,6 +30,8 @@ def build_main_app(
     graph = StateGraph(SageState, context_schema=SageRuntimeContext)
 
     graph.add_node("supervisor", supervisor_node)
+
+    graph.add_node("retrieve_context", retrieve_context_node)
 
     graph.add_node("problem_framing", problem_framing_node)
 

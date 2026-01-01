@@ -24,7 +24,7 @@ sites/simpletest
 # */settings*.php
 
 # Ignore paths that contain user-generated content.
-# */files
+web/sites/default/files
 # */private
 
 # Ignore multi-site test environment.

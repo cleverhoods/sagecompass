@@ -73,3 +73,15 @@ before anyone spends time and money building it.
 - **Monorepo guidance:** [`AGENTS.md`](./AGENTS.md)
 - **LangGraph workspace:** [`langgraph/AGENTS.md`](./langgraph/AGENTS.md)
 - **Backend contracts & architecture:** [`langgraph/backend/app/README.md`](./langgraph/backend/app/README.md) and per-folder READMEs under `app/agents`, `app/nodes`, `app/graphs`, `app/tools`, `app/middlewares`, `app/utils`.
+
+## Known errors:
+
+### Docker - LangStudio network issue
+On Local, Drupal is running inside a ddev initiated docker container, and it cannot connect to 
+LangGraph Studio, unless the Studio is started via `uv run langgraph dev --host 0.0.0.0`.
+
+This enables LangSmith endpoint config like this `http://host.docker.internal:2024`, BUT! it disables
+the default LangSmith because it doesn't see the http://0.0.0.0:2024 path.
+
+The issue can be mitigated if you replace the 0.0.0.0 address manually to 127.0.0.1.
+`https://eu.smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`

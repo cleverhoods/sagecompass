@@ -32,8 +32,8 @@
               "assumption": "Use general churn definition"
             }
           },
-          "importance": 0.8,
-          "confidence": 0.6
+          "importance": 0.84,
+          "confidence": 0.64
         }
       ],
       "confidence": 0.65
@@ -58,25 +58,25 @@
           "resolution": {
             "yes": {
               "impact_direction": "+",
-              "impact_value": 0.7,
+              "impact_value": 0.72,
               "assumption": "Optimize for picking speed"
             },
             "no": {
               "impact_direction": "-",
-              "impact_value": 0.4,
+              "impact_value": 0.43,
               "assumption": "Focus on layout optimization"
             },
             "unknown": {
               "impact_direction": "0",
-              "impact_value": 0.3,
+              "impact_value": 0.34,
               "assumption": "Assume general efficiency improvement"
             }
           },
-          "importance": 0.7,
-          "confidence": 0.5
+          "importance": 0.71,
+          "confidence": 0.51
         }
       ],
-      "confidence": 0.6
+      "confidence": 0.62
     }
   },
   {

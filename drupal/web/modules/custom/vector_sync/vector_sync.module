@@ -1,0 +1,35 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\Entity\Node;
+
+/**
+ * Implements hook_entity_presave().
+ */
+function vector_sync_entity_presave(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'context') {
+    if ($entity->hasField('field_hash')) {
+      $agents = $entity->get('field_agents')->referencedEntities();
+      $tags = $entity->get('field_tags')->referencedEntities();
+
+      $agent_keys = array_map(fn($term) => strtolower($term->label()), $agents);
+      $tag_keys = array_map(fn($term) => strtolower($term->label()), $tags);
+
+      sort($agent_keys);
+      sort($tag_keys);
+
+      $title = trim(strtolower(strip_tags($entity->label())));
+      $desc = trim(strtolower(strip_tags($entity->get('field_description')->value ?? '')));
+
+      $source_string = implode('|', [
+        implode(',', $agent_keys),
+        implode(',', $tag_keys),
+        $title,
+        $desc,
+      ]);
+
+      $hash = hash('sha256', $source_string);
+      $entity->set('field_hash', $hash);
+    }
+  }
+}

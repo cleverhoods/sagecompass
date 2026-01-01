@@ -11,13 +11,12 @@ class AmbiguityResolutionAssumption(BaseModel):
         ...,
         description="Direction and rough magnitude of impact."
     )
-    impact_value: Annotated[Decimal, Field(
+    impact_value: float = Field(
         ...,
         ge=0.0,
         le=1.0,
-        decimal_places=1,
         description="Normalized strength (0–1) of this impact."
-    )]
+    )
     assumption: str = Field(
         ...,
         description="Short internal note: what the frame should assume in this case."

@@ -1,0 +1,8 @@
+name: 'Vector Sync'
+type: module
+description: 'Sync Context content to external vector service'
+core_version_requirement: ^11
+package: SageCompass
+dependencies:
+  - drupal:node
+  - drupal:taxonomy

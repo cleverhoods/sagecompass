@@ -7,9 +7,9 @@ from langchain.agents.middleware import AgentMiddleware
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, PrivateAttr
 
-from app.tools import get_tools
+from app.tools import nothingizer_tool
 from app.agents.utils import compose_agent_prompt
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.utils.model_factory import get_model_for_agent
@@ -26,7 +26,7 @@ def _logger():
 
 class ProblemFramingAgentConfig(BaseModel):
     model: BaseChatModel | None = None
-    tool_names: Sequence[str] = Field(default_factory=lambda: ("nothingizer_tool",))
+
     _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)
 
     def get_extra_middleware(self) -> tuple[AgentMiddleware, ...]:
@@ -47,7 +47,9 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         config = ProblemFramingAgentConfig()
 
     model = config.model or get_model_for_agent(AGENT_NAME)
-    tools: Sequence[BaseTool] = get_tools(config.tool_names)
+
+    # Tool wiring is explicit and configurable
+    tools: list[BaseTool] = [nothingizer_tool]
 
     _logger().info(
         "agent.build",
@@ -56,7 +58,6 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
         tools=[tool.name for tool in tools],
     )
 
-    # Build the system+few-shot prompt
     agent_prompt = compose_agent_prompt(
         agent_name=AGENT_NAME,
         prompt_names=["system", "few-shots"],

@@ -1,6 +1,7 @@
 name: sagecompass
 type: drupal11
 docroot: drupal/web
+composer_root: drupal
 php_version: "8.3"
 webserver_type: "apache-fpm"
 xdebug_enabled: false
@@ -8,8 +9,7 @@ additional_hostnames: []
 additional_fqdns: []
 database:
     type: postgres
-    version: "18"
-omit_containers: [db, ddev-ssh-agent]
+    version: "17"
 use_dns_when_possible: true
 composer_version: "2"
 web_environment: []

@@ -1,0 +1,31 @@
+vector_sync.settings:
+  path: '/admin/config/vector_sync/settings'
+  defaults:
+    _form: '\Drupal\vector_sync\Form\SettingsForm'
+    _title: 'Vector Sync Settings'
+  requirements:
+    _permission: 'administer site configuration'
+
+vector_sync.send:
+  path: '/admin/config/vector_sync/send'
+  defaults:
+    _form: '\Drupal\vector_sync\Form\SendContextForm'
+    _title: 'Send Context Nodes'
+  requirements:
+    _permission: 'administer site configuration'
+
+vector_sync.api_upsert:
+  path: '/api/context/upsert'
+  defaults:
+    _controller: '\Drupal\vector_sync\Controller\Api\ContextUpsertController::upsert'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'
+
+vector_sync.import:
+  path: '/admin/config/sagecompass/import'
+  defaults:
+    _form: '\Drupal\vector_sync\Form\ContextImportForm'
+    _title: 'Import Context Items'
+  requirements:
+    _permission: 'administer site configuration'

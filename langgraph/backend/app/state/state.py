@@ -21,12 +21,17 @@ PHASE_SCHEMAS: dict[str, Type[BaseModel]] = {
     # "business_goals": BusinessGoals,
 }
 
+class EvidenceItem(TypedDict, total=False):
+    namespace: list[str]
+    key: str
+    score: float
 
 class PhaseEntry(TypedDict, total=False):
     # Pydantic .model_dump() of the phase's output schema
     data: Dict[str, Any]
     error: Dict[str, Any]
     status: PhaseStatus
+    evidence: list[EvidenceItem]
 
 class SageState(TypedDict, total=False):
     """
