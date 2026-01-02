@@ -1,110 +1,43 @@
 from __future__ import annotations
 
 from typing import Callable
-from typing_extensions import Literal
 
 from langgraph.graph import END
-from langgraph.runtime import Runtime
 from langgraph.types import Command
+from langgraph.runtime import Runtime
 
+from app.state import SageState
 from app.runtime import SageRuntimeContext
-from app.state import ClarificationSession, SageState
 from app.utils.logger import get_logger
-from app.utils.state_helpers import phase_to_node, reset_clarification_session
-
-logger = get_logger("nodes.supervisor")
 
 
-def make_node_supervisor(
-    *,
-    phase: str = "problem_framing",
-    retrieve_node: str = "retrieve_context",
-) -> Callable[
-    [SageState, Runtime | None],
-    Command[
-        Literal[
-            "guardrails_check",
-            "retrieve_context",
-            "problem_framing",
-            "ambiguity_detection",
-            "clarify_ambiguity",
-            "__end__"
-        ]
-    ]
-]:
+def make_node_supervisor() -> Callable[[SageState, Runtime | None], Command[str]]:
     """
-    Node: supervisor
-    - Governs control flow for a given reasoning phase (e.g. problem_framing)
-    - Handles: gate check, retrieval, ambiguity handling, clarification
-    - Updates: none directly, but may reset session
-    - Goto: the next required node, or END if complete
+    Node: supervisor (global)
+    - Handles top-level orchestration and phase routing
+    - Checks: guardrails, unresolved clarifications, pending phases
+    - Goto: phase subgraph entry or END
     """
+    logger = get_logger("nodes.supervisor")
 
-    def node_supervisor(
-        state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[
-        Literal[
-            "guardrails_check",
-            "retrieve_context",
-            "problem_framing",
-            "ambiguity_detection",
-            "clarify_ambiguity",
-            "__end__"
-        ]
-    ]:
-        # 🔐 Enforce guardrails (once per graph, before any phase)
+    def node_supervisor(state: SageState, runtime: Runtime[SageRuntimeContext] | None = None) -> Command[str]:
+        logger.info("supervisor.entry", state_keys=state.model_dump().keys())
+        from app.utils.phases import get_phase_names
+        # 1. Run guardrails if not done yet
         if state.gating.guardrail is None:
-            logger.info("supervisor.guardrails_check")
+            logger.info("supervisor.guardrails_check.required")
             return Command(goto="guardrails_check")
 
-        # 🔄 Look up phase state
-        phase_entry = state.phases.get(phase)
-        status = phase_entry.status if phase_entry else "pending"
-        data = phase_entry.data if phase_entry else None
-        evidence = phase_entry.evidence if phase_entry else []
+        # 2. TODO: Handle global clarification logic here if designed
 
-        has_data = bool(data)
-        has_evidence = bool(evidence)
+        # 3. Route to first incomplete phase
+        for phase_name, contract in get_phase_names():
+            phase_state = state.phases.get(phase_name)
+            if not phase_state or phase_state.status != "complete":
+                logger.info("supervisor.routing.phase_start", phase=phase_name)
+                return Command(goto=f"{phase_name}")
 
-        logger.info(
-            "supervisor.status",
-            phase=phase,
-            status=status,
-            has_data=has_data,
-            has_evidence=has_evidence,
-        )
-
-        # 🔁 Phase still in progress
-        if status != "complete" or not has_data:
-            # 1. Need context first
-            if not has_evidence:
-                return Command(goto=retrieve_node)
-
-            # 2. Is there an unresolved clarification session?
-            session: ClarificationSession | None = next(
-                (s for s in state.clarification if s.phase == phase), None
-            )
-
-            if session:
-                if session.ambiguous_items:
-                    logger.info("supervisor.needs_clarification", phase=phase)
-                    return Command(goto="clarify_ambiguity")
-                else:
-                    # ✅ Clarification resolved — reset session and proceed
-                    logger.info("supervisor.clarification_resolved", phase=phase)
-                    return Command(
-                        update={
-                            "clarification": reset_clarification_session(state, phase)
-                        },
-                        goto=phase_to_node(phase)
-                    )
-
-            # 3. Continue to core phase node
-            return Command(goto=phase_to_node(phase))
-
-        # ✅ Phase complete
-        logger.info("supervisor.complete", phase=phase)
+        logger.info("supervisor.complete")
         return Command(goto=END)
 
     return node_supervisor

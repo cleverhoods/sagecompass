@@ -1,81 +1,70 @@
-# App Contracts
+# SageCompass `app/` Architecture (Backend)
 
-This document defines the **locked-in contracts** for SageCompass architecture and code organization. It is intended to be copied into relevant parts of the repository.
+This folder contains the LangGraph backend application code: state, graphs, nodes, agents, tools, middleware, and runtime utilities.
 
----
-
-## Project-scoped contracts
-
-### Separation of concerns (LangGraph-aligned)
-- **State**: a single canonical graph state type `SageState` (the shared contract for all graphs/nodes).
-- **Nodes**: workflow units that read/write `SageState` and return `Command(update=..., goto=...)`.
-- **Graphs**: compose nodes into workflows using `StateGraph(SageState)` and compile to an executable app.
-- **Agents**: encapsulated runnables used by nodes (agents do not perform graph routing).
-- **Tools**: reusable callable capabilities that can be used by:
-  - agents (as LLM-callable tools), and
-  - nodes (as regular Python utilities), when deterministic behavior is preferable.
-- **Middlewares**: cross-cutting runtime concerns for agent/model/tool execution (e.g., validation, normalization, error shaping, policy enforcement).
-
-### Construction and Dependency Injection (DI)
-- all python files MUST start with `from __future__ import annotations`
-- pydantic schema class MUST have class and field level descriptions
-- **No import-time construction**: importing a module must not construct models, agents, tools, or graphs.
-- **Factories instead of singletons**:
-  - graphs are built by graph factories,
-  - nodes are built by node factories,
-  - agents are built by agent factories,
-  - tools are built/selected by tool factories or registries.
-- **DI is mandatory**:
-  - node factories receive agent runnables + policies/config,
-  - graph factories receive node callables (already dependency-injected).
-
-### Routing and authority
-- **Routing decisions come from `SageState` only.**
-- Agents/middleware may compute signals, but **nodes must persist** any routing-relevant values into `SageState`.
-- State keys used for routing must have a clear **single writer/owner** node.
-
-### Command-based routing
-If using `Command(goto=...)` as the routing mechanism:
-- Graphs should have only `START -> entry_node` as a static edge.
-- All other transitions must occur via `Command(goto=...)`.
-- Termination must be explicit and bounded (supervisor must be able to route to `END`; no infinite loops).
+## Canonical reference
+- **`../RULES.md` is the canonical engineering rulebook** (MUST/SHOULDs, patterns, testing approach, persistence).
+- This README documents **what lives where** and the stable *contracts* for this folder.
+- If anything conflicts: **`../RULES.md` wins**.
 
 ---
 
-## State contract
+## Folder Anatomy
 
-### Location
-- `SageState` lives at `app/state.py` (or equivalent top-level state contract location).
-- Nodes mutate state, but nodes do not “own” the definition of the state contract.
+### Folder responsibilities
 
-### Canonical outputs
-- For every phase/agent, the project must define **one canonical place** in `SageState` where that phase’s result is written.
-- Supervisor routing must check this canonical location (no mixed conventions).
-- Phase failures must be recorded in `SageState["errors"]`; optional per-phase details may be stored in `SageState["phases"][<phase>]["error"]`.
+#### `state/`
+- Canonical state definitions for the backend.
+- `SageState` is the shared contract used by graphs and nodes.
+- Routing-relevant keys must have a single owner/writer.
+
+#### `graphs/`
+- Graph composition only (no business logic).
+- Main graph lives in `graphs/graph.py`.
+- Phase subgraphs live in `graphs/phases/<phase>/`.
+- Each phase must have a `contract.py` describing the PhaseContract.
+
+#### `nodes/`
+- Orchestration units that:
+  - invoke DI-injected agents/models/tools
+  - validate structured outputs
+  - update owned state keys
+  - decide routing (conditional edges or `Command(goto=...)`)
+
+#### `agents/`
+- Encapsulated domain reasoning units.
+- Prompts are file-based (`prompts/system.prompt`, optional few-shots).
+- Each agent exposes a Pydantic `OutputSchema` (validated before state writes).
+
+#### `tools/`
+- Typed, DI-injected capabilities.
+- Tool restrictions/policies are enforced in code (middleware/tool wrappers), not prompts.
+
+#### `middlewares/`
+- Cross-cutting policy and runtime enforcement:
+  - guardrails (before_agent/before_model/after_model/wrap_tool_call)
+  - dynamic prompt injection
+  - normalization/error shaping
+
+#### `utils/`
+- Shared helpers (logging, env loading, model/provider factories, state helpers).
+
+#### Entry point
+- `main.py`: centralized building/entrypoint for graphs.
 
 ---
 
-## Testing and debugging contracts
-
-### Required tests (current architecture)
-- **Routing unit tests**: supervisor decisions given `SageState` snapshots.
-- **Node unit tests**: each worker node tested with a stub/fake agent (no real LLM).
-
-### Required debugging primitives
-- **Single-node runner**: execute one node with a given `SageState`, return its `Command`.
-- **Bounded step runner**: execute at most N transitions and stop with a clear error if exceeded (prevents token-burn loops).
-- Debugging must focus on:
-  - `goto` decisions,
-  - `SageState` diffs,
-  - and termination conditions.
----
-
-## Folder structure
+### Folder structure
 ```
 app/
 ├── agents/                         -> Read provided app/agents/README.md
 │   └── ...
-├── graphs/                         -> All graphs that are present in the system lives here. 
+├── graphs/                         -> All graphs/subgraphs location. 
+│   ├── phases/                     -> Phase subgraphs.
+│   │   ├── problem_framing/
+│   │   │   ├── contract.py
+│   │   │   └── subgraph.py
+│   │   └── contract.py             -> Phase subgraph contract.
 │   ├── README.md
 │   ├── graph.py                    -> Main graph of SageCompass
 │   └── write_graph.py              -> VectorStore writer graph
@@ -83,7 +72,9 @@ app/
 │   └── dynamic_prompt.py           -> Prompt middleware for few-shots generation.
 ├── nodes/
 │   ├── ambiguity_detection.py      -> Ambiguity detector agent node.
+│   ├── clarify_ambiguity.py        -> Ambiguity clarifying agent node.
 │   ├── gating_guardrails.py        -> Gating guardrail node, checks agains allowed_topics and blocked_keywords.
+│   ├── phase_supervisor.py         -> Phase subgraph supervisor node.
 │   ├── problem_framing.py          -> Problem framing node for the Problem Framing Agent.
 │   ├── retrieve_context.py         -> Context retrieval node, retriewes data from the Vector Storage.
 │   ├── supervisor.py               -> SageCompass main supervisor node.

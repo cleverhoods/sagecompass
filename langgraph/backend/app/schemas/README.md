@@ -1,9 +1,10 @@
-# Schemas
----
+# `schemas/` — Shared Semantic Schemas
 
-## Contracts
+Shared semantic data definitions not bound to a single node/agent.
+Prefer Pydantic for boundaries and persisted artifacts.
 
-### Design rules
-- Semantic data definitions, not bound to any node or agent.
+## Canonical rules
+- See `../RULES.md` for schema versioning + provenance requirements.
 
----
+## Key docs
+- LangChain Structured Output (Pydantic schemas): https://docs.langchain.com/oss/python/langchain/structured-output

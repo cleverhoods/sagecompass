@@ -15,11 +15,13 @@ from app.utils.state_helpers import (
     reset_clarification_session,
 )
 
+from app.agents.ambiguity.agent import build_agent
+
 logger = get_logger("nodes.clarify_ambiguity")
 
 
 def make_node_clarify_ambiguity(
-    agent: Runnable,
+    node_agent: Runnable = None,
     *,
     phase: str = "problem_framing",
     max_rounds: int = 3,
@@ -30,6 +32,7 @@ def make_node_clarify_ambiguity(
     - Updates: state.clarification (per-phase ClarificationSession)
     - Goto: ambiguity_detection | __end__ if loop exceeded
     """
+    agent = node_agent or build_agent()
 
     def node_clarify_ambiguity(
         state: SageState,

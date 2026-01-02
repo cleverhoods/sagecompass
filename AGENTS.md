@@ -1,88 +1,80 @@
 ---
 name: "SageCompass (Global)"
-description: "Top-level monorepo orientation for SageCompass. High-level overview, core stack, and project structure only."
+description: "Top-level monorepo orientation for SageCompass. Monorepo boundaries, precedence, and change policy only."
 category: "Project"
-author: "cleverhoods"
-tags: ["monorepo", "ddev", "drupal", "python", "langgraph", "gradio", "uv", "docker"]
-lastUpdated: "2025-12-25"
 ---
 
 # SageCompass — Global Guide (AGENTS.md)
 
-## Project Overview
+> Scope: Applies to all files in `PROJECT_ROOT/**` **unless** a nearer `AGENTS.md` or component rulebook applies.
 
-SageCompass is an augmented decision system that evaluates business ideas and determines whether they *actually need AI* before committing time and money.
+This global `AGENTS.md` is intentionally short:
+- it defines **monorepo boundaries**
+- it defines **contract precedence**
+- it defines **repo-wide change policy** (CHANGELOG)
+- it points to the **canonical component rulebooks**
 
-This repository is a **monorepo** with multiple layers of responsibility:
+If anything conflicts, the **nearest component contract wins**.
 
-- **.ddev (ddev orchestration)**: local orchestration for containers and service dependencies (e.g., databases, caches, vector DBs). The intent is to add infra services via **ddev**, not via Python tooling.
-- **drupal layer**: the “brain and memory” layer used for curated data, RAG inputs, structured storage (e.g., logs, decisions, artifacts), and long-lived domain knowledge for the system.
-- **langgraph layer**: LangGraph workspace (graphs, UI, configs).
-- **langgraph/backend layer**: LangGraph runtime/API server.
-- **langgraph/ui layer**: a separate Gradio-based UI surface (currently co-located with backend, but conceptually a distinct UI component).
+---
 
-Today, the runnable LangGraph server lives under `langgraph/backend/`.
+## 1) Monorepo boundaries (what belongs where)
 
-The global `AGENTS.md` documents only the **monorepo shape and boundaries**. Component-specific behavior belongs in each component’s own `AGENTS.md` and `README.md`.
+SageCompass is a monorepo with multiple layers of responsibility:
 
-## Tech Stack
+- **.ddev/** — local orchestration for containers and infra services (DBs/caches/vector DBs, etc.).  
+  *Infra services are added via ddev, not via Python tooling.*
+- **drupal/** — "brain & memory" layer (curation + structured storage).  
+  *Long-lived domain knowledge and artifacts live here conceptually, even if implementations start elsewhere.*
+- **langgraph/** — LangGraph workspace (graphs/configs/UI boundary).
+- **langgraph/backend/** — LangGraph runtime/API server (Python, uv-managed).  
+  *This is the primary runnable backend today.*
+- **langgraph/ui/** — Separate UI surface built with Gradio (Python, uv-managed).
 
-### Core runtime
-- **Python**: project-managed via **uv**
-- **LangGraph**: graph orchestration and runtime
-- **langgraph-api**: local dev server and execution environment
-- **Gradio**: UI layer (currently co-located in `langgraph/backend`; dedicated `langgraph/ui` planned)
+---
 
-### Monorepo orchestration
-- **ddev**: manages local containers/services (and later Drupal runtime)
+## 2) Contract precedence (how to decide what rules apply)
 
-### Planned platform layer
-- **Drupal (planned)**:
-  - data curation for RAG
-  - structured storage for logs and artifacts
-  - long-lived knowledge store for LangGraph workflows
+1. **Nearest `AGENTS.md` wins** for any file you edit (closest in the directory tree).
+2. If multiple rulebooks apply, prefer **more specific** guidance over global guidance.
+3. For the backend layer, **component rulebooks beat this file**:
+   - `langgraph/backend/RULES.md` (canonical engineering rules for backend)
+   - `langgraph/backend/AGENTS.md` (backend operational conventions + test lanes)
 
-### Optional services (via ddev, as-needed)
-Examples: Redis, Postgres, vector database(s), etc.
+> Principle: global docs define *boundaries*; component docs define *behavior*.
 
-## Project Structure
-High-level structure (conceptual; will evolve):
+---
 
-```
-PROJECT_ROOT/
-├── .ddev/          # Local orchestration for containers/services (Drupal + infra)
-├── drupal/         # Planned: Drupal app as data-curator + storage layer
-├── images/         # Images for documentation
-├── langgraph/      # LangGraph workspace (graphs, UI, configs)
-│ ├── backend/      # Python runtime serving LangGraph via langgraph-api (uv-managed)
-│ └── ui/           # Planned: Gradio UI surface (conceptually separate; may be co-located today)
-├── mermaids/       # Mermaid markup exports of langgraph components
-├── CHANGELOG.md    # Changelog store
-└── README.md       # Global README file
-```
+## 3) Canonical rulebooks (what to read)
 
-## AGENTS.md Index and Precedence
+### Backend (LangGraph runtime)
+- Canonical engineering rules: `langgraph/backend/RULES.md`
+- Backend operational contracts: `langgraph/backend/AGENTS.md`
+- Backend app architecture map: `langgraph/backend/app/README.md`
 
-This monorepo contains multiple `AGENTS.md` files.
+### Workspace (LangGraph configs/UI boundary)
+- `langgraph/AGENTS.md` (workspace conventions)
 
-### Precedence rules
-1. **Nearest `AGENTS.md` wins**: for any file you edit, follow the `AGENTS.md` located closest to that file in the directory tree.
-2. If no closer file exists, fall back to this **global** `AGENTS.md`.
-3. If rules conflict, prefer **more specific** guidance (component-level) over global guidance.
+### Orchestration / platform
+- `.ddev/` docs (local orchestration)
+- `drupal/AGENTS.md` (planned; when present)
 
-### Locations
-- `PROJECT_ROOT/AGENTS.md` - global monorepo boundaries, top-level conventions.
-- `PROJECT_ROOT/langgraph/AGENTS.md` - LangGraph workspace conventions (graphs/configs/UI boundary).
-- `PROJECT_ROOT/langgraph/backend/AGENTS.md` - Python runtime/server conventions (uv, langgraph-api, tests, debugging).
-- `PROJECT_ROOT/langgraph/backend/app/AGENTS.md` - Application architecture contracts (state/DI/routing, node/agent/tool/middleware separation); defers details to `PROJECT_ROOT/langgraph/backend/app/**/README.md`.
-- `PROJECT_ROOT/drupal/AGENTS.md` - (planned) Drupal layer conventions.
-- Knowledge base for quick navigation and external docs: see `PROJECT_ROOT/DOCS_KB.md`.
+---
 
-## Architectural Refactors (Cross-cutting Changes)
+## 4) Documentation & version alignment (repo-wide)
 
-When implementing an architectural migration that affects multiple layers (code, tests, and docs), you may update contracts and enforcement tests as part of the same change. Prefer to update in this order: (1) contracts/AGENTS/READMEs, (2) enforcement tests, (3) implementation, (4) remaining docs. Keep the repository green within the same change set.
+- `uv.lock` in each Python component is the **source of truth** for installed versions.
+- Any non-trivial code or documentation change MUST:
+  - align with pinned versions
+  - cite official docs (links) when describing framework behavior
+- Do not add new dependencies casually:
+  - propose explicitly
+  - pin and update lockfile
+  - document migration impact
 
-## CHANGELOG.md Policy (Required)
+---
+
+## 5) CHANGELOG.md policy (required)
 
 All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
 
@@ -96,14 +88,14 @@ All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
 - Start with a component prefix in square brackets:
   - `[langgraph/backend]`, `[langgraph/ui]`, `[gradio]`, `[ddev]`, `[drupal]`, `[docs]`, `[prompts]`
 - Use imperative, user-facing phrasing (what changed and why it matters).
-- If applicable, include references at the end: `(PR #123)` / `(issue #456)` / `(ref: <id>)`.
+- If applicable, include references: `(PR #123)` / `(issue #456)` / `(ref: <id>)`.
 
 ### Example
-```
+```text
 ## [Unreleased]
 ### Fixed
 - [langgraph/backend] Prevent import-time agent construction by moving `build_agent()` into node factories. (PR #123)
 
 ### Changed
-- [docs] Clarify AGENTS precedence and add CHANGELOG policy.
+- [docs] Centralize backend rules in `langgraph/backend/RULES.md` and slim AGENTS/READMEs.
 ```

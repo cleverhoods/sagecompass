@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Type, TypeVar
 from pydantic import BaseModel
 from app.state import PhaseEntry, PhaseStatus, SageState
+from app.graphs.phases import PHASES
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -79,3 +80,6 @@ def get_phase_status(
     """
     entry = state.phases.get(key)
     return entry.status if entry else "pending"
+
+def get_phase_names() -> list[str]:
+    return [f"{phase.name}" for phase in PHASES.values()]

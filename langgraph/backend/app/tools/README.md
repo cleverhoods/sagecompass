@@ -1,13 +1,11 @@
-# Tools
----
-## Contracts
+# `tools/` — Capabilities (Typed + Policy-Enforced)
 
-### Location and reuse
-- Tools live under `app/tools/`.
-- Tools are called deterministically through ToolNodes
+Tools are callable capabilities exposed to agents or used by nodes.
+Policy must be enforced **in code** (middleware / wrappers), not prompts.
 
-### Design rules
-- Tools should be stateless by default; any state must be explicit and injected.
-- Tool restrictions/selection (if/when introduced) must be enforced in code (agent factory wiring and/or middleware), not via prompt placeholders.
+## Canonical rules
+- See `../RULES.md` for tool policy enforcement and DI rules.
 
----
+## Key docs
+- LangChain Tools (concepts + patterns): https://docs.langchain.com/oss/python/langchain/tools
+- LangChain Middleware (`wrap_tool_call` for enforcement/retries): https://docs.langchain.com/oss/python/langchain/middleware/custom

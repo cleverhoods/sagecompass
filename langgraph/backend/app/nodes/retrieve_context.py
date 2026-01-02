@@ -11,12 +11,14 @@ from app.runtime import SageRuntimeContext
 from app.state import EvidenceItem, PhaseEntry, SageState
 from app.utils.logger import get_logger
 from app.utils.state_helpers import get_latest_user_input
+from app.tools.context_lookup import context_lookup
+
 
 logger = get_logger("nodes.retrieve_context")
 
 
 def make_node_retrieve_context(
-    tool: Runnable,
+    tool: Runnable = None,
     *,
     phase: str = "problem_framing",
     collection: str = "problem_framing",
@@ -27,7 +29,7 @@ def make_node_retrieve_context(
     - Updates: state.phases[phase].evidence
     - Goto: supervisor
     """
-
+    tool = tool or context_lookup
     def node_retrieve_context(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,

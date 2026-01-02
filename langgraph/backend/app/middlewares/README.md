@@ -1,13 +1,14 @@
-# Middlewares
+# `middlewares/` — Cross-cutting Enforcement (Guardrails, Prompt Injection, Hooks)
 
-This folder contains langchain middleware implementations.
+Middleware is the **policy boundary**:
+- request admissibility
+- redaction / normalization
+- tool-call allowlists and validation
+- output validation / shaping
+- dynamic prompt injection
 
-## Contracts
+## Canonical rules
+- See `../RULES.md` for the guardrails “defense-in-depth” pattern.
 
-- Middleware must follow LangChain v1 hook/decorator patterns (e.g., `@after_agent`, `@wrap_model_call`, `@wrap_tool_call`, `@dynamic_prompt`).
-- Middleware may:
-  - validate/normalize agent outputs,
-  - shape errors,
-  - enforce execution policies,
-  - attach metadata to the agent runtime result.
-- Middleware must not be the only location where routing decisions exist. Nodes must persist routing signals into `SageState`.
+## Key docs
+- Custom Middleware (before/after hooks, wrap_model_call, wrap_tool_call, dynamic_prompt): https://docs.langchain.com/oss/python/langchain/middleware/custom

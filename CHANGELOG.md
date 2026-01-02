@@ -19,6 +19,11 @@
 - [langgraph/backend] Added `gating_guardrail` node with scoped config for `allowed_topics` and `blocked_keywords`, allowing early filtering of unsafe or off-topic input. (ref: Gating Layer Roadmap)
 - [langgraph/backend] Added `make_dynamic_prompt_middleware()` with placeholder resolution and support for runtime prompt injection. (ref: middleware updates)
 - [langgraph/backend] Enabled support for FewShotPromptWithTemplates in middleware, allowing `few-shots.prompt` to be appended as the final agent instruction. (ref: ambiguity agent prompt contract)
+- [langgraph/backend] Introduce phase-level subgraph architecture, enabling each phase (starting with `problem_framing`) to run as a fully encapsulated LangGraph subgraph with its own control flow.
+- [langgraph/backend] Add reusable phase contract pattern to register phases declaratively and attach them dynamically to the main graph.
+- [langgraph/backend] Enable structured ambiguity clarification loops within phases, including human-in-the-loop handling and bounded retries.
+- [langgraph/backend] Support phase-scoped reuse of the existing supervisor node to handle routing, clarification resolution, and completion detection.
+- [docs] Document comprehensive system rules covering DI-first design, node orchestration contracts, phase subgraphs, and runtime purity.
 
 
 ### Changed
@@ -62,6 +67,12 @@
 - [langgraph/backend] Clarify distinction between `phase` vs `node` in supervisor and promote proper orchestration-only flow control.
 - [langgraph/backend] Add support for structured `ClarificationSession` list in `state.py` to support multiple per-phase loops.
 - [langgraph/backend] Improve `supervisor.py` to be fully reusable and phase-parametric with LangGraph-compliant routing logic.
+- [langgraph/backend] Refactor `problem_framing` into a standalone subgraph with explicit entry, loop, and termination semantics.
+- [langgraph/backend] Standardize node factories to allow optional dependency injection with safe default fallbacks (e.g., `agent or build_agent()`).
+- [langgraph/backend] Align all routing logic to use `Command(goto=...)` exclusively, removing reliance on static edges for control flow.
+- [langgraph/backend] Reorganize phase-related code under `app/graphs/phases/<phase>/` to clearly separate contracts, subgraphs, and wiring.
+- [docs] Clarify architectural distinction between global graph orchestration and phase-local control logic.
+- [docs] Centralize documentation governance by relying on `langgraph/backend/RULES.md` + backend `AGENTS.md` as the primary contracts.
 
 
 ### Fixed
@@ -84,6 +95,10 @@
 - [langgraph/backend] Ensure clarification loop terminates cleanly with `goto=END` when round limit is exceeded.
 - [langgraph/backend] Avoid state mutation errors by introducing `reset_clarification_session(...)` helper.
 - [langgraph/backend] Fix `state.phase` lookup error by using phase from supervisor factory args instead.
+- [langgraph/backend] Resolve subgraph type mismatch errors by correctly treating compiled phase graphs as runnable subgraph nodes.
+- [langgraph/backend] Fix mixed static-edge / command-based routing conflicts that caused invalid or undefined execution paths.
+- [langgraph/backend] Eliminate import-time side effects and DI violations in nodes and graph builders.
+- [langgraph/backend] Correct supervisor routing assumptions to support reuse across multiple phases without hardcoded phase behavior.
 
 
 ### Removed
@@ -92,6 +107,7 @@
 - [langgraph/backend] Removed translation agent.
 - [langgraph/backend] Removed HILP middleware.
 - [langgraph/backend] Removed unused `mw.py` file from agents that had no agent-specific middleware logic. (ref: folder contract cleanup)
+- [docs] Removed redundant docs scaffolding (`DOCS_INDEX.md`, `REVIEW_CHECKLIST.md`).
 
 
 ### Security

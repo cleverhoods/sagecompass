@@ -14,11 +14,13 @@ from app.runtime import SageRuntimeContext
 from app.state import PhaseEntry, SageState
 from app.utils.logger import get_logger
 from app.utils.state_helpers import get_latest_user_input
+from app.agents.ambiguity_detector.agent import build_agent  # lazy import to respect SRP
 
 logger = get_logger("nodes.ambiguity_detection")
 
 
 def make_node_ambiguity_detection(
+    node_agent: Runnable = None,
     *,
     phase: str = "problem_framing",
     max_context_items: int = 8,
@@ -30,8 +32,8 @@ def make_node_ambiguity_detection(
     - Updates: state.phases[phase] with ProblemFrame
     - Goto: supervisor
     """
-    from app.agents.problem_framing.agent import build_agent  # lazy import to respect SRP
-    agent: Runnable = build_agent()
+
+    agent: node_agent or build_agent()
 
     def node_ambiguity_detection(
         state: SageState,

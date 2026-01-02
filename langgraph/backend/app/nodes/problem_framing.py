@@ -44,8 +44,8 @@ def make_node_problem_framing(
         store = get_store()
         context_docs: list[dict[str, Any]] = []
         for e in evidence[:max_context_items]:
-            ns = e.get("namespace")
-            key = e.get("key")
+            ns = e.namespace
+            key = e.key
             if not ns or not key:
                 continue
             item = store.get(tuple(ns), key)
@@ -61,7 +61,7 @@ def make_node_problem_framing(
                     "changed": value.get("changed", 0),
                     "store_namespace": ns,
                     "store_key": key,
-                    "score": e.get("score"),
+                    "score": e.score,
                 },
             })
 
