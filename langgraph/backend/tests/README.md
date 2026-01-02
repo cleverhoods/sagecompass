@@ -1,27 +1,40 @@
 # Backend tests
 
-This suite defaults to an **offline stub lane**. Lightweight stubs for critical dependencies live under `tests/stubs/`:
+This suite defaults to an **offline lane**:
+- it runs against the **real pinned frameworks** (LangChain/LangGraph/Pydantic as installed via `uv.lock`)
+- it performs **no network calls**
+- it uses deterministic fakes (e.g., `GenericFakeChatModel`, `FakeEmbeddings`) and in-memory persistence (e.g., `InMemorySaver`) where appropriate
 
-- `langchain_core`, `langchain`, `langgraph`
-- `pydantic`
-- `yaml`
+We do **not** shadow framework packages via `sys.path` stubs.
 
-`tests/conftest.py` prepends `tests/stubs/` to `sys.path` so imports resolve to these shims before falling back to real packages. Toggle lanes with:
+## Lanes
 
-- **Stub lane (default):** `SAGECOMPASS_USE_STUBS=1 pytest`
-- **Real-deps lane:** `SAGECOMPASS_USE_STUBS=0 pytest -m real_deps`
-- **Integration lane (opt-in):** `pytest -m integration` (requires any needed API keys)
+- **Offline lane (default):** `SAGECOMPASS_USE_STUBS=1 uv run pytest`
+- **Real-deps lane:** `SAGECOMPASS_USE_STUBS=0 uv run pytest -m real_deps`
+- **Integration lane (opt-in):** `uv run pytest -m integration` (requires any needed API keys)
 
-Architecture and system-level invariants live under `tests/contracts/` (layout/import boundaries/state/graph/interrupt semantics). Component-level behaviour stays alongside the code under `tests/nodes`, `tests/middlewares`, etc.
+Testing approach follows `../RULES.md` §12 (LangChain “Test”):
+- deterministic unit tests by default
+- bounded, opt-in integration tests
+- record/replay (VCR) where needed to stabilize external calls
 
-Testing approach follows `../RULES.md` §12 (LangChain “Test”): use deterministic fakes (e.g., `GenericFakeChatModel` + in-memory checkpointers) by default and keep real-provider tests bounded/opt-in.
+## Layout
+
+Recommended:
+- `tests/unit/**` — deterministic, offline tests
+- `tests/integration/**` — bounded tests that may hit real services (often paired with VCR cassettes)
+
+Within each, you may mirror the `app/` component layout (agents/nodes/graphs/tools/middlewares) for clarity.
 
 ## Running
 
 ```bash
-# Stub lane
-UV_NO_SYNC=1 uv run pytest
+# Offline lane (default)
+UV_NO_SYNC=1 SAGECOMPASS_USE_STUBS=1 uv run pytest
 
 # Real-deps lane
 SAGECOMPASS_USE_STUBS=0 uv run pytest -m real_deps
+
+# Integration lane (opt-in)
+uv run pytest -m integration
 ```

@@ -198,37 +198,34 @@ Guardrails are layered and share a single policy engine.
 
 ## 12) Testing (fast, meaningful, and bounded)
 
-SageCompass follows the LangChain testing approach for agentic systems: **fast deterministic unit tests** plus **targeted integration tests** for behaviors that only emerge with real models.
+SageCompass follows the LangChain testing approach for agentic systems: **fast deterministic unit tests** plus **targeted, bounded integration tests** for behaviors that only emerge with real providers. :contentReference[oaicite:0]{index=0}
 
-References:
-- LangChain OSS Python docs → *Agent development* → *Test*: https://docs.langchain.com/oss/python/langchain/test
-- LangChain standard unit tests (components): https://reference.langchain.com/python/langchain_tests/unit_tests/
+### MUST (Test against real pinned frameworks — no shadow stubs)
+- Tests MUST run against the **real installed** LangChain/LangGraph/Pydantic packages pinned by `uv.lock`.
+- Do NOT shadow/replace framework packages via `sys.path` tricks or a `tests/stubs/` shim (this breaks version alignment and can make tests pass while runtime fails).
+- “Offline” means **no network calls**, not “no framework”: use deterministic fakes and in-memory persistence instead. :contentReference[oaicite:1]{index=1}
 
 ### MUST (Prefer standard fakes + standard tests)
 - Prefer **LangChain/LangGraph-provided fakes and standard test suites** over custom stubs whenever possible:
-  - Chat models: `GenericFakeChatModel` (deterministic)  
-    https://reference.langchain.com/v0.3/python/core/language_models/langchain_core.language_models.fake_chat_models.GenericFakeChatModel.html
-  - Embeddings: `FakeEmbeddings` (deterministic vectors)  
-    https://reference.langchain.com/v0.3/python/core/embeddings/langchain_core.embeddings.fake.FakeEmbeddings.html
-  - Tools: adopt `langchain_tests.unit_tests.tools.ToolsUnitTests` for custom tool implementations  
-    https://reference.langchain.com/python/langchain_tests/unit_tests/tools/
+  - Chat models: `GenericFakeChatModel` (deterministic) :contentReference[oaicite:2]{index=2}
+  - Embeddings: `FakeEmbeddings` (deterministic embeddings for pipelines) :contentReference[oaicite:3]{index=3}
+  - Tools: adopt `langchain_tests.unit_tests.tools.ToolsUnitTests` for custom tool implementations :contentReference[oaicite:4]{index=4}
 - Keep custom stubs only when framework fakes/standard tests cannot represent the needed behavior; **document why** in the test.
 
 ### MUST (Unit tests: deterministic, fast)
 - Prefer **unit tests** for small, deterministic behavior:
   - policy engine functions (`app/policies/*`)
   - state helper utilities
-  - node logic that does not require network calls (with stubbed dependencies)
-- Mock chat models using an **in-memory fake**:
-  - Use `GenericFakeChatModel` (supports deterministic outputs, tool calls, and streaming).
-- When testing stateful / multi-turn behavior, use an **in-memory checkpointer**:
-  - Use `InMemorySaver` to simulate persisted turns and verify state-dependent routing.
+  - node logic that does not require network calls (with DI-injected fakes)
+- Mock chat models using an in-memory fake:
+  - Use `GenericFakeChatModel` for deterministic responses and tool-call simulation. :contentReference[oaicite:5]{index=5}
+- When testing stateful / multi-turn behavior, use an in-memory checkpointer:
+  - Use `InMemorySaver` (or equivalent in-memory saver) to simulate persisted turns and verify state-dependent routing. :contentReference[oaicite:6]{index=6}
 
 ### MUST (Integration tests: real behavior, bounded scope)
 - Maintain a small set of integration tests that run with real providers to verify:
   - credentials and schema compatibility
   - tool wiring correctness
-  - latency is within acceptable range
   - end-to-end phase routing for at least one happy path + one failure/exit route
 - Integration tests MUST be explicitly bounded:
   - fixed inputs, fixed budgets, bounded loop rounds
@@ -238,15 +235,23 @@ References:
 - For agents where **tool-calling sequence matters**, validate the execution trajectory:
   - Prefer **trajectory match** testing (strict / unordered / subset / superset) when a reference tool-call behavior is expected.
   - Prefer **LLM-as-judge** trajectory evaluation only when strict matching is too brittle.
-- If trajectory evaluators require new dependencies (e.g., `agentevals`), they MUST be:
+- If trajectory evaluators require new dependencies, they MUST be:
   - proposed explicitly
   - added as **dev/test-only** dependencies (not runtime)
-  - **pinned via** `uv.lock`
-  - referenced with official docs/release notes in the PR description
+  - pinned via `uv.lock`
+  - referenced with official docs/release notes in the PR description :contentReference[oaicite:7]{index=7}
+
+### SHOULD (Layout for clarity)
+- Prefer organizing tests into:
+  - `tests/unit/**` for deterministic offline tests
+  - `tests/integration/**` for bounded tests that may hit real services
+- Within each lane, mirroring the `app/` component layout is encouraged (agents/nodes/graphs/tools/middlewares) for navigability.
 
 ### SHOULD (Stability and reproducibility)
-- Where integration tests are sensitive to external flakiness, use **record/replay of HTTP calls** to stabilize CI runs (while maintaining at least one live “smoke” test in a controlled environment).
-- Tests SHOULD avoid asserting exact free-form text; prefer:
+- Where integration tests are sensitive to external flakiness, use record/replay of HTTP calls to stabilize CI runs (while maintaining at least one live smoke test in a controlled environment). :contentReference[oaicite:8]{index=8}
+- Organize tests into `tests/unit/**` and `tests/integration/**`.
+- Within each lane, mirror the `app/` component layout for clarity (subset allowed in integration).
+- Avoid asserting exact free-form text; prefer:
   - structured schema fields
   - tool call presence/arguments
   - routing outcomes
@@ -254,11 +259,8 @@ References:
 
 ### Required coverage (baseline)
 - Unit tests:
-  - at least one per phase contract’s completion criteria
   - at least one per guardrail policy outcome (allow/deny)
 - Integration tests:
-  - one main graph scenario (happy path)
-  - one main graph scenario (guardrail early exit or bounded loop termination)
   - at least one trajectory validation for a tool-using agent
 
 ## 13) Patterns (copyable defaults)
