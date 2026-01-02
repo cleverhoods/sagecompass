@@ -14,6 +14,8 @@ This suite defaults to an **offline stub lane**. Lightweight stubs for critical 
 
 Architecture and system-level invariants live under `tests/contracts/` (layout/import boundaries/state/graph/interrupt semantics). Component-level behaviour stays alongside the code under `tests/nodes`, `tests/middlewares`, etc.
 
+Testing approach follows `../RULES.md` §12 (LangChain “Test”): use deterministic fakes (e.g., `GenericFakeChatModel` + in-memory checkpointers) by default and keep real-provider tests bounded/opt-in.
+
 ## Running
 
 ```bash

@@ -78,9 +78,12 @@ def make_node_clarify_ambiguity(
             ambiguous_items=ambiguous_items,
         )
 
-        state.clarification = [
-            updated_session if s.phase == phase else s for s in state.clarification
-        ]
+        if any(s.phase == phase for s in state.clarification):
+            state.clarification = [
+                updated_session if s.phase == phase else s for s in state.clarification
+            ]
+        else:
+            state.clarification = [updated_session, *state.clarification]
 
         # Next step depends on ambiguity status
         if ambiguous_items:

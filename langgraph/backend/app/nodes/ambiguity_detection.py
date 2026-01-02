@@ -33,7 +33,7 @@ def make_node_ambiguity_detection(
     - Goto: supervisor
     """
 
-    agent: node_agent or build_agent()
+    agent = node_agent or build_agent()
 
     def node_ambiguity_detection(
         state: SageState,
@@ -48,11 +48,23 @@ def make_node_ambiguity_detection(
         store = get_store()
         context_docs: list[dict[str, Any]] = []
         for e in evidence[:max_context_items]:
-            ns = e.get("namespace")
-            key = e.get("key")
+            ns = getattr(e, "namespace", None)
+            key = getattr(e, "key", None)
+            score = getattr(e, "score", None)
+
+            if isinstance(e, dict):
+                ns = e.get("namespace")
+                key = e.get("key")
+                score = e.get("score")
+
             if not ns or not key:
                 continue
-            item = store.get(tuple(ns), key)
+
+            ns_tuple = tuple(ns) if isinstance(ns, (list, tuple)) else None
+            if ns_tuple is None:
+                continue
+
+            item = store.get(ns_tuple, key)
             if not item or not getattr(item, "value", None):
                 continue
             value = item.value or {}
@@ -65,7 +77,7 @@ def make_node_ambiguity_detection(
                     "changed": value.get("changed", 0),
                     "store_namespace": ns,
                     "store_key": key,
-                    "score": e.get("score"),
+                    "score": score if score is None else float(score),
                 },
             })
 
@@ -101,7 +113,7 @@ def make_node_ambiguity_detection(
             }
             state.phases[phase] = phase_entry
             state.errors.append(f"{phase}: missing structured_response")
-            return Command(update=state.dict(), goto="supervisor")
+            return Command(update=state.model_dump(), goto="supervisor")
 
         # Enforce schema
         if not isinstance(pf, ProblemFrame):
