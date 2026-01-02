@@ -5,6 +5,7 @@ external dependencies.
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AnyMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.chat_models import GenericFakeChatModel
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import (
     BasePromptTemplate,
@@ -21,6 +22,7 @@ __all__ = [
     "BaseMessage",
     "HumanMessage",
     "SystemMessage",
+    "GenericFakeChatModel",
     "PydanticOutputParser",
     "PromptTemplate",
     "FewShotPromptWithTemplates",

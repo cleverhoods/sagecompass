@@ -27,6 +27,7 @@
 
 
 ### Changed
+- [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
 - [langgraph/backend] Refactored agent.py to support stateless, config-driven agent construction via agent specific AgentConfig. Enables LangGraph compatibility and improves testability.
 - [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.

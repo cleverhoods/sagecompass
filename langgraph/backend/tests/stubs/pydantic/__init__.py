@@ -24,6 +24,17 @@ def Field(default: Any = ..., *, default_factory: Callable[[], Any] | None = Non
     return _FieldSpec(default=default, default_factory=default_factory)
 
 
+class _PrivateAttrSpec:
+    def __init__(self, default: Any = None, default_factory: Callable[[], Any] | None = None) -> None:
+        self.default = default
+        self.default_factory = default_factory
+
+
+def PrivateAttr(default: Any = None, default_factory: Callable[[], Any] | None = None) -> Any:
+    """Stub for pydantic PrivateAttr used to hold internal data."""
+    return _PrivateAttrSpec(default=default, default_factory=default_factory)
+
+
 class BaseModel:
     """Minimal BaseModel compatible with the expectations in tests."""
 
@@ -38,6 +49,12 @@ class BaseModel:
                 else:
                     value = None
                 setattr(self, name, value)
+            elif isinstance(spec, _PrivateAttrSpec):
+                if spec.default_factory is not None:
+                    value = spec.default_factory()
+                else:
+                    value = spec.default
+                setattr(self, name, value)
 
         self.__dict__.update(data)
 
@@ -51,6 +68,12 @@ class BaseModel:
 
     def model_dump(self) -> Dict[str, Any]:
         return dict(self.__dict__)
+
+    def model_copy(self, *, update: Dict[str, Any] | None = None) -> "BaseModel":
+        data = self.model_dump()
+        if update:
+            data.update(update)
+        return self.__class__(**data)
 
     def __repr__(self) -> str:  # pragma: no cover - debug helper
         args = ", ".join(f"{k}={v!r}" for k, v in self.__dict__.items())
