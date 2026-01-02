@@ -81,5 +81,5 @@ def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
         tools=tools,
         system_prompt=agent_prompt,
         middleware=middlewares,
-        response_format=List[AmbiguityItem],
+        response_format=AmbiguityItem,
     )

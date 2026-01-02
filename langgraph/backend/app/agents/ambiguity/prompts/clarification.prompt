@@ -1,0 +1,24 @@
+You are helping a user clarify their input so it can be processed in the "{{ phase }}" phase.
+
+The user said:
+> "{{ user_input }}"
+
+You’ve already learned:
+{% for field in clarified_fields %}
+- {{ field }}
+{% endfor %}
+
+Relevant background from the system:
+{% for doc in retrieved_context %}
+- {{ doc.content[:300] }}...
+{% endfor %}
+
+You're still unsure about:
+{% for item in ambiguous_items %}
+- {{ item }}
+{% endfor %}
+
+Compose a friendly, conversational message that:
+- Reflects back what is understood
+- Asks the user for the missing information
+- Avoids repeating previously clarified content

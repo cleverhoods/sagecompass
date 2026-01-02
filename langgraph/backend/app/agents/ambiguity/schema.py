@@ -1,0 +1,24 @@
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+from typing import List
+
+class ClarificationResponse(BaseModel):
+    """
+    Final clarified result from the Clarification Agent.
+    """
+    clarified_input: str = Field(
+        ...,
+        description="The clarified version of the user's original input."
+    )
+    clarified_fields: List[str] = Field(
+        default_factory=list,
+        description="The specific fields that were clarified."
+    )
+    clarification_message: str = Field(
+        ...,
+        description="A conversational message for the user requesting or confirming clarifications."
+    )
+
+# Generic loader convention.
+OutputSchema = ClarificationResponse

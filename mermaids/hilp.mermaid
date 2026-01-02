@@ -1,19 +1,19 @@
-flowchart TD
-    Start([Thread Start]) --> Supervisor
+graph TD
 
-    %% SUPERVISOR
-    Supervisor[supervisor node] -->|user_lang missing| DetectLang
-    Supervisor -->|problem_framing incomplete| PF[problem_framing node]
-    Supervisor -->|problem_framing complete| Translator
+A(User Input) --> B(Supervisor)
+B --> C(Gating Guardrails)
+C --> D(Supervisor)
+D --> E(Retrieve Context)
+E --> F(Supervisor)
+F --> G(Ambiguity Detection)
 
-    %% DETECT LANGUAGE
-    DetectLang --> Supervisor
+G -->|If Ambiguous| H(Ambiguity Resolver Loop)
+G -->|If Clear| I(Supervisor)
 
-    %% PROBLEM FRAMING + HILP
-    PF --> PF_Agent[pf_agent (middleware attached)]
-    PF_Agent -->|structured_response| HilpMW[boolean HILP middleware\n(runtime.human)]
-    HilpMW --> PF_Record[store phase data\n+ hilp_meta/clarifications]
-    PF_Record --> Supervisor
+H -->|Clarified| C
+I --> J(Problem Framing)
+J --> K(Supervisor)
+K --> L(Ambiguity Detection)
 
-    %% TRANSLATION / END
-    Translator --> End((END))
+L -->|If Ambiguous| H
+L -->|If Clear| M(Business Goals)

@@ -5,6 +5,7 @@
 
 ### Folder contract
 - Each agent is encapsulated under: `app/agents/<agent_name>/`.
+- Each agent is a Single Responsibility Object (SRO).
 
 ### Required files
 - `agent.py`: exposes `build_agent(config: AgentConfig) -> Runnable` for the agent.
@@ -15,13 +16,12 @@
     - Response schema attachment (response_format)
 - `config.yml`: default configuration for this agent.
   - Responsibilities: default model/provider settings and **policy knobs** (e.g., middleware thresholds).
-- `schema.py`: contains **agent input/output schemas** and structured artifacts the LLM must produce (e.g., `ProblemFrame`, `KpiSet`, ambiguity structures).
+- `schema.py`: contains **agent input/output schemas** and structured artifacts the LLM must produce (e.g., `ProblemFrame`, `KpiSet`, `List[AmbiguityItem]`).
 - `prompts/` folder:
   - MUST contain `system.prompt`
   - MAY contain `few-shots.prompt` (recommended) **and a matching `examples.json`**; few-shot rendering must end with a final user-input stub (empty assistant output) to guide completions.
-- `mw.py`:
-  - Contains middleware hooks/decorators (glue) for this agent.
-  - Heavy logic must be delegated to pure modules inside the agent folder (e.g., `{business_logic}_mw.py`) and invoked from `mw.py`.
+
+- Domain-specific business logic MUST be implemented in modules inside the agent folder.
 
 ### Prompt contract
 - If `few-shots.prompt` exists, it SHOULD be wired via `FewShotPromptWithTemplates` from `langchain_core.prompts` **and paired with `examples.json` containing at least one example and a trailing user stub**.
@@ -36,13 +36,13 @@ agents/
 ├── [agent_name]/               -> Contains the agent related stuff
 │   ├── prompts/                -> Contains all the prompts
 │   │   ├── __init__.py
-│   │   ├── few-shots.prompt
+│   │   ├── few-shots.prompt    -> Optional few-shot prompt.
+│   │   ├── examples.json       -> If few-shots.prompt is present, it MUST be here. Defines examples for the few-shots prompt.
 │   │   └── system.prompt       -> Mandatory prompt.
 │   ├── __init__.py
-│   ├── agent.py                -> .
+│   ├── agent.py                -> Agent creation and default configuration logic.
 │   ├── config.yaml             -> Provide agent specific default configurations.
-│   ├── mw.py                   -> Provides agent specific middlewares and middleware logic.
-│   └── schema.py               -> Provides ALL the relevant Schemas. Contract: it returns an OutputSchema.
+│   └── schema.py               -> Provides ALL the relevant Schemas, it MUST return an OutputSchema.
 ├── README.md
 ├── __init__.py
 ├── global_system.prompt        -> Global System prompt, can/should be attached to all agents system prompts.

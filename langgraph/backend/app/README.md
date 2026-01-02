@@ -17,6 +17,8 @@ This document defines the **locked-in contracts** for SageCompass architecture a
 - **Middlewares**: cross-cutting runtime concerns for agent/model/tool execution (e.g., validation, normalization, error shaping, policy enforcement).
 
 ### Construction and Dependency Injection (DI)
+- all python files MUST start with `from __future__ import annotations`
+- pydantic schema class MUST have class and field level descriptions
 - **No import-time construction**: importing a module must not construct models, agents, tools, or graphs.
 - **Factories instead of singletons**:
   - graphs are built by graph factories,
@@ -80,11 +82,16 @@ app/
 ├── middlewares/
 │   └── dynamic_prompt.py           -> Prompt middleware for few-shots generation.
 ├── nodes/
+│   ├── ambiguity_detection.py      -> Ambiguity detector agent node.
+│   ├── gating_guardrails.py        -> Gating guardrail node, checks agains allowed_topics and blocked_keywords.
 │   ├── problem_framing.py          -> Problem framing node for the Problem Framing Agent.
 │   ├── retrieve_context.py         -> Context retrieval node, retriewes data from the Vector Storage.
 │   ├── supervisor.py               -> SageCompass main supervisor node.
 │   └── write_vector_content.py     -> VectorStore writer node.
+├── schemas/                        -> Shared semantic data definitions, not bound to any node or agent.
+│   └── ambiguities.py              -> Ambiguity schema.
 ├── state/                          -> All state definitions in the system lives here.
+│   ├── gating.py                   -> Gating state information.
 │   ├── state.py                    -> Main state for the system.
 │   └── write_state.py              -> Vector writing state.
 ├── tools/                          -> Available Tools for the system.
@@ -102,6 +109,6 @@ app/
 │   ├── phases.py                   -> Helper methods around Phases.
 │   ├── provider_config.py          -> Instantiates an LLM provider for a given agent
 │   └── state_helpers.py            -> Helper methods around State.
-├── main.py                         -> Centralized entrypoint for the application.
+├── main.py                         -> Centralized building and entrypoint for the graphs.
 └── runtime.py                      -> Defines SageRuntimeContext, the runtime context for the main application.
 ```

@@ -1,0 +1,85 @@
+from __future__ import annotations
+
+from typing import Any
+
+from langchain.agents import create_agent, AgentState
+from langchain.agents.middleware import AgentMiddleware
+from langchain_core.language_models import BaseChatModel
+from langchain_core.runnables import Runnable
+from langchain_core.tools import BaseTool
+
+from app.agents.utils import compose_agent_prompt
+from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
+from app.utils.model_factory import get_model_for_agent
+from app.utils.logger import get_logger
+
+from .schema import OutputSchema
+
+AGENT_NAME = "ambiguity"
+
+
+def _logger():
+    return get_logger(f"agents.{AGENT_NAME}")
+
+
+class ClarificationAgentConfig:
+    """
+    Configuration object for the Clarification Agent. Can be extended to support custom models or middleware.
+    """
+    def __init__(self, model: BaseChatModel | None = None, extra_middleware: list[AgentMiddleware] | None = None):
+        self.model = model
+        self._extra_middleware = extra_middleware or []
+
+    def get_model(self) -> BaseChatModel:
+        return self.model or get_model_for_agent(AGENT_NAME)
+
+    def get_extra_middleware(self) -> list[AgentMiddleware]:
+        return self._extra_middleware
+
+
+def build_agent(config: ClarificationAgentConfig | None = None) -> Runnable:
+    """
+    Constructs a clarification agent to help refine ambiguous user input.
+
+    Returns:
+        A Runnable agent that outputs a structured ClarificationResponse.
+    """
+    if config is None:
+        config = ClarificationAgentConfig()
+
+    model = config.get_model()
+
+    tools: list[BaseTool] = []  # No tools for this agent; clarification is model-only
+
+    _logger().info(
+        "agent.build",
+        agent=AGENT_NAME,
+        model=str(model),
+        tools=[tool.name for tool in tools],
+    )
+
+    # Compose system + prompt using Jinja template
+    agent_prompt = compose_agent_prompt(
+        agent_name=AGENT_NAME,
+        prompt_names=["system", "clarification"],
+        include_global=True,
+        include_format_instructions=False,
+    )
+
+    middlewares: list[AgentMiddleware[AgentState, Any]] = [
+        make_dynamic_prompt_middleware(
+            agent_prompt,
+            placeholders=["user_input", "ambiguous_items", "clarified_fields", "retrieved_context", "phase"],
+            output_schema=OutputSchema,
+        )
+    ]
+
+    middlewares.extend(config.get_extra_middleware())
+
+    return create_agent(
+        model=model,
+        tools=tools,
+        system_prompt=agent_prompt,
+        middleware=middlewares,
+        response_format=OutputSchema,
+    )

@@ -19,6 +19,8 @@ def build_main_app(
     guardrails_node: NodeFn,
     problem_framing_node: NodeFn,
     retrieve_context_node: NodeFn,
+    clarify_ambiguity_node: NodeFn,
+    ambiguity_detection_node: NodeFn,
 ) -> CompiledStateGraph:
     """
     Graph factory for the main SageCompass graph.
@@ -28,9 +30,13 @@ def build_main_app(
     - Receives fully dependency-injected node callables.
     - Only static edge is START -> entry node ("supervisor").
     """
-    graph = StateGraph(SageState, context_schema=SageRuntimeContext)
+    graph = StateGraph(SageState)
 
     graph.add_node("supervisor", supervisor_node)
+
+    graph.add_node("clarify_ambiguity", clarify_ambiguity_node)
+
+    graph.add_node("ambiguity_detection", ambiguity_detection_node)
 
     graph.add_node("guardrails_check", guardrails_node)
 

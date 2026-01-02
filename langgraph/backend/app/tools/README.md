@@ -4,9 +4,7 @@
 
 ### Location and reuse
 - Tools live under `app/tools/`.
-- Tools can be used both:
-  - by agents (as LLM-callable tools),
-  - by nodes directly (as deterministic utilities).
+- Tools are called deterministically through ToolNodes
 
 ### Design rules
 - Tools should be stateless by default; any state must be explicit and injected.

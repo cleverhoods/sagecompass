@@ -53,6 +53,15 @@
 - [langgraph/backend] Replaced legacy `user_query` dependency with state-derived `task_input`, making agent invocation more robust and context-aware. (ref: remove user_query)
 - [langgraph/backend] Refactored `supervisor` logic to cleanly read phase state via structured methods and avoid defensive dict access. (ref: supervisor cleanup)
 - [langgraph/backend] Moved few-shot prompt composition out of `compose_agent_prompt()` and into middleware to separate prompt rendering from prompt injection. (ref: prompt layering policy)
+- [langgraph/backend] Refactor `clarify_ambiguity` node to use new `ClarificationSession` model with scoped state and bounded loop handling.
+- [langgraph/backend] Add max clarification round cutoff logic to support fail-fast flow.
+- [langgraph/backend] Normalize all nodes to be orchestration-only factories (`make_node_*`) and accept injected agents/tools.
+- [langgraph/backend] Replace legacy problem framing node structure with cleaner DI and logging pattern.
+- [langgraph/backend] Standardize logger instantiation outside node factories as DI-safe singleton.
+- [langgraph/backend] Move ambiguity schema to `schemas/` since it is not phase- or agent-bound.
+- [langgraph/backend] Clarify distinction between `phase` vs `node` in supervisor and promote proper orchestration-only flow control.
+- [langgraph/backend] Add support for structured `ClarificationSession` list in `state.py` to support multiple per-phase loops.
+- [langgraph/backend] Improve `supervisor.py` to be fully reusable and phase-parametric with LangGraph-compliant routing logic.
 
 
 ### Fixed
@@ -69,6 +78,12 @@
 - [langgraph/backend] Unblocked backend contract tests by making the app package importable and adding a stub for `langgraph.runtime`.
 - [langgraph/backend] Resolved bug where few-shot `task_input` placeholder was not preserved due to early formatting. Now injected only at runtime. (ref: dynamic prompt bug)
 - [langgraph/backend] Fixed error when returning FewShotPromptWithTemplates directly to `create_agent()` by converting to rendered SystemMessage before injection. (ref: agent build crash)
+- [langgraph/backend] Prevent import-time agent construction by moving `build_agent()` into node factories.
+- [langgraph/backend] Resolve missing structured response errors by validating and defaulting agent outputs.
+- [langgraph/backend] Fix incorrect assumption in supervisor that clarification always returns to `problem_framing`.
+- [langgraph/backend] Ensure clarification loop terminates cleanly with `goto=END` when round limit is exceeded.
+- [langgraph/backend] Avoid state mutation errors by introducing `reset_clarification_session(...)` helper.
+- [langgraph/backend] Fix `state.phase` lookup error by using phase from supervisor factory args instead.
 
 
 ### Removed

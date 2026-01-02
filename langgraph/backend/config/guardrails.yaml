@@ -6,6 +6,9 @@ allowed_topics:
   - kpi
   - optimization
   - "cost savings"
+  - "product reviews"
+  - "support logs"
+  - "quality"
   - efficiency
 
 # Blocked keywords.
