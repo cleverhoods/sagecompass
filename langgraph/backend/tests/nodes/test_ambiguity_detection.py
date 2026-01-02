@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from langchain_core.chat_models import GenericFakeChatModel
+# https://reference.langchain.com/v0.3/python/core/language_models/langchain_core.language_models.fake_chat_models.GenericFakeChatModel.html
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import HumanMessage
 from langgraph.types import Command
 
@@ -9,6 +10,7 @@ from app.nodes.ambiguity_detection import make_node_ambiguity_detection
 from app.state import EvidenceItem, PhaseEntry, SageState
 
 
+# Local wrapper: node expects an agent with invoke(); LangChain fakes cover models, not agents.
 class _FakeAgent:
     def __init__(self, responses: list[dict]):
         self.model = GenericFakeChatModel(responses)
@@ -17,6 +19,7 @@ class _FakeAgent:
         return self.model.invoke(inputs)
 
 
+# Local stub: no standard Store fake for namespace/key lookups in these unit tests.
 class _StoreItem:
     def __init__(self, value: dict):
         self.value = value

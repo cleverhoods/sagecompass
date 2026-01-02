@@ -17,3 +17,4 @@ class GenericFakeChatModel:
         if self.responses:
             return self.responses.pop(0)
         return {}
+

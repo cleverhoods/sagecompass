@@ -200,7 +200,19 @@ Guardrails are layered and share a single policy engine.
 
 SageCompass follows the LangChain testing approach for agentic systems: **fast deterministic unit tests** plus **targeted integration tests** for behaviors that only emerge with real models.
 
-Reference: LangChain OSS Python docs → *Agent development* → *Test*.
+References:
+- LangChain OSS Python docs → *Agent development* → *Test*: https://docs.langchain.com/oss/python/langchain/test
+- LangChain standard unit tests (components): https://reference.langchain.com/python/langchain_tests/unit_tests/
+
+### MUST (Prefer standard fakes + standard tests)
+- Prefer **LangChain/LangGraph-provided fakes and standard test suites** over custom stubs whenever possible:
+  - Chat models: `GenericFakeChatModel` (deterministic)  
+    https://reference.langchain.com/v0.3/python/core/language_models/langchain_core.language_models.fake_chat_models.GenericFakeChatModel.html
+  - Embeddings: `FakeEmbeddings` (deterministic vectors)  
+    https://reference.langchain.com/v0.3/python/core/embeddings/langchain_core.embeddings.fake.FakeEmbeddings.html
+  - Tools: adopt `langchain_tests.unit_tests.tools.ToolsUnitTests` for custom tool implementations  
+    https://reference.langchain.com/python/langchain_tests/unit_tests/tools/
+- Keep custom stubs only when framework fakes/standard tests cannot represent the needed behavior; **document why** in the test.
 
 ### MUST (Unit tests: deterministic, fast)
 - Prefer **unit tests** for small, deterministic behavior:
@@ -208,9 +220,9 @@ Reference: LangChain OSS Python docs → *Agent development* → *Test*.
   - state helper utilities
   - node logic that does not require network calls (with stubbed dependencies)
 - Mock chat models using an **in-memory fake**:
-  - Use `GenericFakeChatModel` (supports iterating deterministic `AIMessage`/strings, tool calls, and streaming).
+  - Use `GenericFakeChatModel` (supports deterministic outputs, tool calls, and streaming).
 - When testing stateful / multi-turn behavior, use an **in-memory checkpointer**:
-  - Use `InMemorySaver` to simulate persisted conversation turns and verify state-dependent routing.
+  - Use `InMemorySaver` to simulate persisted turns and verify state-dependent routing.
 
 ### MUST (Integration tests: real behavior, bounded scope)
 - Maintain a small set of integration tests that run with real providers to verify:

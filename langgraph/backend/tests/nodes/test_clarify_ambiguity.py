@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from langchain_core.chat_models import GenericFakeChatModel
+# https://reference.langchain.com/v0.3/python/core/language_models/langchain_core.language_models.fake_chat_models.GenericFakeChatModel.html
+from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import HumanMessage
 
 from app.nodes.clarify_ambiguity import make_node_clarify_ambiguity
 from app.state import ClarificationSession, SageState
 
 
+# Local wrapper: node expects an agent with invoke(); LangChain fakes cover models, not agents.
 class _FakeAgent:
     def __init__(self, responses: list[dict]):
         self.model = GenericFakeChatModel(responses)

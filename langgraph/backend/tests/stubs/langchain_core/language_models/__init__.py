@@ -1,4 +1,4 @@
-"""Stub language model base class."""
+"""Stub language model base classes."""
 
 from __future__ import annotations
 
@@ -8,3 +8,4 @@ class BaseChatModel:
 
     def __call__(self, *args, **kwargs):  # pragma: no cover - helper
         raise NotImplementedError("Stub BaseChatModel cannot be invoked")
+

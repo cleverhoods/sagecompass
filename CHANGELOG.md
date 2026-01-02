@@ -27,6 +27,7 @@
 
 
 ### Changed
+- [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
 - [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
 - [langgraph/backend] Refactored agent.py to support stateless, config-driven agent construction via agent specific AgentConfig. Enables LangGraph compatibility and improves testability.
