@@ -8,6 +8,7 @@ from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 
+from app.state.ambiguity import AmbiguityContext
 from app.state.gating import GatingContext
 
 
@@ -86,6 +87,7 @@ class SageState(BaseModel):
 
     This object is passed between all nodes. It stores:
     - `gating`: Gating decision metadata (safety, scope, etc.)
+    - `ambiguity`: ambiguity detection and resolution state
     - `clarification`: clarification data
     - `messages`: Full conversation history (user + agents)
     - `phases`: Structured outputs of each processing phase (e.g., problem_framing)
@@ -93,7 +95,11 @@ class SageState(BaseModel):
     """
     gating: GatingContext = Field(
         default_factory=lambda: GatingContext(original_input=""),
-        description="All gating-related validation, scope, and ambiguity information."
+        description="All gating-related validation and scope information."
+    )
+    ambiguity: AmbiguityContext = Field(
+        default_factory=AmbiguityContext,
+        description="Ambiguity detection and resolution state.",
     )
     clarification: list[ClarificationSession] = Field(
         default_factory=list,

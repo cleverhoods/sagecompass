@@ -35,6 +35,7 @@ before anyone spends time and money building it.
 ### Directory structure
 ```
 .
+├── drupal/                   # Drupal site root/
 ├── langgraph/                # LangGraph workspace, configs, and UI/backend code
 │   ├── backend/              # Runnable LangGraph backend + Gradio UI (uv-managed)
 │   └── ui/                   # Planned dedicated UI surface (currently co-located)

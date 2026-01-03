@@ -43,7 +43,7 @@ def make_node_ambiguity_detection(
         goto: Node name to route to after completion.
 
     Side effects/state writes:
-        Updates `state.gating.detected_ambiguities` and phase clarification session.
+        Updates `state.ambiguity.detected` and phase clarification session.
         Marks `state.phases[phase].ambiguity_checked` after the detector runs.
 
     Returns:
@@ -166,13 +166,13 @@ def make_node_ambiguity_detection(
         else:
             updated_clarification = [updated_session, *state.clarification]
 
-        updated_gating = state.gating.model_copy(
-            update={"detected_ambiguities": ambiguities}
+        updated_ambiguity = state.ambiguity.model_copy(
+            update={"detected": ambiguities}
         )
 
         return Command(
             update={
-                "gating": updated_gating,
+                "ambiguity": updated_ambiguity,
                 "clarification": updated_clarification,
                 "phases": state.phases,
             },

@@ -23,6 +23,9 @@ This is the canonical reference for architecture and engineering rules for SageC
 - No ambiguous "magic values":
   - State keys and sentinel values MUST be centralized as typed model fields (preferred) or as well-named constants/enums close to their use.
   - Do not treat `SageState` as a dict (no `model_dump().get(...)` / `getattr(..., default)` fallbacks); define Pydantic defaults so typed attributes are always safe to read.
+- Keep state responsibilities clean:
+  - `GatingContext` MUST only own guardrail/decision metadata.
+  - Ambiguity detection and resolution MUST live in a dedicated ambiguity state model (not in `GatingContext`).
 - Middleware behavior MUST be transparent:
   - Custom middleware factories MUST include inline comments explaining runtime expectations/invariants (e.g., prompt suffix must come last; placeholders are injected late; what may/may not be mutated).
 

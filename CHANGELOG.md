@@ -6,6 +6,7 @@
 - [langgraph/backend] Add unit tests for guardrails policies and middleware enforcement behaviors.
 - [langgraph/backend] Add guardrail allow/deny unit tests and a tool-calling agent trajectory integration test.
 - [langgraph/backend] Add contract tests to enforce platform domain folder governance requirements.
+- [langgraph/backend] Add unit tests for ambiguity context state defaults and payloads.
 - [prompt] Created `few-shots.prompt` and `example.json` for Problem Framing agent.
 - [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
@@ -36,6 +37,7 @@
 - [langgraph/backend] Resolve lint/type gate failures by tightening node/runtime typing and suppressing add_node overload false positives.
 - [langgraph/backend] Extend PhaseContract with `retrieval_enabled` to match phase flag requirements.
 - [langgraph/backend] Move policies/utilities into `app/platform/*` domains and update imports/tests to match platform governance.
+- [langgraph/backend] Separate ambiguity tracking from gating state with a dedicated ambiguity context.
 - [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
 - [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.

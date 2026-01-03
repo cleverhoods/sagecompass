@@ -77,9 +77,9 @@ def test_ambiguity_detection_updates_gating_and_clarification() -> None:
     assert result.goto == "phase_supervisor"
     assert result.update is not None
 
-    updated_gating = result.update["gating"]
-    assert len(updated_gating.detected_ambiguities) == 1
-    assert updated_gating.detected_ambiguities[0].key == "scope"
+    updated_ambiguity = result.update["ambiguity"]
+    assert len(updated_ambiguity.detected) == 1
+    assert updated_ambiguity.detected[0].key == "scope"
 
     updated_clarification = result.update["clarification"]
     assert updated_clarification[0].ambiguous_items == ["scope"]

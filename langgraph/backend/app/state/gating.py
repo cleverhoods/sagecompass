@@ -7,7 +7,6 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
-from app.schemas.ambiguities import AmbiguityItem
 
 # -----------------------------
 # Reducers
@@ -75,17 +74,6 @@ class GatingContext(BaseModel):
     guardrail: GuardrailResult | None = Field(
         default=None,
         description="Result of deterministic guardrail checks."
-    )
-
-    # --- Ambiguity handling ---
-    detected_ambiguities: list[AmbiguityItem] = Field(
-        default_factory=list,
-        description="Ambiguities detected by any agent so far."
-    )
-
-    resolved_ambiguities: list[AmbiguityItem] = Field(
-        default_factory=list,
-        description="Ambiguities resolved via user input or fallback assumptions."
     )
 
     # --- Confidence & rationale ---
