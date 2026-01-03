@@ -1,14 +1,15 @@
+"""Helpers for common SageState operations."""
+
 from __future__ import annotations
 
-from typing import Optional
 from langchain_core.messages import HumanMessage
 from langchain_core.messages.utils import AnyMessage
 
-from app.state import SageState, ClarificationSession
+from app.state import ClarificationSession, SageState
 
-def get_latest_user_input(messages: list[AnyMessage]) -> Optional[str]:
-    """
-    Finds the most recent HumanMessage in the message stream.
+
+def get_latest_user_input(messages: list[AnyMessage]) -> str | None:
+    """Finds the most recent HumanMessage in the message stream.
 
     Args:
         messages: Message history for the current thread.
@@ -18,12 +19,11 @@ def get_latest_user_input(messages: list[AnyMessage]) -> Optional[str]:
     """
     for msg in reversed(messages):
         if isinstance(msg, HumanMessage):
-            return msg.content
+            return str(msg.content) if msg.content is not None else None
     return None
 
 def phase_to_node(phase: str) -> str:
-    """
-    Map a phase name to its entry node.
+    """Map a phase name to its entry node.
 
     Args:
         phase: Phase identifier.
@@ -40,8 +40,7 @@ def phase_to_node(phase: str) -> str:
     return mapping.get(phase, "supervisor")  # fallback to supervisor if unknown
 
 def reset_clarification_session(state: SageState, phase: str) -> list[ClarificationSession]:
-    """
-    Remove the clarification session for the given phase.
+    """Remove the clarification session for the given phase.
 
     Args:
         state: Current SageState.

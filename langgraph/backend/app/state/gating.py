@@ -1,11 +1,13 @@
+"""Gating-related state models."""
+
 from __future__ import annotations
 
-from typing import List, Optional, Literal
-from pydantic import BaseModel, Field
 from decimal import Decimal
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 from app.schemas.ambiguities import AmbiguityItem
-
 
 # -----------------------------
 # Guardrail evaluation result
@@ -25,7 +27,7 @@ class GuardrailResult(BaseModel):
         ...,
         description="Whether the input is within SageCompass domain and capabilities."
     )
-    reasons: List[str] = Field(
+    reasons: list[str] = Field(
         default_factory=list,
         description="Human-readable reasons explaining the guardrail outcome."
     )
@@ -48,8 +50,8 @@ GatingDecision = Literal[
 # -----------------------------
 
 class GatingContext(BaseModel):
-    """
-    Holds all gating-related information.
+    """Holds all gating-related information.
+
     This object is mutated progressively by gating nodes and agents.
     """
 
@@ -60,24 +62,24 @@ class GatingContext(BaseModel):
     )
 
     # --- Guardrails ---
-    guardrail: Optional[GuardrailResult] = Field(
+    guardrail: GuardrailResult | None = Field(
         default=None,
         description="Result of deterministic guardrail checks."
     )
 
     # --- Ambiguity handling ---
-    detected_ambiguities: List[AmbiguityItem] = Field(
+    detected_ambiguities: list[AmbiguityItem] = Field(
         default_factory=list,
         description="Ambiguities detected by any agent so far."
     )
 
-    resolved_ambiguities: List[AmbiguityItem] = Field(
+    resolved_ambiguities: list[AmbiguityItem] = Field(
         default_factory=list,
         description="Ambiguities resolved via user input or fallback assumptions."
     )
 
     # --- Confidence & rationale ---
-    confidence: Optional[Decimal] = Field(
+    confidence: Decimal | None = Field(
         default=None,
         ge=0.01,
         le=0.99,
@@ -85,13 +87,13 @@ class GatingContext(BaseModel):
         description="Overall confidence that the input is sufficiently understood."
     )
 
-    rationale: List[str] = Field(
+    rationale: list[str] = Field(
         default_factory=list,
         description="Short internal notes explaining gating decisions."
     )
 
     # --- Final decision ---
-    decision: Optional[GatingDecision] = Field(
+    decision: GatingDecision | None = Field(
         default=None,
         description="Final gating outcome."
     )

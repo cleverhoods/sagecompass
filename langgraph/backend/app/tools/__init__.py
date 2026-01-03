@@ -1,3 +1,5 @@
+"""Tool exports for SageCompass backend."""
+
 from __future__ import annotations
 
 from .context_lookup import context_lookup
@@ -7,5 +9,5 @@ from .vector_writer import vector_write
 __all__ = [
     "context_lookup",
     "nothingizer_tool",
-    "vector_writer",
+    "vector_write",
 ]

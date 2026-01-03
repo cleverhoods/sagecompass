@@ -1,3 +1,5 @@
+"""Path constants for SageCompass backend."""
+
 from __future__ import annotations
 
 from pathlib import Path

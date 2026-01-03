@@ -1,8 +1,10 @@
+"""Debugging helpers."""
+
 import os
 
+
 def maybe_attach_pycharm() -> None:
-    """
-    Attach the PyCharm debugger if host/port env vars are present.
+    """Attach the PyCharm debugger if host/port env vars are present.
 
     Side effects/state writes:
         Starts a remote debug session when configured.
@@ -12,5 +14,5 @@ def maybe_attach_pycharm() -> None:
     if not host or not port:
         return
 
-    import pydevd_pycharm
+    import pydevd_pycharm  # type: ignore[import-untyped]
     pydevd_pycharm.settrace(host, port=int(port), suspend=False)

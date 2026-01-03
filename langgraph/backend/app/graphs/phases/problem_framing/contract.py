@@ -1,9 +1,10 @@
+"""Problem framing phase contract definition."""
+
 from __future__ import annotations
 
+from app.agents.problem_framing.schema import ProblemFrame
 from app.graphs.phases.contract import PhaseContract
 from app.graphs.phases.problem_framing.subgraph import build_problem_framing_subgraph
-from app.agents.problem_framing.schema import ProblemFrame
-
 
 problem_framing_contract = PhaseContract(
     name="problem_framing",

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from langchain.agents.middleware.types import ModelRequest
-from langgraph.prebuilt.tool_node import ToolCallRequest
 from langchain_core.language_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from typing import Any
+
+from langgraph.prebuilt.tool_node import ToolCallRequest, ToolRuntime
 
 from app.middlewares.guardrails import GuardrailsMiddleware
 from app.policies.guardrails import build_guardrails_config
@@ -45,11 +47,20 @@ def test_guardrails_middleware_enforces_tool_allowlist() -> None:
     })
     middleware = GuardrailsMiddleware(config=config, allowed_tools=["allowed_tool"])
 
+    runtime: ToolRuntime[Any, Any] = ToolRuntime(
+        state={},
+        context=None,
+        config={},
+        stream_writer=lambda _value: None,
+        tool_call_id=None,
+        store=None,
+    )
+
     request = ToolCallRequest(
         tool_call={"name": "blocked_tool", "args": {}, "id": "call-1"},
         tool=None,
         state={},
-        runtime=None,
+        runtime=runtime,
     )
 
     def handler(_request):

@@ -1,19 +1,22 @@
+"""Global supervisor node for top-level routing."""
+
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from langgraph.graph import END
-from langgraph.types import Command
 from langgraph.runtime import Runtime
+from langgraph.types import Command
 
-from app.state import SageState
 from app.runtime import SageRuntimeContext
+from app.state import SageState
 from app.utils.logger import get_logger
 
 
-def make_node_supervisor() -> Callable[[SageState, Runtime | None], Command[str]]:
-    """
-    Node: supervisor (global)
+def make_node_supervisor(
+) -> Callable[[SageState, Runtime[SageRuntimeContext] | None], Command[str]]:
+    """Node: supervisor (global).
+
     Purpose:
         Handle top-level orchestration and phase routing.
 
@@ -25,7 +28,10 @@ def make_node_supervisor() -> Callable[[SageState, Runtime | None], Command[str]
     """
     logger = get_logger("nodes.supervisor")
 
-    def node_supervisor(state: SageState, runtime: Runtime[SageRuntimeContext] | None = None) -> Command[str]:
+    def node_supervisor(
+        state: SageState,
+        runtime: Runtime[SageRuntimeContext] | None = None,
+    ) -> Command[str]:
         logger.info("supervisor.entry", state_keys=state.model_fields.keys())
         from app.utils.phases import get_phase_names
         # 1. Run guardrails if not done yet
@@ -36,7 +42,7 @@ def make_node_supervisor() -> Callable[[SageState, Runtime | None], Command[str]
         # 2. TODO: Handle global clarification logic here if designed
 
         # 3. Route to first incomplete phase
-        for phase_name, contract in get_phase_names():
+        for phase_name in get_phase_names():
             phase_state = state.phases.get(phase_name)
             if not phase_state or phase_state.status != "complete":
                 logger.info("supervisor.routing.phase_start", phase=phase_name)

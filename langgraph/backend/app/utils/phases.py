@@ -1,11 +1,13 @@
+"""Phase helper utilities for SageState access."""
+
 from __future__ import annotations
 
-from typing import Any, Dict, Type, TypeVar
-from pydantic import BaseModel
-from app.state import PhaseEntry, PhaseStatus, SageState
-from app.graphs.phases import PHASES
+from typing import Any
 
-T = TypeVar("T", bound=BaseModel)
+from pydantic import BaseModel
+
+from app.graphs.phases import PHASES
+from app.state import PhaseEntry, PhaseStatus, SageState
 
 # ---- WRITE HELPERS (return updates, do NOT mutate state) ----
 
@@ -13,10 +15,10 @@ def set_phase_data_update(
     state: SageState,
     key: str,
     value: BaseModel,
-) -> Dict[str, Any]:
-    """
-    Return a state update that stores a phase's structured result
-    in SageState.phases[key].data.
+) -> dict[str, Any]:
+    """Return a state update that stores a phase's structured result.
+
+    Stores results in SageState.phases[key].data.
 
     Args:
         state: Current SageState.
@@ -47,9 +49,8 @@ def set_phase_status_update(
     state: SageState,
     key: str,
     status: PhaseStatus,
-) -> Dict[str, Any]:
-    """
-    Return a state update that sets the lifecycle status for a given phase.
+) -> dict[str, Any]:
+    """Return a state update that sets the lifecycle status for a given phase.
 
     Args:
         state: Current SageState.
@@ -78,13 +79,12 @@ def set_phase_status_update(
 
 # ---------- READ HELPERS (pure) ----------
 
-def get_phase_data(
+def get_phase_data[T: BaseModel](
     state: SageState,
     key: str,
-    model: Type[T],
+    model: type[T],
 ) -> T | None:
-    """
-    Load and validate a phase's structured result from SageState.
+    """Load and validate a phase's structured result from SageState.
 
     Args:
         state: Current SageState.
@@ -105,8 +105,7 @@ def get_phase_status(
     state: SageState,
     key: str,
 ) -> PhaseStatus:
-    """
-    Read lifecycle status for a phase; default to 'pending'.
+    """Read lifecycle status for a phase; default to 'pending'.
 
     Args:
         state: Current SageState.
@@ -119,8 +118,7 @@ def get_phase_status(
     return entry.status if entry else "pending"
 
 def get_phase_names() -> list[str]:
-    """
-    Return ordered phase names from the PHASES registry.
+    """Return ordered phase names from the PHASES registry.
 
     Returns:
         List of phase names.

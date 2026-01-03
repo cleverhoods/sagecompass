@@ -1,8 +1,10 @@
+"""Provider configuration loader for model factories."""
+
 import importlib
 import os
 
-from app.utils.file_loader import FileLoader
 from app.utils.env import load_project_env
+from app.utils.file_loader import FileLoader
 from app.utils.logger import get_logger
 from app.utils.paths import CONFIG_DIR
 
@@ -10,17 +12,16 @@ PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
 
 
 class ProviderFactory:
-    """
-    Instantiates an LLM provider for a given agent based on:
-      - agent.yaml (specific overrides)
-      - config/provider/{provider}.yaml (global defaults)
-    Supports any provider module in LangChain ecosystem.
+    """Instantiate an LLM provider for a given agent.
+
+    Sources:
+        - agent.yaml (specific overrides)
+        - config/provider/{provider}.yaml (global defaults)
     """
 
     @staticmethod
-    def for_agent(agent_name: str = None):
-        """
-        Instantiate a provider model for an agent using config + env.
+    def for_agent(agent_name: str | None = None):
+        """Instantiate a provider model for an agent using config + env.
 
         Args:
             agent_name: Optional agent name for per-agent overrides.
@@ -35,12 +36,13 @@ class ProviderFactory:
         try:
             load_project_env()
             # --- Load configurations ---
-            if agent_name is None:
-                agent_cfg = {}
-            else:
-                agent_cfg = FileLoader.load_agent_config(agent_name) or {}
+            agent_cfg = {} if agent_name is None else FileLoader.load_agent_config(agent_name) or {}
 
-            provider_name = (agent_cfg.get("provider") or os.getenv("DEFAULT_PROVIDER", "openai")).lower()
+            provider_name_value = agent_cfg.get("provider") or os.getenv(
+                "DEFAULT_PROVIDER",
+                "openai",
+            )
+            provider_name = str(provider_name_value).lower()
             prov_cfg = FileLoader.load_provider_config(provider_name)
             if not prov_cfg:
                 raise FileNotFoundError(f"Provider config missing for '{provider_name}'")
@@ -61,7 +63,7 @@ class ProviderFactory:
             # --- Resolve API key ---
             api_key = os.getenv(prov_cfg["key_env"])
             if not api_key:
-                raise EnvironmentError(f"Missing environment variable: {prov_cfg['key_env']}")
+                raise OSError(f"Missing environment variable: {prov_cfg['key_env']}")
 
             # --- Dynamic import and instantiation ---
             module = importlib.import_module(prov_cfg["module"])

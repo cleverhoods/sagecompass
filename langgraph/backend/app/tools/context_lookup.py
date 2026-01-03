@@ -1,14 +1,15 @@
+"""Tool for retrieving context from the LangGraph Store."""
+
 from __future__ import annotations
 
-from langchain_core.tools import tool
 from langchain_core.documents import Document
+from langchain_core.tools import tool
 from langgraph.config import get_store
 
 
 @tool
 def context_lookup(query: str, collection: str) -> list[Document]:
-    """
-    Retrieve agent-scoped context relevant to a query from long-term memory (Store-backed).
+    """Retrieve agent-scoped context relevant to a query from long-term memory (Store-backed).
 
     Use this when an agent needs supporting context (policies, definitions, constraints,
     prior decisions, curated notes) that was previously stored. This performs semantic

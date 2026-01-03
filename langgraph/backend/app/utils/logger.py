@@ -1,16 +1,18 @@
+"""Structured logging helpers for SageCompass."""
+
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any, Mapping, Optional
+from typing import Any
 
 import structlog
 
 
 @lru_cache(maxsize=1)
 def configure_logging() -> structlog.stdlib.BoundLogger:
-    """
-    Configure structlog to render structured JSON while honoring stdlib logging.
+    """Configure structlog to render structured JSON while honoring stdlib logging.
 
     We keep structlog for structured, machine-readable events and rely on the
     stdlib logging pipeline for interoperability (handlers, log levels, etc.).
@@ -37,9 +39,8 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     return structlog.get_logger("sagecompass")
 
 
-def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
-    """
-    Helper for modules that want their own bound logger without using globals.
+def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+    """Helper for modules that want their own bound logger without using globals.
 
     Example:
         logger = get_logger("problem_framing")
@@ -51,9 +52,13 @@ def get_logger(name: Optional[str] = None) -> structlog.stdlib.BoundLogger:
     return base_logger
 
 
-def log(event: str, payload: Mapping[str, Any] | None = None, *, component: str | None = None) -> None:
-    """
-    Project-wide logging helper.
+def log(
+    event: str,
+    payload: Mapping[str, Any] | None = None,
+    *,
+    component: str | None = None,
+) -> None:
+    """Project-wide logging helper.
 
     Usage:
         log("agent.node.start", {"agent": "problem_framing"})

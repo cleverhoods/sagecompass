@@ -1,7 +1,9 @@
+"""Node for ambiguity detection orchestration."""
+
 from __future__ import annotations
 
-from typing import Any, Callable
-from typing_extensions import Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import Runnable
@@ -9,24 +11,27 @@ from langgraph.config import get_store
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
+from app.agents.ambiguity_detector.agent import build_agent  # lazy import to respect SRP
 from app.agents.problem_framing.schema import ProblemFrame
 from app.runtime import SageRuntimeContext
 from app.state import PhaseEntry, SageState
 from app.utils.logger import get_logger
 from app.utils.state_helpers import get_latest_user_input
-from app.agents.ambiguity_detector.agent import build_agent  # lazy import to respect SRP
 
 logger = get_logger("nodes.ambiguity_detection")
 
 
 def make_node_ambiguity_detection(
-    node_agent: Runnable = None,
+    node_agent: Runnable | None = None,
     *,
     phase: str = "problem_framing",
     max_context_items: int = 8,
-) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor"]]]:
-    """
-    Node: ambiguity_detection
+) -> Callable[
+    [SageState, Runtime[SageRuntimeContext] | None],
+    Command[Literal["supervisor"]],
+]:
+    """Node: ambiguity_detection.
+
     Purpose:
         Detect ambiguity for the current phase using the ambiguity detector agent.
 
@@ -42,7 +47,6 @@ def make_node_ambiguity_detection(
     Returns:
         A Command routing back to `supervisor`.
     """
-
     agent = node_agent or build_agent()
 
     def node_ambiguity_detection(
@@ -98,7 +102,12 @@ def make_node_ambiguity_detection(
                 for d in context_docs if d.get("text")
             )
             messages_for_agent = [
-                SystemMessage(content="Retrieved context (use as supporting input):\n\n" + context_block),
+                SystemMessage(
+                    content=(
+                        "Retrieved context (use as supporting input):\n\n"
+                        + context_block
+                    )
+                ),
                 *state.messages,
             ]
         else:

@@ -1,16 +1,26 @@
+"""Main graph composition for SageCompass."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any, cast
 
 from langgraph.graph import START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
-from app.state import SageState
-from app.runtime import SageRuntimeContext
+
 from app.graphs.phases import PHASES
+from app.runtime import SageRuntimeContext
+from app.state import SageState
 
 # Type alias for node callables operating on SageState.
 NodeFn = Callable[[SageState, Runtime[SageRuntimeContext] | None], object]
+
+
+def _as_runtime_node(
+    node: NodeFn,
+) -> Callable[[SageState, Runtime[SageRuntimeContext]], Any]:
+    return cast(Callable[[SageState, Runtime[SageRuntimeContext]], Any], node)
 
 
 def build_main_app(
@@ -20,9 +30,8 @@ def build_main_app(
     retrieve_context_node: NodeFn,
     clarify_ambiguity_node: NodeFn,
     ambiguity_detection_node: NodeFn,
-) -> CompiledStateGraph:
-    """
-    Graph factory for the main SageCompass graph.
+) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
+    """Graph factory for the main SageCompass graph.
 
     Args:
         supervisor_node: DI-injected supervisor node callable.
@@ -37,14 +46,26 @@ def build_main_app(
     Returns:
         A compiled LangGraph instance with phase subgraphs attached.
     """
-    graph = StateGraph(SageState)
+    graph = StateGraph(SageState, context_schema=SageRuntimeContext)
 
     # Add control nodes
-    graph.add_node("supervisor", supervisor_node)
-    graph.add_node("clarify_ambiguity", clarify_ambiguity_node)
-    graph.add_node("ambiguity_detection", ambiguity_detection_node)
-    graph.add_node("guardrails_check", guardrails_node)
-    graph.add_node("retrieve_context", retrieve_context_node)
+    graph.add_node("supervisor", _as_runtime_node(supervisor_node))  # type: ignore[call-overload]
+    graph.add_node(
+        "clarify_ambiguity",
+        _as_runtime_node(clarify_ambiguity_node),  # type: ignore[call-overload]
+    )
+    graph.add_node(
+        "ambiguity_detection",
+        _as_runtime_node(ambiguity_detection_node),  # type: ignore[call-overload]
+    )
+    graph.add_node(
+        "guardrails_check",
+        _as_runtime_node(guardrails_node),  # type: ignore[call-overload]
+    )
+    graph.add_node(
+        "retrieve_context",
+        _as_runtime_node(retrieve_context_node),  # type: ignore[call-overload]
+    )
 
     # Add phase subgraphs from the phase registry
     for phase in PHASES.values():
@@ -52,4 +73,7 @@ def build_main_app(
 
     graph.add_edge(START, "supervisor")
 
-    return graph.compile()
+    return cast(
+        CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState],
+        graph.compile(),
+    )

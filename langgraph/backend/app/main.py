@@ -1,16 +1,18 @@
+"""Application entrypoints for SageCompass graphs."""
+
 from __future__ import annotations
 
 from langgraph.graph.state import CompiledStateGraph
 
 from app.graphs.graph import build_main_app
 from app.graphs.write_graph import build_write_graph
-
+from app.nodes.ambiguity_detection import make_node_ambiguity_detection
+from app.nodes.clarify_ambiguity import make_node_clarify_ambiguity
+from app.nodes.gating_guardrails import make_node_guardrails_check
 from app.nodes.retrieve_context import make_node_retrieve_context
 from app.nodes.supervisor import make_node_supervisor
-from app.nodes.gating_guardrails import make_node_guardrails_check
-from app.nodes.clarify_ambiguity import make_node_clarify_ambiguity
-from app.nodes.ambiguity_detection import make_node_ambiguity_detection
-
+from app.runtime import SageRuntimeContext
+from app.state import SageState, VectorWriteState
 from app.utils.env import load_project_env
 from app.utils.logger import configure_logging
 
@@ -21,9 +23,9 @@ def _bootstrap() -> None:
     load_project_env()
 
 
-def build_app() -> CompiledStateGraph:
-    """
-    Factory for SageCompass main reasoning graph.
+def build_app() -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
+    """Factory for SageCompass main reasoning graph.
+
     This should be used in all internal code, tests, and LangServe integrations.
 
     Side effects/state writes:
@@ -43,9 +45,9 @@ def build_app() -> CompiledStateGraph:
     )
 
 
-def get_app() -> CompiledStateGraph:
-    """
-    External runner entrypoint (e.g., LangGraph CLI, langgraph.yaml).
+def get_app() -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
+    """External runner entrypoint (e.g., LangGraph CLI, langgraph.yaml).
+
     Must always return a fresh compiled LangGraph instance.
 
     Returns:
@@ -54,9 +56,9 @@ def get_app() -> CompiledStateGraph:
     return build_app()
 
 
-def build_vector_write_graph() -> CompiledStateGraph:
-    """
-    Build vector writer LangGraph.
+def build_vector_write_graph(
+) -> CompiledStateGraph[VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState]:
+    """Build vector writer LangGraph.
 
     Side effects/state writes:
         Initializes logging and loads environment variables.
@@ -68,9 +70,10 @@ def build_vector_write_graph() -> CompiledStateGraph:
     return build_write_graph()
 
 
-def get_vector_write_graph() -> CompiledStateGraph:
-    """
-    External runner entrypoint for vector writing graph.
+def get_vector_write_graph(
+) -> CompiledStateGraph[VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState]:
+    """External runner entrypoint for vector writing graph.
+
     Must always return a fresh compiled LangGraph instance.
 
     Returns:

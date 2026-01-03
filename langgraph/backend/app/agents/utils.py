@@ -1,14 +1,15 @@
+"""Agent prompt and schema utilities."""
+
 from __future__ import annotations
 
 import importlib
 import json
-from functools import lru_cache
-from typing import Any, Callable, Sequence, Type
+from collections.abc import Callable, Sequence
+from functools import cache
+from typing import Any
 
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate, FewShotPromptWithTemplates
 from langchain_core.tools import BaseTool
-
 from pydantic import BaseModel
 
 from app.utils.file_loader import FileLoader
@@ -23,7 +24,6 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}"
         - ≥1 real example
         - 1 stub example that ends with an empty output and uses `task_input == user_placeholder`
     """
-
     template_file = FileLoader.resolve_agent_prompt_path("few-shots", agent_name)
     template_str = template_file.read_text(encoding="utf-8").strip()
     if not template_str:
@@ -58,7 +58,9 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}"
         if not str(ex["task_input"]).strip():
             raise ValueError(f"Example {idx} for agent '{agent_name}' must include a task_input")
         if _is_empty(ex["output"]):
-            raise ValueError(f"Example {idx} for agent '{agent_name}' must include a non-empty output")
+            raise ValueError(
+                f"Example {idx} for agent '{agent_name}' must include a non-empty output"
+            )
 
     def _render_example(task_input: str, output: Any) -> str:
         rendered_output = output if isinstance(output, str) else json.dumps(output, indent=2)
@@ -79,7 +81,7 @@ def compose_agent_prompt(
     *,
     include_global: bool = True,
     include_format_instructions: bool = False,
-    output_schema: Type[BaseModel] | None = None,
+    output_schema: type[BaseModel] | None = None,
 ) -> str:
     """Compose an agent system prompt from prompt files and optional few-shots.
 
@@ -114,9 +116,10 @@ def compose_agent_prompt(
     return "\n\n".join(parts)
 
 
-@lru_cache(maxsize=None)
-def load_agent_schema(agent_name: str) -> Type[BaseModel]:
-    """
+@cache
+def load_agent_schema(agent_name: str) -> type[BaseModel]:
+    """Load an agent's OutputSchema from its schema module.
+
     Convention: each agent exposes `OutputSchema` in
     app/agents/{agent_name}/schema.py.
     """
@@ -126,7 +129,7 @@ def load_agent_schema(agent_name: str) -> Type[BaseModel]:
         raise RuntimeError(f"Schema module not found for agent: {agent_name!r}") from exc
 
     try:
-        schema_cls = getattr(module, "OutputSchema")
+        schema_cls = module.OutputSchema
     except AttributeError as exc:
         raise RuntimeError(
             f"Schema module for agent {agent_name!r} does not define OutputSchema"
@@ -139,9 +142,10 @@ def load_agent_schema(agent_name: str) -> Type[BaseModel]:
     return schema_cls
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_agent_builder(agent_name: str) -> Callable[..., Any]:
-    """
+    """Load an agent's build_agent factory from its module.
+
     Convention: each agent exposes `build_agent` in
     app/agents/{agent_name}/agent.py.
     """
@@ -151,7 +155,7 @@ def load_agent_builder(agent_name: str) -> Callable[..., Any]:
         raise RuntimeError(f"Agent module not found for agent: {agent_name!r}") from exc
 
     try:
-        builder = getattr(module, "build_agent")
+        builder = module.build_agent
     except AttributeError as exc:
         raise RuntimeError(
             f"Agent module for {agent_name!r} does not define build_agent(...)"
@@ -164,7 +168,7 @@ def load_agent_builder(agent_name: str) -> Callable[..., Any]:
 
 def build_tool_allowlist(
     tools: Sequence[BaseTool],
-    response_schema: Type[BaseModel] | None = None,
+    response_schema: type[BaseModel] | None = None,
 ) -> list[str]:
     """Return allowed tool names, including the structured output tool name if present."""
     allowlist = [tool.name for tool in tools]

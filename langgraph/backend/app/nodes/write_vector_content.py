@@ -1,18 +1,22 @@
+"""Node for writing vector content items."""
+
 from __future__ import annotations
 
-from typing import Callable, Literal
-from langgraph.graph import END
-from langgraph.types import Command
-from langgraph.runtime import Runtime
+from collections.abc import Callable
+from typing import Literal
 
+from langgraph.runtime import Runtime
+from langgraph.types import Command
+
+from app.runtime import SageRuntimeContext
 from app.state import VectorWriteState
 from app.tools.vector_writer import write_to_vectorstore
 from app.utils.logger import get_logger
 
 
-def make_node_write_vector() -> Callable[[VectorWriteState, Runtime | None], Command[Literal[END]]]:
-    """
-    Node: vector_writer
+def make_node_write_vector(
+) -> Callable[[VectorWriteState, Runtime[SageRuntimeContext] | None], Command[Literal["__end__"]]]:
+    """Node: vector_writer.
 
     Purpose:
         Write vector content items to the LangGraph Store using the vector writer tool.
@@ -27,8 +31,8 @@ def make_node_write_vector() -> Callable[[VectorWriteState, Runtime | None], Com
 
     def node_write_vector(
         state: VectorWriteState,
-        runtime: Runtime | None = None
-    ) -> Command[Literal[END]]:
+        runtime: Runtime[SageRuntimeContext] | None = None,
+    ) -> Command[Literal["__end__"]]:
         items = state.get("items") or []
         logger.info("vector_writer.batch.start", count=len(items))
 
@@ -59,6 +63,6 @@ def make_node_write_vector() -> Callable[[VectorWriteState, Runtime | None], Com
                 write_to_vectorstore(content, collection, metadata)
 
         logger.info("vector_writer.batch.done", count=len(items))
-        return Command(goto=END)
+        return Command(goto="__end__")
 
     return node_write_vector

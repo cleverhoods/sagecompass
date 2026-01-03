@@ -1,18 +1,19 @@
+"""Environment loading utilities."""
+
 from __future__ import annotations
 
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from app.utils.paths import BACKEND_ROOT
 from app.utils.logger import get_logger
+from app.utils.paths import BACKEND_ROOT
 
 _ENV_LOADED = False
 
 
 def load_project_env() -> None:
-    """
-    Load environment variables from the backend .env file exactly once.
+    """Load environment variables from the backend .env file exactly once.
 
     Safe to call from:
     - `uv run langgraph dev` (no-op if already loaded by LangGraph)

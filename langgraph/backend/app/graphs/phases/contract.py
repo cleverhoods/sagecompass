@@ -1,13 +1,15 @@
+"""Phase contract model for subgraph definitions."""
+
 from __future__ import annotations
 
-from typing import Callable, Type
+from collections.abc import Callable
+
 from langchain_core.runnables import Runnable
 from pydantic import BaseModel, Field
 
 
 class PhaseContract(BaseModel):
-    """
-    Defines a reusable execution contract for a single phase.
+    """Defines a reusable execution contract for a single phase.
 
     Each PhaseContract describes how the phase runs, its structured output,
     and what runtime logic or controls apply (e.g., RAG, clarification, etc).
@@ -21,7 +23,7 @@ class PhaseContract(BaseModel):
         ...,
         description="Function to build the LangGraph subgraph."
     )
-    output_schema: Type[BaseModel] = Field(
+    output_schema: type[BaseModel] = Field(
         ...,
         description="Structured output schema produced by the phase."
     )

@@ -69,15 +69,15 @@ convention = "google"
 test = { ref = "test_unit", help = "Default: run offline unit test lane" }
 
 [tool.poe.tasks.test_unit]
-cmd = "pytest tests/unit -m \"not real_deps and not integration\""
+cmd = "pytest tests/unit -v -m \"not real_deps and not integration\""
 help = "Unit lane (fast, offline)"
 
 [tool.poe.tasks.test_real]
-cmd = "pytest -m real_deps"
+cmd = "pytest -v -m real_deps"
 help = "Real-deps lane (offline)"
 
 [tool.poe.tasks.test_integration]
-cmd = "pytest tests/integration -m integration"
+cmd = "pytest tests/integration -v -m integration"
 help = "Integration lane (may require credentials)"
 
 # ---- Linting/Styling ----

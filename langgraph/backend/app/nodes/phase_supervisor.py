@@ -1,7 +1,9 @@
+"""Phase supervisor node for per-phase routing."""
+
 from __future__ import annotations
 
-from typing import Callable
-from typing_extensions import Literal
+from collections.abc import Callable
+from typing import Literal
 
 from langgraph.graph import END
 from langgraph.runtime import Runtime
@@ -20,20 +22,11 @@ def make_node_phase_supervisor(
     phase: str = "problem_framing",
     retrieve_node: str = "retrieve_context",
 ) -> Callable[
-    [SageState, Runtime | None],
-    Command[
-        Literal[
-            "guardrails_check",
-            "retrieve_context",
-            "problem_framing",
-            "ambiguity_detection",
-            "clarify_ambiguity",
-            "__end__"
-        ]
-    ]
+    [SageState, Runtime[SageRuntimeContext] | None],
+    Command[str],
 ]:
-    """
-    Node: supervisor
+    """Node: supervisor.
+
     Purpose:
         Govern control flow for a given reasoning phase (e.g., problem_framing).
 
@@ -51,16 +44,7 @@ def make_node_phase_supervisor(
     def node_phase_supervisor(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[
-        Literal[
-            "guardrails_check",
-            "retrieve_context",
-            "problem_framing",
-            "ambiguity_detection",
-            "clarify_ambiguity",
-            "__end__"
-        ]
-    ]:
+    ) -> Command[str]:
         # 🔐 Enforce guardrails (once per graph, before any phase)
         if state.gating.guardrail is None:
             logger.info("supervisor.guardrails_check")

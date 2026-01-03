@@ -1,14 +1,20 @@
+"""File loading utilities for prompts and configs."""
+
 from __future__ import annotations
 
-import os, json, yaml
-from functools import lru_cache
+import json
+import os
+from functools import cache
 from pathlib import Path
 
+import yaml  # type: ignore[import-untyped]
+
 from app.utils.logger import get_logger
-from app.utils.paths import APP_ROOT, AGENTS_DIR, CONFIG_DIR
+from app.utils.paths import AGENTS_DIR, APP_ROOT, CONFIG_DIR
 
 
 class FileLoader:
+    """Load prompts, configs, and schemas from the filesystem."""
     DEV_MODE = os.getenv("SAGECOMPASS_ENV", "prod").lower() == "dev"
 
     @staticmethod
@@ -23,8 +29,7 @@ class FileLoader:
         loader=None,
         category: str = "file",
     ):
-        """
-        Read a file and optionally parse it via a loader.
+        """Read a file and optionally parse it via a loader.
 
         Args:
             file_path: Absolute path to the file.
@@ -57,10 +62,9 @@ class FileLoader:
     # --- Generic helpers -------------------------------------------------
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def load_yaml(cls, relative_path: str, category: str = "config"):
-        """
-        Load a YAML file relative to APP_ROOT (app/).
+        """Load a YAML file relative to APP_ROOT (app/).
 
         Example: load_yaml("agents/problem_framing/config.yaml")
 
@@ -73,7 +77,7 @@ class FileLoader:
     # --- Legacy prompt/schema loaders (still relative to app/agents) -----
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def load_prompt(cls, prompt_name: str, agent_name: str | None = None):
         """Load a .prompt file for a given agent.
 
@@ -93,8 +97,7 @@ class FileLoader:
 
     @classmethod
     def resolve_agent_prompt_path(cls, prompt_name: str, agent_name: str) -> Path:
-        """
-        Resolve the path to an agent prompt and ensure it exists.
+        """Resolve the path to an agent prompt and ensure it exists.
 
         Args:
             prompt_name: Prompt filename without extension.
@@ -103,15 +106,15 @@ class FileLoader:
         Returns:
             Path to the prompt file.
         """
-
         prompt_path = AGENTS_DIR / agent_name / "prompts" / f"{prompt_name}.prompt"
         if not prompt_path.exists():
             raise FileNotFoundError(prompt_path)
         return prompt_path
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def load_schema(cls, agent_name: str, schema_name: str):
+        """Load a JSON schema file for an agent."""
         file_path = os.path.join(
             APP_ROOT, "agents", agent_name, f"{schema_name}.json"
         )
@@ -120,10 +123,9 @@ class FileLoader:
     # --- Specialized shortcuts -------------------------------------------
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def load_agent_config(cls, agent_name: str):
-        """
-        Loads agents/<agent_name>/config.yaml from app/.
+        """Loads agents/<agent_name>/config.yaml from app/.
 
         Returns:
             Parsed YAML data or False if missing/invalid.
@@ -132,10 +134,9 @@ class FileLoader:
         return cls._read_file(path, loader=yaml.safe_load, category="agent.config")
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def load_provider_config(cls, provider: str):
-        """
-        Loads config/provider/<provider>.yaml from the top-level config/ dir.
+        """Loads config/provider/<provider>.yaml from the top-level config/ dir.
 
         This no longer assumes config lives under app/; it uses CONFIG_DIR.
 
@@ -150,10 +151,9 @@ class FileLoader:
         )
 
     @classmethod
-    @lru_cache(maxsize=None)
+    @cache
     def load_guardrails_config(cls):
-        """
-        Loads guardrails.yaml from the top-level config/ dir.
+        """Loads guardrails.yaml from the top-level config/ dir.
 
         Returns:
             Parsed YAML data or False if missing/invalid.

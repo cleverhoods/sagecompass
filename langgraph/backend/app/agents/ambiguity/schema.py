@@ -1,11 +1,12 @@
+"""Schema for clarification agent output."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
-from typing import List
+
 
 class ClarificationResponse(BaseModel):
-    """
-    Final clarified result from the Clarification Agent.
+    """Final clarified result from the Clarification Agent.
 
     Invariants:
         clarified_input is non-empty when a clarification message is returned.
@@ -14,7 +15,7 @@ class ClarificationResponse(BaseModel):
         ...,
         description="The clarified version of the user's original input."
     )
-    clarified_fields: List[str] = Field(
+    clarified_fields: list[str] = Field(
         default_factory=list,
         description="The specific fields that were clarified."
     )

@@ -1,7 +1,8 @@
+"""Guardrails middleware enforcing policy at model/tool boundaries."""
+
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Iterable
+from collections.abc import Iterable, Sequence
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
 from langchain.agents.middleware.types import ToolCallRequest
@@ -23,11 +24,13 @@ def _latest_user_text(messages: Iterable[object]) -> str:
 
 class GuardrailsMiddleware(AgentMiddleware):
     """Enforce guardrails and tool allowlists at model/tool boundaries."""
+
     def __init__(
         self,
         config: GuardrailsConfig,
         allowed_tools: Sequence[str] | None = None,
     ) -> None:
+        """Initialize middleware with a guardrails config and tool allowlist."""
         self._config = config
         self._allowed_tools = set(allowed_tools or [])
 
@@ -48,6 +51,7 @@ class GuardrailsMiddleware(AgentMiddleware):
         request: ModelRequest,
         handler,
     ) -> ModelResponse:
+        """Apply guardrails before executing the model call."""
         rejected = self._check_guardrails(request)
         if rejected is not None:
             return rejected
@@ -58,12 +62,14 @@ class GuardrailsMiddleware(AgentMiddleware):
         request: ModelRequest,
         handler,
     ) -> ModelResponse:
+        """Apply guardrails before executing the async model call."""
         rejected = self._check_guardrails(request)
         if rejected is not None:
             return rejected
         return await handler(request)
 
     def wrap_tool_call(self, request: ToolCallRequest, handler):
+        """Enforce tool allowlist before executing tool calls."""
         tool_name = request.tool_call.get("name") if request.tool_call else None
         if self._allowed_tools and tool_name not in self._allowed_tools:
             logger.warning("tool.blocked", tool=tool_name)
@@ -76,6 +82,7 @@ class GuardrailsMiddleware(AgentMiddleware):
         return handler(request)
 
     async def awrap_tool_call(self, request: ToolCallRequest, handler):
+        """Enforce tool allowlist before executing async tool calls."""
         tool_name = request.tool_call.get("name") if request.tool_call else None
         if self._allowed_tools and tool_name not in self._allowed_tools:
             logger.warning("tool.blocked", tool=tool_name)
@@ -98,5 +105,5 @@ def make_guardrails_middleware(
     if config is None:
         raw = FileLoader.load_guardrails_config() or {}
         config = build_guardrails_config(raw)
-    # Invariant: allowlist must include any structured output tool name when response_format is used.
+    # Invariant: allowlist must include structured output tool names when response_format is used.
     return GuardrailsMiddleware(config=config, allowed_tools=allowed_tools)

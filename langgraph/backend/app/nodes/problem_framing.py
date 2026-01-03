@@ -1,10 +1,12 @@
+"""Node for problem framing orchestration."""
+
 from __future__ import annotations
 
-from typing import Any, Callable
-from typing_extensions import Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
-from langchain_core.runnables import Runnable
 from langchain_core.messages import SystemMessage
+from langchain_core.runnables import Runnable
 from langgraph.config import get_store
 from langgraph.runtime import Runtime
 from langgraph.types import Command
@@ -23,9 +25,12 @@ def make_node_problem_framing(
     *,
     phase: str = "problem_framing",
     max_context_items: int = 8,
-) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor"]]]:
-    """
-    Node: problem_framing
+) -> Callable[
+    [SageState, Runtime[SageRuntimeContext] | None],
+    Command[Literal["supervisor"]],
+]:
+    """Node: problem_framing.
+
     Purpose:
         Run the Problem Framing agent with retrieved context.
 
@@ -83,7 +88,12 @@ def make_node_problem_framing(
                 for d in context_docs if d.get("text")
             )
             messages_for_agent = [
-                SystemMessage(content="Retrieved context (use as supporting input):\n\n" + context_block),
+                SystemMessage(
+                    content=(
+                        "Retrieved context (use as supporting input):\n\n"
+                        + context_block
+                    )
+                ),
                 *state.messages,
             ]
         else:

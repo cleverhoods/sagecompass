@@ -1,25 +1,29 @@
+"""Node for guardrails gating."""
+
 from __future__ import annotations
 
-from typing import Callable
-from typing_extensions import Literal
+from collections.abc import Callable
+from typing import Literal
 
-from langgraph.types import Command
-from langgraph.runtime import Runtime
 from langgraph.graph import END
+from langgraph.runtime import Runtime
+from langgraph.types import Command
 
+from app.policies.guardrails import build_guardrails_config, evaluate_guardrails
 from app.runtime import SageRuntimeContext
 from app.state import SageState
-from app.policies.guardrails import build_guardrails_config, evaluate_guardrails
 from app.utils.file_loader import FileLoader
 from app.utils.logger import get_logger
 
 
 def make_node_guardrails_check(
     *,
-    goto_if_safe: str = "supervisor",
-) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor", "__end__"]]]:
-    """
-    Node: guardrails_check
+    goto_if_safe: Literal["supervisor"] = "supervisor",
+) -> Callable[
+    [SageState, Runtime[SageRuntimeContext] | None],
+    Command[str],
+]:
+    """Node: guardrails_check.
 
     Purpose:
         Perform deterministic safety & scope validation on raw user input.
@@ -33,7 +37,6 @@ def make_node_guardrails_check(
     Returns:
         A Command routing to `goto_if_safe` on success or END on failure.
     """
-
     logger = get_logger("nodes.guardrails_check")
 
     # Load config once at node construction
@@ -42,7 +45,7 @@ def make_node_guardrails_check(
     def node_guardrails_check(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[Literal["supervisor", "__end__"]]:
+    ) -> Command[str]:
 
         original_input = state.gating.original_input
         guardrail = evaluate_guardrails(original_input, config)

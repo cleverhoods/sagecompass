@@ -1,3 +1,5 @@
+"""Phase contract registry for SageCompass graphs."""
+
 from __future__ import annotations
 
 from app.graphs.phases.problem_framing import problem_framing_contract

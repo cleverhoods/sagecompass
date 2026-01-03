@@ -1,20 +1,22 @@
+"""Problem framing agent builder."""
+
 from __future__ import annotations
 
-from typing import Sequence, Any
+from typing import Any
 
-from langchain.agents import create_agent, AgentState
+from langchain.agents import AgentState, create_agent
 from langchain.agents.middleware import AgentMiddleware
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
 
-from app.tools import nothingizer_tool
 from app.agents.utils import build_tool_allowlist, compose_agent_prompt
-from app.middlewares.guardrails import make_guardrails_middleware
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
-from app.utils.model_factory import get_model_for_agent
+from app.middlewares.guardrails import make_guardrails_middleware
+from app.tools import nothingizer_tool
 from app.utils.logger import get_logger
+from app.utils.model_factory import get_model_for_agent
 
 from .schema import ProblemFrame
 
@@ -36,12 +38,12 @@ class ProblemFramingAgentConfig(BaseModel):
     _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)
 
     def get_extra_middleware(self) -> tuple[AgentMiddleware, ...]:
+        """Return extra middleware registered for this agent."""
         return tuple(self._extra_middleware)
 
 
 def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
-    """
-    Builds a LangChain agent runnable for use in LangGraph or standalone.
+    """Builds a LangChain agent runnable for use in LangGraph or standalone.
 
     Args:
         config: Configuration for this agent run. If None, defaults will be used.

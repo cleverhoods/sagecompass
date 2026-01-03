@@ -1,12 +1,15 @@
+"""Node for clarification loop orchestration."""
+
 from __future__ import annotations
 
-from typing import Callable
-from typing_extensions import Literal
+from collections.abc import Callable
+from typing import Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
+from app.agents.ambiguity.agent import build_agent
 from app.runtime import SageRuntimeContext
 from app.state import ClarificationSession, SageState
 from app.utils.logger import get_logger
@@ -15,19 +18,20 @@ from app.utils.state_helpers import (
     reset_clarification_session,
 )
 
-from app.agents.ambiguity.agent import build_agent
-
 logger = get_logger("nodes.clarify_ambiguity")
 
 
 def make_node_clarify_ambiguity(
-    node_agent: Runnable = None,
+    node_agent: Runnable | None = None,
     *,
     phase: str = "problem_framing",
     max_rounds: int = 3,
-) -> Callable[[SageState, Runtime | None], Command[Literal["ambiguity_detection", "__end__"]]]:
-    """
-    Node: clarify_ambiguity
+) -> Callable[
+    [SageState, Runtime[SageRuntimeContext] | None],
+    Command[Literal["ambiguity_detection", "__end__"]],
+]:
+    """Node: clarify_ambiguity.
+
     Purpose:
         Refine user input via clarification agent and manage clarification session state.
 
@@ -97,15 +101,20 @@ def make_node_clarify_ambiguity(
 
         # Next step depends on ambiguity status
         if ambiguous_items:
-            logger.info("clarify_ambiguity.continue", round=updated_session.round, items=ambiguous_items)
-            return Command(update={"clarification": state.clarification}, goto="ambiguity_detection")
+            logger.info(
+                "clarify_ambiguity.continue",
+                round=updated_session.round,
+                items=ambiguous_items,
+            )
+            return Command(
+                update={"clarification": state.clarification},
+                goto="ambiguity_detection",
+            )
 
         logger.info("clarify_ambiguity.resolved", round=updated_session.round)
         return Command(
-            update={
-                "clarification": reset_clarification_session(state, phase)
-            },
-            goto="ambiguity_detection"
+            update={"clarification": reset_clarification_session(state, phase)},
+            goto="ambiguity_detection",
         )
 
     return node_clarify_ambiguity

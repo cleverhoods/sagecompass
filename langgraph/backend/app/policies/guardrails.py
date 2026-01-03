@@ -1,7 +1,9 @@
+"""Guardrails policy evaluation helpers."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Iterable, Mapping
 
 from app.state.gating import GuardrailResult
 
@@ -28,8 +30,20 @@ def _normalize_terms(values: Iterable[object] | None) -> tuple[str, ...]:
 def build_guardrails_config(raw: Mapping[str, object] | None) -> GuardrailsConfig:
     """Build a normalized guardrails config from raw YAML/JSON data."""
     data = raw or {}
-    allowed = _normalize_terms(data.get("allowed_topics"))
-    blocked = _normalize_terms(data.get("blocked_keywords"))
+    allowed_raw = data.get("allowed_topics")
+    blocked_raw = data.get("blocked_keywords")
+    allowed_values = (
+        allowed_raw
+        if isinstance(allowed_raw, Iterable) and not isinstance(allowed_raw, (str, bytes))
+        else None
+    )
+    blocked_values = (
+        blocked_raw
+        if isinstance(blocked_raw, Iterable) and not isinstance(blocked_raw, (str, bytes))
+        else None
+    )
+    allowed = _normalize_terms(allowed_values)
+    blocked = _normalize_terms(blocked_values)
     return GuardrailsConfig(allowed_topics=allowed, blocked_keywords=blocked)
 
 

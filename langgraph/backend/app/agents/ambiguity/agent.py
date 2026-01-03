@@ -1,8 +1,10 @@
+"""Clarification agent builder for ambiguity resolution."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from langchain.agents import create_agent, AgentState
+from langchain.agents import AgentState, create_agent
 from langchain.agents.middleware import AgentMiddleware
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable
@@ -11,8 +13,8 @@ from langchain_core.tools import BaseTool
 from app.agents.utils import build_tool_allowlist, compose_agent_prompt
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.middlewares.guardrails import make_guardrails_middleware
-from app.utils.model_factory import get_model_for_agent
 from app.utils.logger import get_logger
+from app.utils.model_factory import get_model_for_agent
 
 from .schema import OutputSchema
 
@@ -24,23 +26,28 @@ def _logger():
 
 
 class ClarificationAgentConfig:
-    """
-    Configuration object for the Clarification Agent. Can be extended to support custom models or middleware.
-    """
-    def __init__(self, model: BaseChatModel | None = None, extra_middleware: list[AgentMiddleware] | None = None):
+    """Configuration for the Clarification Agent."""
+
+    def __init__(
+        self,
+        model: BaseChatModel | None = None,
+        extra_middleware: list[AgentMiddleware] | None = None,
+    ) -> None:
+        """Initialize config with optional model and middleware overrides."""
         self.model = model
         self._extra_middleware = extra_middleware or []
 
     def get_model(self) -> BaseChatModel:
+        """Return the configured model or a default provider model."""
         return self.model or get_model_for_agent(AGENT_NAME)
 
     def get_extra_middleware(self) -> list[AgentMiddleware]:
+        """Return extra middleware to append during agent construction."""
         return self._extra_middleware
 
 
 def build_agent(config: ClarificationAgentConfig | None = None) -> Runnable:
-    """
-    Constructs a clarification agent to help refine ambiguous user input.
+    """Construct a clarification agent to refine ambiguous user input.
 
     Returns:
         A Runnable agent that outputs a structured ClarificationResponse.
@@ -73,9 +80,15 @@ def build_agent(config: ClarificationAgentConfig | None = None) -> Runnable:
         make_guardrails_middleware(allowed_tools=allowed_tools),
         make_dynamic_prompt_middleware(
             agent_prompt,
-            placeholders=["user_input", "ambiguous_items", "clarified_fields", "retrieved_context", "phase"],
+            placeholders=[
+                "user_input",
+                "ambiguous_items",
+                "clarified_fields",
+                "retrieved_context",
+                "phase",
+            ],
             output_schema=OutputSchema,
-        )
+        ),
     ]
 
     middlewares.extend(config.get_extra_middleware())

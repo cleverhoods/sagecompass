@@ -1,30 +1,34 @@
+"""Node for retrieving context evidence."""
+
 from __future__ import annotations
 
-from typing import Callable
-from typing_extensions import Literal
+from collections.abc import Callable
+from typing import Literal
 
-from langgraph.types import Command
-from langgraph.runtime import Runtime
 from langchain_core.runnables import Runnable
+from langgraph.runtime import Runtime
+from langgraph.types import Command
 
 from app.runtime import SageRuntimeContext
 from app.state import EvidenceItem, PhaseEntry, SageState
+from app.tools.context_lookup import context_lookup
 from app.utils.logger import get_logger
 from app.utils.state_helpers import get_latest_user_input
-from app.tools.context_lookup import context_lookup
-
 
 logger = get_logger("nodes.retrieve_context")
 
 
 def make_node_retrieve_context(
-    tool: Runnable = None,
+    tool: Runnable | None = None,
     *,
     phase: str = "problem_framing",
     collection: str = "problem_framing",
-) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor"]]]:
-    """
-    Node: retrieve_context
+) -> Callable[
+    [SageState, Runtime[SageRuntimeContext] | None],
+    Command[Literal["supervisor"]],
+]:
+    """Node: retrieve_context.
+
     Purpose:
         Fetch relevant context from the vector store using a lookup tool.
 
@@ -61,9 +65,8 @@ def make_node_retrieve_context(
             score = md.get("score")
 
             if ns and key:
-                e = EvidenceItem(namespace=ns, key=key, score=score)
-                if isinstance(score, (int, float)):
-                    e.score = float(score)
+                score_value = float(score) if isinstance(score, (int, float)) else 0.0
+                e = EvidenceItem(namespace=ns, key=key, score=score_value)
                 evidence.append(e)
 
         logger.info("retrieve_context.complete", phase=phase, results=len(evidence))
