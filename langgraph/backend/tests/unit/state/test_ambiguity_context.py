@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from app.agents.ambiguity_clarification.schema import ClarificationResponse
+from app.platform.runtime import format_ambiguity_key
 from app.schemas.ambiguities import AmbiguityItem
 from app.state.ambiguity import AmbiguityContext
 
@@ -22,7 +23,7 @@ def test_ambiguity_context_defaults() -> None:
 
 def test_ambiguity_context_accepts_items() -> None:
     item = AmbiguityItem(
-        key="scope",
+        key=["scope", "channels", "coverage"],
         description="Scope is unclear.",
         clarifying_question="Is this limited to Q4?",
         resolution_assumption="Assume Q4-only constraints.",
@@ -34,10 +35,10 @@ def test_ambiguity_context_accepts_items() -> None:
 
     response = ClarificationResponse(
         clarified_input="Scope clarified.",
-        clarified_keys=["scope"],
+        clarified_keys=[format_ambiguity_key(item.key)],
         clarification_output="Thanks for clarifying scope.",
     )
     context = AmbiguityContext(detected=[item], resolved=[response])
 
-    assert context.detected[0].key == "scope"
-    assert "scope" in context.resolved[0].clarified_keys
+    assert context.detected[0].key == ["scope", "channels", "coverage"]
+    assert format_ambiguity_key(item.key) in context.resolved[0].clarified_keys

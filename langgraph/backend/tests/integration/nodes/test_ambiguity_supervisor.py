@@ -14,7 +14,7 @@ from app.state import AmbiguityContext, EvidenceItem, PhaseEntry, SageState
 
 def _build_ambiguity_item() -> AmbiguityItem:
     return AmbiguityItem(
-        key="scope",
+        key=["scope", "channels", "coverage"],
         description="Scope is unclear.",
         clarifying_question="Which channels are in scope?",
         resolution_assumption="Assume all channels.",

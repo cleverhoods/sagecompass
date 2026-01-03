@@ -31,7 +31,7 @@ def test_supervisor_ends_when_waiting_for_user() -> None:
         eligible=False,
         detected=[
             AmbiguityItem(
-                key="scope",
+                key=["scope", "channels", "coverage"],
                 description="Scope is unclear.",
                 clarifying_question="Which channels are in scope?",
                 resolution_assumption="Assume all channels.",
@@ -70,7 +70,7 @@ def test_supervisor_ends_when_ambiguity_exhausted() -> None:
         eligible=False,
         detected=[
             AmbiguityItem(
-                key="scope",
+                key=["scope", "channels", "coverage"],
                 description="Scope is unclear.",
                 clarifying_question="Which channels are in scope?",
                 resolution_assumption="Assume all channels.",

@@ -35,6 +35,7 @@
 
 
 ### Changed
+- [langgraph/backend] Represent ambiguity keys as three-category lists and update clarification flow to track the new labels.
 - [langgraph/backend] Route ambiguity clarification to internal vs external nodes based on `hilp_enabled`, with a placeholder external path that ends the graph.
 - [langgraph/backend] Move ambiguity preflight routing into a reusable phase subgraph and route the supervisor through it.
 - [langgraph/backend] Add a HILP toggle to ambiguity state and use it to gate clarification waiting.
