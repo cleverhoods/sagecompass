@@ -4,7 +4,6 @@ from decimal import Decimal
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
-from langgraph.graph import END
 
 from app.agents.ambiguity_clarification.schema import ClarificationResponse
 from app.nodes.ambiguity_supervisor import make_node_ambiguity_supervisor
@@ -34,7 +33,7 @@ def _build_response(keys: list[str]) -> ClarificationResponse:
 
 
 @pytest.mark.integration
-def test_ambiguity_supervisor_waits_for_user_input() -> None:
+def test_ambiguity_supervisor_routes_to_internal_clarification() -> None:
     state = SageState(
         messages=[
             HumanMessage(content="Need clarity on scope."),
@@ -57,7 +56,7 @@ def test_ambiguity_supervisor_waits_for_user_input() -> None:
     node = make_node_ambiguity_supervisor()
     cmd = node(state, None)
 
-    assert cmd.goto == END
+    assert cmd.goto == "ambiguity_clarification"
 
 
 @pytest.mark.integration
@@ -84,7 +83,7 @@ def test_ambiguity_supervisor_routes_on_user_reply() -> None:
 
 
 @pytest.mark.integration
-def test_ambiguity_supervisor_routes_to_hilp_placeholder() -> None:
+def test_ambiguity_supervisor_ignores_hilp_flag() -> None:
     state = SageState(
         messages=[HumanMessage(content="Need clarity on scope.")],
         ambiguity=AmbiguityContext(
@@ -103,7 +102,7 @@ def test_ambiguity_supervisor_routes_to_hilp_placeholder() -> None:
     node = make_node_ambiguity_supervisor()
     cmd = node(state, None)
 
-    assert cmd.goto == "ambiguity_clarification_external"
+    assert cmd.goto == "ambiguity_clarification"
 
 
 @pytest.mark.integration

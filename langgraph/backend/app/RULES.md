@@ -307,6 +307,8 @@ SageCompass follows the LangChain testing approach for agentic systems: **fast d
   - credentials and schema compatibility
   - tool wiring correctness
   - end-to-end phase routing for at least one happy path + one failure/exit route
+- OpenAI integration tests require `OPENAI_API_KEY` and use `langchain_openai.ChatOpenAI`.
+  Docs: https://python.langchain.com/docs/integrations/chat/openai/
 - Integration tests MUST be explicitly bounded:
   - fixed inputs, fixed budgets, bounded loop rounds
   - assert on **structured outputs** and/or **trajectory-level invariants** (e.g., required tools called)

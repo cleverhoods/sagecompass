@@ -15,7 +15,6 @@ from app.platform.runtime.state_helpers import (
     get_current_clarifying_question,
     get_pending_ambiguity_keys,
 )
-from app.platform.runtime.state_helpers import is_latest_message_human
 from app.runtime import SageRuntimeContext
 from app.state import PhaseEntry, SageState
 
@@ -166,28 +165,15 @@ def make_node_ambiguity_supervisor(
                 goto=goto,
             )
 
-        if (
-            ambiguity.hilp_enabled
-            and ambiguity.resolved
-            and not is_latest_message_human(state.messages)
-        ):
-            logger.info("ambiguity_supervisor.awaiting_user", pending=pending_keys)
-            return Command(goto=cast(AmbiguitySupervisorRoute, END))
-
         question = get_current_clarifying_question(ambiguity)
         status = (
             f"Clarification pending: {question}"
             if question
             else "Clarification pending for unresolved ambiguity."
         )
-        clarification_target = (
-            external_clarification_node
-            if ambiguity.hilp_enabled
-            else clarification_node
-        )
         return Command(
             update={"messages": [AIMessage(content=status)]},
-            goto=clarification_target,
+            goto=clarification_node,
         )
 
     return node_ambiguity_supervisor

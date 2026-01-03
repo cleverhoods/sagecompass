@@ -13,6 +13,15 @@ We do **not** shadow framework packages via `sys.path` stubs.
 - **Real-deps lane:** `uv run pytest -m real_deps`
 - **Integration lane (opt-in):** `uv run pytest -m integration` (requires any needed API keys)
 
+## OpenAI integration requirements
+
+OpenAI-backed integration tests require:
+- `OPENAI_API_KEY`
+- Optional: `OPENAI_MODEL` (defaults to `gpt-4.1-mini` in tests)
+
+They use LangChain's OpenAI integration (`langchain_openai.ChatOpenAI`).
+Docs: https://python.langchain.com/docs/integrations/chat/openai/
+
 Testing approach follows `../RULES.md` §12 (LangChain “Test”):
 - deterministic unit tests by default
 - bounded, opt-in integration tests

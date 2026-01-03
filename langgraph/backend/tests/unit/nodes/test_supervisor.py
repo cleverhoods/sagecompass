@@ -23,7 +23,7 @@ def test_supervisor_starts_global_preflight() -> None:
     assert result.update["ambiguity"].target_step == "problem_framing"
 
 
-def test_supervisor_ends_when_waiting_for_user() -> None:
+def test_supervisor_routes_to_preflight_when_clarification_pending() -> None:
     guardrail = GuardrailResult(is_safe=True, is_in_scope=True, reasons=["ok"])
     ambiguity = AmbiguityContext(
         target_step="problem_framing",
@@ -59,7 +59,7 @@ def test_supervisor_ends_when_waiting_for_user() -> None:
     node = make_node_supervisor()
     result = node(state, None)
 
-    assert result.goto == "__end__"
+    assert result.goto == "ambiguity_preflight"
 
 
 def test_supervisor_ends_when_ambiguity_exhausted() -> None:

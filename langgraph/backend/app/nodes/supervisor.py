@@ -13,7 +13,6 @@ from langgraph.types import Command
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (
     get_pending_ambiguity_keys,
-    is_latest_message_human,
     reset_clarification_context,
 )
 from app.runtime import SageRuntimeContext
@@ -116,16 +115,6 @@ def make_node_supervisor(
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)
-        if (
-            ambiguity.checked
-            and not ambiguity.eligible
-            and pending_keys
-            and ambiguity.hilp_enabled
-            and ambiguity.resolved
-            and not is_latest_message_human(state.messages)
-        ):
-            logger.info("supervisor.awaiting_user", pending=pending_keys)
-            return Command(goto=cast(SupervisorRoute, END))
 
         if ambiguity.target_step != next_phase:
             updated_ambiguity = reset_clarification_context(
