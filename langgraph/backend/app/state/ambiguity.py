@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from app.agents.ambiguity_clarification.schema import ClarificationResponse
 from app.schemas.ambiguities import AmbiguityItem
 
 
 class AmbiguityContext(BaseModel):
-    """Tracks ambiguity detection and resolution state.
+    """Tracks ambiguity detection and clarification state.
 
     This object is updated by ambiguity scan and clarification nodes.
     """
@@ -29,7 +30,11 @@ class AmbiguityContext(BaseModel):
         default_factory=list,
         description="Ambiguities detected by any agent so far.",
     )
-    resolved: list[AmbiguityItem] = Field(
+    resolved: list[ClarificationResponse] = Field(
         default_factory=list,
-        description="Ambiguities resolved via user input or fallback assumptions.",
+        description="Clarification replies that resolved detected ambiguities.",
+    )
+    exhausted: bool = Field(
+        default=False,
+        description="Whether the clarification loop has hit its max rounds.",
     )

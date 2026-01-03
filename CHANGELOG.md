@@ -35,6 +35,9 @@
 
 ### Changed
 - [langgraph/backend] Route ambiguity scan/retrieval/clarification nodes and the global supervisor through the new context models so evidence, status, and messaging stay in sync.
+- [langgraph/backend] Make ambiguity scan importance/confidence thresholds and max-selection counts configurable so runtime locales can adjust which ambiguities flow into clarification.
+- [langgraph/backend] Skip clarification state updates when no high-priority ambiguities survive filtering so the next supervisor hit doesn’t rerun clarification on a resolved request.
+- [langgraph/backend] Filter ambiguity scan outputs to the top three high-confidence/high-importance ambiguities and drive clarification using those detected clarifying questions while keeping retrieved context in dedicated document inputs instead of expanding the system prompt.
 - [langgraph/backend] Add required docstrings and clarify middleware/prompt contracts to match updated RULES.md.
 - [langgraph/backend] Enforce strict pytest markers and register the real_deps marker in pytest config.
 - [langgraph/backend] Resolve lint/type gate failures by tightening node/runtime typing and suppressing add_node overload false positives.
@@ -42,6 +45,7 @@
 - [langgraph/backend] Move policies/utilities into `app/platform/*` domains and update imports/tests to match platform governance.
 - [langgraph/backend] Separate ambiguity tracking from gating state with a dedicated ambiguity context.
 - [langgraph/backend] Add user-facing status messages for supervisor, retrieval, ambiguity detection, and clarification steps.
+- [langgraph/backend] Add an AI status message during ambiguity clarification that reports which clarifying question is currently being processed.
 - [langgraph/backend] Flatten ambiguity schema fields and update ambiguity detector prompts/examples to match.
 - [langgraph/backend] Simplify ambiguity resolution fields to a single assumption and impact trio.
 - [langgraph/backend] Limit ambiguity detection context to three items and route clarification using clarifying questions.
@@ -49,6 +53,7 @@
 - [langgraph/backend] Reorder phase supervision to scan before retrieval and clarify before framing, with max-round clarification exit messaging.
 - [langgraph/backend] Clarify global supervisor messaging to reflect phase supervisor handoff.
 - [langgraph/backend] Move ambiguity and clarification tracking into global contexts and run preflight scan/retrieval/clarification before phases.
+- [langgraph/backend] Consolidate clarification metadata into `AmbiguityContext`, remove `ClarificationContext`, and drop `PhaseEntry.ambiguity_checked` so scan/clarification share a single authoritative context.
 - [langgraph/backend] Replace per-phase clarification sessions with a ClarificationContext and align global preflight routing.
 - [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
@@ -104,6 +109,9 @@
 ### Fixed
 - [langgraph/backend] Use the resolved target phase when ambiguity scan fails to return structured output.
 - [langgraph/backend] Align ambiguity clarification schema, prompts, and node inputs so clarification loops carry structured fields and context.
+- [langgraph/backend] Guard against stale clarification loops by adding an integration regression for the shared `AmbiguityContext`, basing routing on resolved/pending keys, and surfacing the active clarifying question message.
+- [langgraph/backend] Keep the clarification context aligned with the latest user message even when agents omit `clarified_input`, and add an integration guardrail that catches stale clarified inputs.
+- [langgraph/backend] Ensure ambiguity scan reuses `reset_clarification_context()` so the clarification session always starts clean and doesn’t carry over stale clarified inputs before the clarifier runs.
 - [langgraph/backend] Preserve non-empty `gating.original_input` via reducer and populate it from incoming messages in guardrails.
 - [langgraph/backend] Add subgraph wiring test to ensure phase routes via `phase_supervisor` and avoids unknown supervisor edges.
 - [langgraph/backend] Fix phase subgraph routing to use `phase_supervisor` and avoid unknown node errors.

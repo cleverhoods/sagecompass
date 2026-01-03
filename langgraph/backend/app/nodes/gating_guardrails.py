@@ -8,12 +8,12 @@ from langgraph.graph import END
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
-from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
-from app.runtime import SageRuntimeContext
-from app.state import SageState
 from app.platform.config.file_loader import FileLoader
 from app.platform.observability.logger import get_logger
+from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
 from app.platform.runtime.state_helpers import get_latest_user_input
+from app.runtime import SageRuntimeContext
+from app.state import SageState
 
 
 def make_node_guardrails_check(

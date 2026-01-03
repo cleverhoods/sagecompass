@@ -45,12 +45,18 @@ class AmbiguityItem(BaseModel):
         ge=0.01,
         le=0.99,
         decimal_places=2,
-        description="How critical this ambiguity is for framing the problem (0.99 = critical)."
+        description=(
+            "How critical this ambiguity is for framing the problem. "
+            "Higher values (close to 0.99) are routed first."
+        )
     )]
     confidence: Annotated[Decimal, Field(
         ...,
         ge=0.01,
         le=0.99,
         decimal_places=2,
-        description="How confident you are that this ambiguity is real and worth clarifying."
+        description=(
+            "How confident the agent is that the ambiguity is valid. "
+            "Combine with importance to sort clarifications."
+        )
     )]

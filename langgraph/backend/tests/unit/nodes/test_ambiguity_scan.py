@@ -32,8 +32,8 @@ def _build_ambiguity_item() -> AmbiguityItem:
         resolution_assumption="Assume Q4-only constraints.",
         resolution_impact_direction="+",
         resolution_impact_value=0.6,
-        importance=Decimal("0.6"),
-        confidence=Decimal("0.7"),
+        importance=Decimal("0.95"),
+        confidence=Decimal("0.95"),
     )
 
 
@@ -65,8 +65,6 @@ def test_ambiguity_scan_updates_gating_and_clarification() -> None:
 
     assert result.update["messages"]
 
-    updated_clarification = result.update["clarification"]
-    assert updated_clarification.ambiguous_items == ["Is this limited to Q4?"]
-
-    updated_phase = result.update["phases"]["problem_framing"]
-    assert updated_phase.ambiguity_checked is True
+    assert updated_ambiguity.detected[0].key == "scope"
+    assert updated_ambiguity.resolved == []
+    assert updated_ambiguity.eligible is False

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import yaml  # type: ignore[import-untyped]
 
-from app.platform.observability.logger import get_logger
 from app.platform.config.paths import AGENTS_DIR, APP_ROOT, CONFIG_DIR
+from app.platform.observability.logger import get_logger
 
 
 class FileLoader:

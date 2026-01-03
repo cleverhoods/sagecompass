@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from app.nodes.ambiguity_scan import make_node_ambiguity_scan
 from app.nodes.ambiguity_clarification import make_node_ambiguity_clarification
+from app.nodes.ambiguity_scan import make_node_ambiguity_scan
 from app.nodes.gating_guardrails import make_node_guardrails_check
 from app.nodes.phase_supervisor import make_node_phase_supervisor
 from app.nodes.problem_framing import make_node_problem_framing

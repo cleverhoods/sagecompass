@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from app.agents.ambiguity_clarification.schema import ClarificationResponse
 from app.schemas.ambiguities import AmbiguityItem
 from app.state.ambiguity import AmbiguityContext
 
@@ -28,7 +29,12 @@ def test_ambiguity_context_accepts_items() -> None:
         confidence=Decimal("0.7"),
     )
 
-    context = AmbiguityContext(detected=[item], resolved=[item])
+    response = ClarificationResponse(
+        clarified_input="Scope clarified.",
+        clarified_keys=["scope"],
+        clarification_output="Thanks for clarifying scope.",
+    )
+    context = AmbiguityContext(detected=[item], resolved=[response])
 
     assert context.detected[0].key == "scope"
-    assert context.resolved[0].key == "scope"
+    assert "scope" in context.resolved[0].clarified_keys

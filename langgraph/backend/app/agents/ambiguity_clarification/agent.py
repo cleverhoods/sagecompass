@@ -10,10 +10,10 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable
 from langchain_core.tools import BaseTool
 
-from app.platform.utils.agent_utils import build_tool_allowlist, compose_agent_prompt
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.middlewares.guardrails import make_guardrails_middleware
 from app.platform.observability.logger import get_logger
+from app.platform.utils.agent_utils import build_tool_allowlist, compose_agent_prompt
 from app.platform.utils.model_factory import get_model_for_agent
 
 from .schema import OutputSchema
@@ -83,8 +83,7 @@ def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runn
             placeholders=[
                 "user_input",
                 "ambiguous_items",
-                "clarified_fields",
-                "retrieved_context",
+                "clarified_keys",
                 "phase",
             ],
             output_schema=OutputSchema,

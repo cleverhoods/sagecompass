@@ -8,10 +8,10 @@ from typing import Literal
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
+from app.platform.observability.logger import get_logger
 from app.runtime import SageRuntimeContext
 from app.state import VectorWriteState
 from app.tools.vector_writer import write_to_vectorstore
-from app.platform.observability.logger import get_logger
 
 
 def make_node_write_vector(

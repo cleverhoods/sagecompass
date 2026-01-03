@@ -20,6 +20,7 @@ This is the canonical reference for architecture and engineering rules for SageC
   - Shared utility functions and node/graph factory functions MUST have docstrings describing purpose, key args, expected side effects/state writes, and return values.
 - Prompt files are first-class assets:
   - Prompt contracts (placeholders, suffix ordering, `examples.json` requirements) MUST be documented **in code** at the load/compose boundary.
+  - Prompts must not inject retrieved context; context hydration is handled by the nodes, not the prompt.
 - No ambiguous "magic values":
   - State keys and sentinel values MUST be centralized as typed model fields (preferred) or as well-named constants/enums close to their use.
   - Do not treat `SageState` as a dict (no `model_dump().get(...)` / `getattr(..., default)` fallbacks); define Pydantic defaults so typed attributes are always safe to read.

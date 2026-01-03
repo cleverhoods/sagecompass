@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from typing import Any
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.documents import Document
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
 from langgraph.config import get_store
 from langgraph.runtime import Runtime
@@ -13,11 +15,14 @@ from langgraph.types import Command
 
 from app.agents.ambiguity_scan.agent import build_agent  # lazy import to respect SRP
 from app.agents.ambiguity_scan.schema import OutputSchema
-from app.runtime import SageRuntimeContext
-from app.state import ClarificationContext, PhaseEntry, SageState
-from app.state.clarification import ClarificationStatus
 from app.platform.observability.logger import get_logger
-from app.platform.runtime.state_helpers import get_latest_user_input
+from app.platform.runtime.state_helpers import (
+    get_latest_user_input,
+    reset_clarification_context,
+)
+from app.runtime import SageRuntimeContext
+from app.schemas.ambiguities import AmbiguityItem
+from app.state import PhaseEntry, SageState
 
 logger = get_logger("nodes.ambiguity_scan")
 
@@ -27,6 +32,9 @@ def make_node_ambiguity_scan(
     *,
     phase: str | None = None,
     max_context_items: int = 3,
+    importance_threshold: Decimal | float = Decimal("0.9"),
+    confidence_threshold: Decimal | float = Decimal("0.8"),
+    max_selected: int = 3,
     goto: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
@@ -41,11 +49,13 @@ def make_node_ambiguity_scan(
         node_agent: Optional injected agent runnable.
         phase: Optional phase key to update in `state.phases`.
         max_context_items: Max evidence items to hydrate into context.
+        importance_threshold: Minimum ambiguity importance to qualify for clarification.
+        confidence_threshold: Minimum ambiguity confidence to qualify for clarification.
+        max_selected: Max number of ambiguities forwarded to clarification.
         goto: Node name to route to after completion.
 
     Side effects/state writes:
-        Updates `state.ambiguity.detected` and clarification context.
-        Marks `state.phases[phase]` ambiguity_checked after the scan runs.
+        Updates `state.ambiguity` with detected items, pending keys, and status.
         When phase is not provided, uses `state.ambiguity.target_step`.
 
     Returns:
@@ -69,12 +79,14 @@ def make_node_ambiguity_scan(
                 },
                 goto=goto,
             )
+        importance_limit = Decimal(str(importance_threshold))
+        confidence_limit = Decimal(str(confidence_threshold))
 
         # Step 1: hydrate evidence
         phase_entry = state.phases.get(target_phase) or PhaseEntry()
         evidence = list(phase_entry.evidence or [])
 
-        context_docs: list[dict[str, Any]] = []
+        context_docs: list[Document] = []
         if evidence:
             store = get_store()
             for e in evidence[:max_context_items]:
@@ -98,36 +110,23 @@ def make_node_ambiguity_scan(
                 if not item or not getattr(item, "value", None):
                     continue
                 value = item.value or {}
-                context_docs.append({
-                    "text": value.get("text", ""),
-                    "metadata": {
-                        "title": value.get("title", ""),
-                        "tags": value.get("tags", []),
-                        "agents": value.get("agents", []),
-                        "changed": value.get("changed", 0),
-                        "store_namespace": ns,
-                        "store_key": key,
-                        "score": score if score is None else float(score),
-                    },
-                })
-
-        # Step 2: add context into messages
-        if context_docs:
-            context_block = "\n\n".join(
-                f"TITLE: {d['metadata'].get('title','')}\nTEXT: {d['text']}".strip()
-                for d in context_docs if d.get("text")
-            )
-            messages_for_agent = [
-                SystemMessage(
-                    content=(
-                        "Retrieved context (use as supporting input):\n\n"
-                        + context_block
+                metadata = {
+                    "title": value.get("title", ""),
+                    "tags": value.get("tags", []),
+                    "agents": value.get("agents", []),
+                    "changed": value.get("changed", 0),
+                    "store_namespace": ns,
+                    "store_key": key,
+                    "score": score if score is None else float(score),
+                }
+                context_docs.append(
+                    Document(
+                        page_content=value.get("text", ""),
+                        metadata=metadata,
                     )
-                ),
-                *state.messages,
-            ]
-        else:
-            messages_for_agent = state.messages
+                )
+
+        messages_for_agent = state.messages
 
         # Step 3: call agent
         agent_input: dict[str, Any] = {
@@ -160,32 +159,55 @@ def make_node_ambiguity_scan(
             structured = OutputSchema.model_validate(structured)
 
         ambiguities = structured.ambiguities
-        ambiguity_questions = [
-            item.clarifying_question or item.description or item.key
+        high_priority = [
+            item
             for item in ambiguities
+            if item.importance >= importance_limit
+            and item.confidence >= confidence_limit
         ]
-
-        phase_entry.ambiguity_checked = True
-        state.phases[target_phase] = phase_entry
-
-        clarification_status: ClarificationStatus = (
-            "awaiting" if ambiguity_questions else "resolved"
+        high_priority.sort(
+            key=lambda priority_item: (priority_item.importance, priority_item.confidence),
+            reverse=True,
         )
-        updated_clarification = ClarificationContext(
+        selected_ambiguities = high_priority[:max_selected]
+        def _question(a_item: AmbiguityItem) -> str:
+            return a_item.clarifying_question or a_item.description or a_item.key
+        ambiguity_questions = [_question(item) for item in selected_ambiguities]
+
+        base_context = reset_clarification_context(
+            state,
             target_step=target_phase,
-            round=0,
-            ambiguous_items=ambiguity_questions,
-            clarified_input=user_input,
-            clarification_message="",
-            status=clarification_status,
         )
 
-        updated_ambiguity = state.ambiguity.model_copy(
+        if not ambiguity_questions:
+            resolved_context = base_context.model_copy(
+                update={
+                    "target_step": target_phase,
+                    "checked": True,
+                    "eligible": True,
+                    "detected": [],
+                    "resolved": [],
+                    "exhausted": False,
+                }
+            )
+            return Command(
+                update={
+                    "ambiguity": resolved_context,
+                    "phases": state.phases,
+                    "messages": [
+                        AIMessage(content="No high-priority ambiguities detected.")
+                    ],
+                },
+                goto=goto,
+            )
+
+        updated_context = base_context.model_copy(
             update={
                 "target_step": target_phase,
                 "checked": True,
-                "eligible": not ambiguity_questions,
-                "detected": ambiguities,
+                "eligible": False,
+                "detected": selected_ambiguities,
+                "exhausted": False,
             }
         )
 
@@ -197,8 +219,7 @@ def make_node_ambiguity_scan(
 
         return Command(
             update={
-                "ambiguity": updated_ambiguity,
-                "clarification": updated_clarification,
+                "ambiguity": updated_context,
                 "phases": state.phases,
                 "messages": [AIMessage(content=summary)],
             },

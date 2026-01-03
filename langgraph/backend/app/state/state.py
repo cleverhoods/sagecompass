@@ -9,7 +9,6 @@ from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 
 from app.state.ambiguity import AmbiguityContext
-from app.state.clarification import ClarificationContext
 from app.state.gating import GatingContext
 
 
@@ -41,16 +40,11 @@ class PhaseEntry(BaseModel):
     - `error`: Structured failure information if execution failed
     - `status`: Lifecycle status of the phase result
     - `evidence`: Inputs or support retrieved from memory/vector store
-    - `ambiguity_checked`: Whether ambiguity detection has been run for this phase
     """
     data: dict[str, object] = Field(default_factory=dict)
     error: dict[str, object] = Field(default_factory=dict)
     status: PhaseStatus = "pending"
     evidence: list[EvidenceItem] = Field(default_factory=list)
-    ambiguity_checked: bool = Field(
-        default=False,
-        description="Tracks whether ambiguity detection has executed for this phase."
-    )
 
 
 class SageState(BaseModel):
@@ -58,8 +52,7 @@ class SageState(BaseModel):
 
     This object is passed between all nodes. It stores:
     - `gating`: Gating decision metadata (safety, scope, etc.)
-    - `ambiguity`: ambiguity detection and resolution state
-    - `clarification`: clarification data for the next step
+    - `ambiguity`: ambiguity detection and clarification state
     - `messages`: Full conversation history (user + agents)
     - `phases`: Structured outputs of each processing phase (e.g., problem_framing)
     - `errors`: Global error log
@@ -71,17 +64,6 @@ class SageState(BaseModel):
     ambiguity: AmbiguityContext = Field(
         default_factory=AmbiguityContext,
         description="Ambiguity detection and resolution state.",
-    )
-    clarification: ClarificationContext = Field(
-        default_factory=lambda: ClarificationContext(
-            round=0,
-            ambiguous_items=[],
-            clarified_fields=[],
-            clarification_message="",
-            clarified_input="",
-            status="idle",
-        ),
-        description="Clarification state for the next step being prepared.",
     )
     messages: Annotated[list[AnyMessage], add_messages] = Field(
         default_factory=list,

@@ -2,12 +2,12 @@
   {
     "task_input": "We want to use AI to improve customer support efficiency.",
     "output": {
-      "clarified_input": "We want to use AI to improve customer support efficiency.",
-      "clarified_fields": [],
-      "clarification_message": "Which support channels are in scope, and which efficiency metric should we optimize (response time, resolution rate, or cost)?",
-      "ambiguous_items": [
-        "Support channels in scope",
-        "Primary efficiency metric"
+      "responses": [
+        {
+          "clarified_input": "We want to use AI to improve customer support efficiency.",
+          "clarified_keys": [],
+          "clarification_output": "Which support channels are in scope, and which efficiency metric should we optimize (response time, resolution rate, or cost)?"
+        }
       ]
     }
   },

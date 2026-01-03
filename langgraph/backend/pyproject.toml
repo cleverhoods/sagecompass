@@ -45,10 +45,10 @@ markers = [
 
 [tool.ruff]
 target-version = "py312"
-line-length = 100
+line-length = 120
 
 [tool.ruff.lint]
-# Baseline quality + imports + modernize + docstrings
+# Baseline quality + imports + modernize + bugbear + simplifications + docstrings
 select = ["E", "F", "I", "UP", "B", "SIM", "D"]
 # Keep this list short; only ignore rules you truly disagree with.
 ignore = []
@@ -57,38 +57,21 @@ ignore = []
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D"]  # tests don't need full docstring coverage
+# Tests don't need full docstring coverage.
+"tests/**" = ["D"]
 
 [tool.poe]
-# Optional: load env files automatically for tasks (supports list too)
+# Optional: load env files automatically for tasks
 # envfile = [".env", ".env.local"]
 
 [tool.poe.tasks]
-
-# ---- Test lanes (matches your contract-first plan) ----
+# ---- Test lanes ----
 test = { ref = "test_unit", help = "Default: run offline unit test lane" }
+test_unit = { cmd = "pytest tests/unit -v -m \"not real_deps and not integration\"", help = "Unit lane (fast, offline)" }
+test_real = { cmd = "pytest -v -m real_deps", help = "Real-deps lane (offline)" }
+test_integration = { cmd = "pytest tests/integration -v -m integration", help = "Integration lane (may require credentials)" }
 
-[tool.poe.tasks.test_unit]
-cmd = "pytest tests/unit -v -m \"not real_deps and not integration\""
-help = "Unit lane (fast, offline)"
-
-[tool.poe.tasks.test_real]
-cmd = "pytest -v -m real_deps"
-help = "Real-deps lane (offline)"
-
-[tool.poe.tasks.test_integration]
-cmd = "pytest tests/integration -v -m integration"
-help = "Integration lane (may require credentials)"
-
-# ---- Linting/Styling ----
-[tool.poe.tasks.lint]
-cmd = "ruff check ."
-help = "Run ruff lint"
-
-[tool.poe.tasks.fmt]
-cmd = "ruff format ."
-help = "Run ruff formatter"
-
-[tool.poe.tasks.type]
-cmd = "mypy ."
-help = "Run mypy type checks"
+# ---- Linting / Formatting / Typing ----
+lint = { cmd = "ruff check .", help = "Run Ruff linter" }
+fmt  = { cmd = "ruff format .", help = "Run Ruff formatter" }
+type = { cmd = "mypy .", help = "Run mypy type checks" }
