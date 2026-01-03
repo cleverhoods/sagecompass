@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- [langgraph/backend] Add an `ambiguity_supervisor` node to centralize ambiguity preflight routing.
 - [langgraph/backend] Introduce `ClarificationContext` plus runtime helpers to reset global clarification state for the preflight routing flow.
 - [langgraph/backend] Add an integration test that exercises guardrails -> ambiguity scan -> retrieval -> clarification -> phase supervisor routing.
 - [langgraph/backend] Add guardrails policy engine and middleware enforcement across model/tool boundaries.
@@ -34,6 +35,13 @@
 
 
 ### Changed
+- [langgraph/backend] Route ambiguity clarification to internal vs external nodes based on `hilp_enabled`, with a placeholder external path that ends the graph.
+- [langgraph/backend] Move ambiguity preflight routing into a reusable phase subgraph and route the supervisor through it.
+- [langgraph/backend] Add a HILP toggle to ambiguity state and use it to gate clarification waiting.
+- [langgraph/backend] Annotate node Command routes with Literal unions so LangSmith can render graph edges.
+- [langgraph/backend] Gate ambiguity preflight retrieval with bounded rounds and rescan after evidence is retrieved.
+- [langgraph/backend] Track ambiguity context retrieval rounds to prevent repeated scan/retrieve loops.
+- [langgraph/backend] Clarify OutputSchema requirements in RULES and align ambiguity agent schemas with typed Pydantic models.
 - [langgraph/backend] Route ambiguity scan/retrieval/clarification nodes and the global supervisor through the new context models so evidence, status, and messaging stay in sync.
 - [langgraph/backend] Make ambiguity scan importance/confidence thresholds and max-selection counts configurable so runtime locales can adjust which ambiguities flow into clarification.
 - [langgraph/backend] Skip clarification state updates when no high-priority ambiguities survive filtering so the next supervisor hit doesn’t rerun clarification on a resolved request.
@@ -107,6 +115,11 @@
 
 
 ### Fixed
+- [langgraph/backend] Default autonomous ambiguity clarifications to resolve pending keys when the agent updates clarified_input without listing keys.
+- [langgraph/backend] Format `keys_to_clarify` as a list when injecting ambiguity clarification prompts.
+- [langgraph/backend] Stop the supervisor from looping when ambiguity clarification is exhausted.
+- [langgraph/backend] Prevent ambiguity clarification loops from re-running without new user input.
+- [langgraph/backend] Fix dynamic prompt placeholder injection for task_input and clarify ambiguity key labeling in clarification outputs.
 - [langgraph/backend] Use the resolved target phase when ambiguity scan fails to return structured output.
 - [langgraph/backend] Align ambiguity clarification schema, prompts, and node inputs so clarification loops carry structured fields and context.
 - [langgraph/backend] Guard against stale clarification loops by adding an integration regression for the shared `AmbiguityContext`, basing routing on resolved/pending keys, and surfacing the active clarifying question message.

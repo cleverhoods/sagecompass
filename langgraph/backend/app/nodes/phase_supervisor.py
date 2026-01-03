@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Literal, cast
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -17,12 +18,23 @@ from app.state import SageState
 logger = get_logger("nodes.phase_supervisor")
 
 
+PhaseSupervisorRoute = Literal[
+    "__end__",
+    "guardrails_check",
+    "phase_supervisor",
+    "problem_framing",
+    "goal_framer",
+    "evaluate_feasibility",
+    "business_summary",
+]
+
+
 def make_node_phase_supervisor(
     *,
     phase: str = "problem_framing",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[str],
+    Command[PhaseSupervisorRoute],
 ]:
     """Node: supervisor.
 
@@ -42,7 +54,7 @@ def make_node_phase_supervisor(
     def node_phase_supervisor(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[PhaseSupervisorRoute]:
         # Enforce guardrails (once per graph, before any phase)
         if state.gating.guardrail is None:
             logger.info("supervisor.guardrails_check")
@@ -69,14 +81,14 @@ def make_node_phase_supervisor(
                         AIMessage(content=f"Running {phase} analysis.")
                     ]
                 },
-                goto=phase_to_node(phase),
+                goto=cast(PhaseSupervisorRoute, phase_to_node(phase)),
             )
 
         # Phase complete
         logger.info("supervisor.complete", phase=phase)
         return Command(
             update={"messages": [AIMessage(content=f"{phase} phase complete.")]},
-            goto=END,
+            goto=cast(PhaseSupervisorRoute, END),
         )
 
     return node_phase_supervisor

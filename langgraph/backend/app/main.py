@@ -5,11 +5,11 @@ from __future__ import annotations
 from langgraph.graph.state import CompiledStateGraph
 
 from app.graphs.graph import build_main_app
+from app.graphs.phases.ambiguity_preflight.subgraph import (
+    build_ambiguity_preflight_subgraph,
+)
 from app.graphs.write_graph import build_write_graph
-from app.nodes.ambiguity_clarification import make_node_ambiguity_clarification
-from app.nodes.ambiguity_scan import make_node_ambiguity_scan
 from app.nodes.gating_guardrails import make_node_guardrails_check
-from app.nodes.retrieve_context import make_node_retrieve_context
 from app.nodes.supervisor import make_node_supervisor
 from app.platform.config.env import load_project_env
 from app.platform.observability.logger import configure_logging
@@ -39,9 +39,7 @@ def build_app() -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, 
     return build_main_app(
         supervisor_node=make_node_supervisor(),
         guardrails_node=make_node_guardrails_check(),
-        retrieve_context_node=make_node_retrieve_context(),
-        ambiguity_clarification_node=make_node_ambiguity_clarification(),
-        ambiguity_scan_node=make_node_ambiguity_scan(),
+        ambiguity_preflight_graph=build_ambiguity_preflight_subgraph(),
     )
 
 

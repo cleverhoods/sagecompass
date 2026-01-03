@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Literal, cast
 
 from langgraph.graph import END
 from langgraph.runtime import Runtime
@@ -15,13 +16,15 @@ from app.platform.runtime.state_helpers import get_latest_user_input
 from app.runtime import SageRuntimeContext
 from app.state import SageState
 
+GuardrailsRoute = Literal["__end__", "supervisor"]
+
 
 def make_node_guardrails_check(
     *,
-    goto_if_safe: str = "supervisor",
+    goto_if_safe: Literal["supervisor"] = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[str],
+    Command[GuardrailsRoute],
 ]:
     """Node: guardrails_check.
 
@@ -45,7 +48,7 @@ def make_node_guardrails_check(
     def node_guardrails_check(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[GuardrailsRoute]:
 
         original_input = state.gating.original_input or (
             get_latest_user_input(state.messages) or ""
@@ -69,7 +72,7 @@ def make_node_guardrails_check(
         # Stop only if unsafe
         if not (guardrail.is_safe and guardrail.is_in_scope):
             logger.warning("guardrails.blocked")
-            return Command(update=update, goto=END)
+            return Command(update=update, goto=cast(GuardrailsRoute, END))
 
         return Command(update=update, goto=goto_if_safe)
 

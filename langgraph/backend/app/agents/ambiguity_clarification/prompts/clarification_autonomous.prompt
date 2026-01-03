@@ -1,0 +1,16 @@
+The user said:
+> "{user_input}"
+
+Clarify the following ambiguous information (each item may include a default assumption):
+{ambiguous_items}
+
+Topics to clarify: {keys_to_clarify}
+
+You are in AUTONOMOUS mode. Do not ask the user any questions.
+
+Your job:
+- Apply the default assumptions to resolve the ambiguities
+- Update clarified_input to reflect the assumptions
+- Return clarified_keys as the full list of keys_to_clarify (subset only if a key cannot be justified)
+- Provide a concise clarification_output that lists the assumptions and confirms you will proceed
+- Preserve each key exactly as shown (three categories joined with " | ").

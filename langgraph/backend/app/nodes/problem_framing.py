@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import Runnable
@@ -20,15 +20,18 @@ from app.state import PhaseEntry, SageState
 logger = get_logger("nodes.problem_framing")
 
 
+ProblemFramingRoute = Literal["phase_supervisor", "supervisor"]
+
+
 def make_node_problem_framing(
     agent: Runnable,
     *,
     phase: str = "problem_framing",
     max_context_items: int = 8,
-    goto: str = "supervisor",
+    goto: ProblemFramingRoute = "phase_supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[str],
+    Command[ProblemFramingRoute],
 ]:
     """Node: problem_framing.
 
@@ -52,7 +55,7 @@ def make_node_problem_framing(
     def node_problem_framing(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[ProblemFramingRoute]:
         user_input = get_latest_user_input(state.messages) or ""
 
         # Step 1: hydrate evidence

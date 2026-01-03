@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage
@@ -21,10 +21,16 @@ from app.platform.runtime.state_helpers import (
     reset_clarification_context,
 )
 from app.runtime import SageRuntimeContext
-from app.schemas.ambiguities import AmbiguityItem
 from app.state import PhaseEntry, SageState
 
 logger = get_logger("nodes.ambiguity_scan")
+
+
+AmbiguityScanRoute = Literal[
+    "ambiguity_supervisor",
+    "phase_supervisor",
+    "supervisor",
+]
 
 
 def make_node_ambiguity_scan(
@@ -35,10 +41,10 @@ def make_node_ambiguity_scan(
     importance_threshold: Decimal | float = Decimal("0.9"),
     confidence_threshold: Decimal | float = Decimal("0.8"),
     max_selected: int = 3,
-    goto: str = "supervisor",
+    goto: AmbiguityScanRoute = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[str],
+    Command[AmbiguityScanRoute],
 ]:
     """Node: ambiguity_scan.
 
@@ -55,7 +61,7 @@ def make_node_ambiguity_scan(
         goto: Node name to route to after completion.
 
     Side effects/state writes:
-        Updates `state.ambiguity` with detected items, pending keys, and status.
+        Updates `state.ambiguity` with detected items and eligibility status.
         When phase is not provided, uses `state.ambiguity.target_step`.
 
     Returns:
@@ -66,7 +72,7 @@ def make_node_ambiguity_scan(
     def node_ambiguity_scan(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[AmbiguityScanRoute]:
         user_input = get_latest_user_input(state.messages) or ""
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
@@ -88,43 +94,49 @@ def make_node_ambiguity_scan(
 
         context_docs: list[Document] = []
         if evidence:
-            store = get_store()
-            for e in evidence[:max_context_items]:
-                ns = getattr(e, "namespace", None)
-                key = getattr(e, "key", None)
-                score = getattr(e, "score", None)
+            try:
+                store = get_store()
+            except RuntimeError:
+                logger.warning("ambiguity_scan.missing_runtime_store", phase=target_phase)
+                store = None
 
-                if isinstance(e, dict):
-                    ns = e.get("namespace")
-                    key = e.get("key")
-                    score = e.get("score")
+            if store is not None:
+                for e in evidence[:max_context_items]:
+                    ns = getattr(e, "namespace", None)
+                    key = getattr(e, "key", None)
+                    score = getattr(e, "score", None)
 
-                if not ns or not key:
-                    continue
+                    if isinstance(e, dict):
+                        ns = e.get("namespace")
+                        key = e.get("key")
+                        score = e.get("score")
 
-                ns_tuple = tuple(ns) if isinstance(ns, (list, tuple)) else None
-                if ns_tuple is None:
-                    continue
+                    if not ns or not key:
+                        continue
 
-                item = store.get(ns_tuple, key)
-                if not item or not getattr(item, "value", None):
-                    continue
-                value = item.value or {}
-                metadata = {
-                    "title": value.get("title", ""),
-                    "tags": value.get("tags", []),
-                    "agents": value.get("agents", []),
-                    "changed": value.get("changed", 0),
-                    "store_namespace": ns,
-                    "store_key": key,
-                    "score": score if score is None else float(score),
-                }
-                context_docs.append(
-                    Document(
-                        page_content=value.get("text", ""),
-                        metadata=metadata,
+                    ns_tuple = tuple(ns) if isinstance(ns, (list, tuple)) else None
+                    if ns_tuple is None:
+                        continue
+
+                    item = store.get(ns_tuple, key)
+                    if not item or not getattr(item, "value", None):
+                        continue
+                    value = item.value or {}
+                    metadata = {
+                        "title": value.get("title", ""),
+                        "tags": value.get("tags", []),
+                        "agents": value.get("agents", []),
+                        "changed": value.get("changed", 0),
+                        "store_namespace": ns,
+                        "store_key": key,
+                        "score": score if score is None else float(score),
+                    }
+                    context_docs.append(
+                        Document(
+                            page_content=value.get("text", ""),
+                            metadata=metadata,
+                        )
                     )
-                )
 
         messages_for_agent = state.messages
 
@@ -170,16 +182,16 @@ def make_node_ambiguity_scan(
             reverse=True,
         )
         selected_ambiguities = high_priority[:max_selected]
-        def _question(a_item: AmbiguityItem) -> str:
-            return a_item.clarifying_question or a_item.description or a_item.key
-        ambiguity_questions = [_question(item) for item in selected_ambiguities]
 
+        current_retrieval_round = state.ambiguity.context_retrieval_round
         base_context = reset_clarification_context(
             state,
             target_step=target_phase,
+            context_retrieval_round=current_retrieval_round,
+            last_scan_retrieval_round=current_retrieval_round,
         )
 
-        if not ambiguity_questions:
+        if not selected_ambiguities:
             resolved_context = base_context.model_copy(
                 update={
                     "target_step": target_phase,
@@ -187,6 +199,8 @@ def make_node_ambiguity_scan(
                     "eligible": True,
                     "detected": [],
                     "resolved": [],
+                    "context_retrieval_round": current_retrieval_round,
+                    "last_scan_retrieval_round": current_retrieval_round,
                     "exhausted": False,
                 }
             )
@@ -207,6 +221,8 @@ def make_node_ambiguity_scan(
                 "checked": True,
                 "eligible": False,
                 "detected": selected_ambiguities,
+                "context_retrieval_round": current_retrieval_round,
+                "last_scan_retrieval_round": current_retrieval_round,
                 "exhausted": False,
             }
         )

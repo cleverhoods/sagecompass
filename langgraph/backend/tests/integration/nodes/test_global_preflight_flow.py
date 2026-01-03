@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
+from typing import Any, cast
 
 import pytest
 from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable
 
+from app.graphs.phases.ambiguity_preflight.subgraph import (
+    build_ambiguity_preflight_subgraph,
+)
 from app.nodes import (
     make_node_ambiguity_clarification,
     make_node_ambiguity_scan,
     make_node_guardrails_check,
-    make_node_retrieve_context,
     make_node_supervisor,
 )
 from app.schemas.ambiguities import AmbiguityItem
@@ -113,6 +115,7 @@ def _apply_command(state: SageState, command):
 
 @pytest.mark.integration
 def test_global_preflight_flow_routes_to_phase_supervisor() -> None:
+    cmd: Any
     state = SageState(
         gating=GatingContext(original_input=""),
         messages=[HumanMessage(content="We need automation to reduce churn.")],
@@ -120,14 +123,10 @@ def test_global_preflight_flow_routes_to_phase_supervisor() -> None:
 
     supervisor = make_node_supervisor()
     guardrails = make_node_guardrails_check()
-    ambiguity_scan = make_node_ambiguity_scan(
-        node_agent=cast(Runnable, DummyAmbiguityScanAgent())
-    )
-    retrieve_context = make_node_retrieve_context(
-        tool=cast(Runnable, DummyLookupTool())
-    )
-    ambiguity_clarification = make_node_ambiguity_clarification(
-        node_agent=cast(Runnable, DummyClarificationAgent())
+    ambiguity_preflight = build_ambiguity_preflight_subgraph(
+        ambiguity_scan_agent=cast(Runnable, DummyAmbiguityScanAgent()),
+        ambiguity_clarification_agent=cast(Runnable, DummyClarificationAgent()),
+        retrieve_tool=cast(Runnable, DummyLookupTool()),
     )
 
     cmd = supervisor(state, None)
@@ -139,33 +138,14 @@ def test_global_preflight_flow_routes_to_phase_supervisor() -> None:
     state = _apply_command(state, cmd)
 
     cmd = supervisor(state, None)
-    assert cmd.goto == "ambiguity_scan"
+    assert cmd.goto == "ambiguity_preflight"
     state = _apply_command(state, cmd)
 
-    cmd = ambiguity_scan(state, None)
-    assert cmd.goto == "supervisor"
-    state = _apply_command(state, cmd)
+    state = SageState.model_validate(ambiguity_preflight.invoke(state))
 
     assert state.ambiguity.checked is True
     assert state.ambiguity.target_step == "problem_framing"
-
-    cmd = supervisor(state, None)
-    assert cmd.goto == "retrieve_context"
-    state = _apply_command(state, cmd)
-
-    cmd = retrieve_context(state, None)
-    assert cmd.goto == "supervisor"
-    state = _apply_command(state, cmd)
-
     assert state.phases["problem_framing"].evidence
-
-    cmd = supervisor(state, None)
-    assert cmd.goto == "ambiguity_clarification"
-    state = _apply_command(state, cmd)
-
-    cmd = ambiguity_clarification(state, None)
-    assert cmd.goto == "supervisor"
-    state = _apply_command(state, cmd)
 
     assert state.ambiguity.resolved
     assert state.ambiguity.eligible is True
@@ -282,6 +262,23 @@ class ClarificationAgentWithoutClarifiedInput:
         }
 
 
+class PartialClarificationAgent:
+    """Clarification agent that resolves only the first ambiguity."""
+
+    def invoke(self, inputs: dict[str, object]) -> dict[str, object]:
+        return {
+            "structured_response": {
+                "responses": [
+                    {
+                        "clarified_input": inputs.get("user_input", ""),
+                        "clarified_keys": ["scope"],
+                        "clarification_output": "Need the success metric next.",
+                    }
+                ],
+            }
+        }
+
+
 class QuestionTrackingClarificationAgent:
     """Clarification agent that leaves clarifying questions unresolved."""
 
@@ -299,8 +296,32 @@ class QuestionTrackingClarificationAgent:
         }
 
 
+class ClarificationAgentWithoutKeys:
+    """Clarification agent that omits clarified_keys despite refining input."""
+
+    def invoke(self, inputs: dict[str, object]) -> dict[str, object]:
+        user_input = str(inputs.get("user_input", ""))
+        clarified_input = (
+            f"{user_input} Assuming structured, comprehensive data is available."
+            if user_input
+            else "Assuming structured, comprehensive data is available."
+        )
+        return {
+            "structured_response": {
+                "responses": [
+                    {
+                        "clarified_input": clarified_input,
+                        "clarified_keys": [],
+                        "clarification_output": "Assuming data is available. Proceeding.",
+                    }
+                ],
+            }
+        }
+
+
 @pytest.mark.integration
 def test_clarification_uses_detected_questions() -> None:
+    cmd: Any
     state = SageState(
         gating=GatingContext(original_input=""),
         messages=[HumanMessage(content="Clarify this request.")],
@@ -322,11 +343,13 @@ def test_clarification_uses_detected_questions() -> None:
 
     assert len(state.ambiguity.detected) == 3
     expected_questions = [
-        "Which channels should be covered?",
-        "What metric should we optimize?",
-        "What timeframe are we targeting?",
+        ("scope", "Which channels should be covered?"),
+        ("metric", "What metric should we optimize?"),
+        ("timeframe", "What timeframe are we targeting?"),
     ]
-    assert _pending_questions(state.ambiguity) == expected_questions
+    assert _pending_questions(state.ambiguity) == [
+        question for _, question in expected_questions
+    ]
     assert _pending_keys(state.ambiguity) == ["scope", "metric", "timeframe"]
 
     recorder = RecordingClarificationAgent()
@@ -338,13 +361,18 @@ def test_clarification_uses_detected_questions() -> None:
     state = _apply_command(state, cmd)
 
     assert recorder.calls
-    assert recorder.calls[0]["ambiguous_items"] == expected_questions
+    ambiguous_items = str(recorder.calls[0]["ambiguous_items"])
+    for key, question in expected_questions:
+        assert f"{key}:" in ambiguous_items
+        assert question in ambiguous_items
+    assert "clarified_keys" not in recorder.calls[0]
     assert state.ambiguity.resolved
     assert _pending_keys(state.ambiguity) == []
 
 
 @pytest.mark.integration
 def test_clarification_prefers_latest_user_input() -> None:
+    cmd: Any
     state = SageState(
         gating=GatingContext(original_input=""),
         messages=[HumanMessage(content="We are uncertain about scope.")],
@@ -378,6 +406,7 @@ def test_clarification_prefers_latest_user_input() -> None:
 
 @pytest.mark.integration
 def test_clarification_reports_current_question() -> None:
+    cmd: Any
     state = SageState(
         gating=GatingContext(original_input=""),
         messages=[HumanMessage(content="Need clarity on scope.")],
@@ -414,6 +443,92 @@ def test_clarification_reports_current_question() -> None:
     assert "Which channels" in state.messages[-1].content
 
 
+@pytest.mark.integration
+def test_clarification_defaults_missing_keys_when_input_is_updated() -> None:
+    cmd: Any
+    state = SageState(
+        gating=GatingContext(original_input=""),
+        messages=[HumanMessage(content="Need clarity on data readiness.")],
+    )
+    ambiguity_context = AmbiguityContext(
+        target_step="problem_framing",
+        checked=True,
+        eligible=False,
+        detected=[
+            AmbiguityItem(
+                key="data_access_and_quality",
+                description="Data access and quality is unclear.",
+                clarifying_question="Do we have structured, reliable data?",
+                resolution_assumption="Assume data is structured and accessible.",
+                resolution_impact_direction="+",
+                resolution_impact_value=0.6,
+                importance=Decimal("0.95"),
+                confidence=Decimal("0.95"),
+            )
+        ],
+        resolved=[],
+    )
+    state = state.model_copy(update={"ambiguity": ambiguity_context})
+
+    clarifier = make_node_ambiguity_clarification(
+        node_agent=cast(Runnable, ClarificationAgentWithoutKeys())
+    )
+
+    cmd = clarifier(state, None)
+    state = _apply_command(state, cmd)
+
+    assert not _pending_keys(state.ambiguity)
+    assert state.ambiguity.eligible is True
+
+
+@pytest.mark.integration
+def test_clarification_partial_resolution_keeps_pending_keys() -> None:
+    cmd: Any
+    state = SageState(
+        gating=GatingContext(original_input=""),
+        messages=[HumanMessage(content="Clarify scope and metric.")],
+    )
+    ambiguity_context = AmbiguityContext(
+        target_step="problem_framing",
+        checked=True,
+        eligible=False,
+        detected=[
+            AmbiguityItem(
+                key="scope",
+                description="Scope endpoints are unclear.",
+                clarifying_question="Which channels should be in scope?",
+                resolution_assumption="Assume marketing is in scope.",
+                resolution_impact_direction="+",
+                resolution_impact_value=0.5,
+                importance=Decimal("0.95"),
+                confidence=Decimal("0.95"),
+            ),
+            AmbiguityItem(
+                key="metric",
+                description="Success metric is unclear.",
+                clarifying_question="Which metric matters most?",
+                resolution_assumption="Assume response time.",
+                resolution_impact_direction="+",
+                resolution_impact_value=0.4,
+                importance=Decimal("0.94"),
+                confidence=Decimal("0.92"),
+            ),
+        ],
+        resolved=[],
+    )
+    state = state.model_copy(update={"ambiguity": ambiguity_context})
+
+    clarification_node = make_node_ambiguity_clarification(
+        node_agent=cast(Runnable, PartialClarificationAgent())
+    )
+
+    cmd = clarification_node(state, None)
+    state = _apply_command(state, cmd)
+
+    assert state.ambiguity.eligible is False
+    assert _pending_keys(state.ambiguity) == ["metric"]
+
+
 class ThresholdAmbiguityAgent:
     """Returns ambiguity items below the default threshold."""
 
@@ -433,6 +548,7 @@ class ThresholdAmbiguityAgent:
 
 @pytest.mark.integration
 def test_ambiguity_scan_thresholds_are_configurable() -> None:
+    cmd: Any
     state = SageState(
         gating=GatingContext(original_input="", guardrail=None),
         messages=[HumanMessage(content="Check thresholds.")],

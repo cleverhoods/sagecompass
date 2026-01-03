@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas import AmbiguityItem
 
@@ -14,4 +14,7 @@ class OutputSchema(BaseModel):
     Invariants:
         `ambiguities` contains zero or more AmbiguityItem entries.
     """
-    ambiguities: list[AmbiguityItem]
+    ambiguities: list[AmbiguityItem] = Field(
+        default_factory=list,
+        description="List of ambiguity payloads.",
+    )

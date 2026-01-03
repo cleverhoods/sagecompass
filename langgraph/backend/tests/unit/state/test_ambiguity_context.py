@@ -15,6 +15,9 @@ def test_ambiguity_context_defaults() -> None:
     assert context.eligible is False
     assert context.detected == []
     assert context.resolved == []
+    assert context.hilp_enabled is False
+    assert context.context_retrieval_round == 0
+    assert context.last_scan_retrieval_round == 0
 
 
 def test_ambiguity_context_accepts_items() -> None:

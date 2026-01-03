@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Literal, cast
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -12,14 +13,22 @@ from langgraph.types import Command
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (
     get_pending_ambiguity_keys,
+    is_latest_message_human,
     reset_clarification_context,
 )
 from app.runtime import SageRuntimeContext
 from app.state import SageState
 
+SupervisorRoute = Literal[
+    "__end__",
+    "ambiguity_preflight",
+    "guardrails_check",
+    "problem_framing_supervisor",
+]
+
 
 def make_node_supervisor(
-) -> Callable[[SageState, Runtime[SageRuntimeContext] | None], Command[str]]:
+) -> Callable[[SageState, Runtime[SageRuntimeContext] | None], Command[SupervisorRoute]]:
     """Node: supervisor (global).
 
     Purpose:
@@ -27,7 +36,7 @@ def make_node_supervisor(
 
     Flow:
         supervisor -> guardrails_check -> supervisor
-        -> ambiguity_scan -> retrieve_context -> ambiguity_clarification (loop)
+        -> ambiguity_preflight -> (scan/retrieve/clarification) -> supervisor
         -> phase_supervisor -> phase node -> supervisor
 
     Side effects/state writes:
@@ -41,7 +50,7 @@ def make_node_supervisor(
     def node_supervisor(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[SupervisorRoute]:
         logger.info("supervisor.entry", state_keys=SageState.model_fields.keys())
         from app.graphs.phases import PHASES
         from app.platform.runtime.phases import get_phase_names
@@ -65,14 +74,58 @@ def make_node_supervisor(
             logger.info("supervisor.complete")
             return Command(
                 update={"messages": [AIMessage(content="All phases complete.")]},
-                goto=END,
+                goto=cast(SupervisorRoute, END),
             )
 
         logger.info("supervisor.routing.phase_start", phase=next_phase)
-        phase_contract = PHASES[next_phase]
         ambiguity = state.ambiguity
-        phase_state = state.phases.get(next_phase)
-        evidence = phase_state.evidence if phase_state else []
+
+        if (
+            ambiguity.target_step == next_phase
+            and ambiguity.checked
+            and ambiguity.eligible
+        ):
+            return Command(
+                update={
+                    "messages": [
+                        AIMessage(
+                            content=(
+                                f"Starting {next_phase} flow via the phase supervisor."
+                            )
+                        )
+                    ]
+                },
+                goto=cast(SupervisorRoute, f"{next_phase}_supervisor"),
+            )
+
+        if ambiguity.target_step == next_phase and ambiguity.exhausted:
+            logger.info("supervisor.ambiguity_exhausted", phase=next_phase)
+            if (
+                state.messages
+                and isinstance(state.messages[-1], AIMessage)
+                and state.messages[-1].content == "Unable to clarify the request."
+            ):
+                return Command(goto=cast(SupervisorRoute, END))
+            return Command(
+                update={
+                    "messages": [
+                        AIMessage(content="Unable to clarify the request.")
+                    ]
+                },
+                goto=cast(SupervisorRoute, END),
+            )
+
+        pending_keys = get_pending_ambiguity_keys(ambiguity)
+        if (
+            ambiguity.checked
+            and not ambiguity.eligible
+            and pending_keys
+            and ambiguity.hilp_enabled
+            and ambiguity.resolved
+            and not is_latest_message_human(state.messages)
+        ):
+            logger.info("supervisor.awaiting_user", pending=pending_keys)
+            return Command(goto=cast(SupervisorRoute, END))
 
         if ambiguity.target_step != next_phase:
             updated_ambiguity = reset_clarification_context(
@@ -81,75 +134,12 @@ def make_node_supervisor(
             )
             return Command(
                 update={"ambiguity": updated_ambiguity},
-                goto="ambiguity_scan",
+                goto="ambiguity_preflight",
             )
 
-        if not ambiguity.checked:
-            return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Checking for ambiguities.")
-                    ]
-                },
-                goto="ambiguity_scan",
-            )
-
-        if (
-            phase_contract.retrieval_enabled
-            and phase_contract.requires_evidence
-            and not evidence
-        ):
-            return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Retrieving context for this step.")
-                    ]
-                },
-                goto="retrieve_context",
-            )
-
-        if ambiguity.exhausted:
-            logger.info("supervisor.clarification_exhausted", phase=next_phase)
-            return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Unable to clarify the request.")
-                    ]
-                },
-                goto=END,
-            )
-
-        pending_keys = get_pending_ambiguity_keys(ambiguity)
-        if pending_keys:
-            return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Clarification pending.")
-                    ]
-                },
-                goto="ambiguity_clarification",
-            )
-
-        if not ambiguity.eligible:
-            return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Clarification pending.")
-                    ]
-                },
-                goto="ambiguity_clarification",
-            )
-
-        # 3. Route to first incomplete phase (global preflight must be eligible)
         return Command(
-            update={
-                "messages": [
-                    AIMessage(
-                        content=(f"Starting {next_phase} flow via the phase supervisor.")
-                    )
-                ]
-            },
-            goto=f"{next_phase}_supervisor",
+            update={"messages": [AIMessage(content="Running ambiguity preflight.")]},
+            goto="ambiguity_preflight",
         )
 
 

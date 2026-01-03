@@ -26,7 +26,7 @@ def _safe_guardrail() -> GuardrailResult:
 
 def _build_ambiguity_item() -> AmbiguityItem:
     return AmbiguityItem(
-        key="scope",
+        key=["scope", "channels", "coverage"],
         description="Scope is unclear.",
         clarifying_question="Is this limited to Q4?",
         resolution_assumption="Assume Q4-only constraints.",
@@ -61,10 +61,10 @@ def test_ambiguity_scan_updates_gating_and_clarification() -> None:
 
     updated_ambiguity = result.update["ambiguity"]
     assert len(updated_ambiguity.detected) == 1
-    assert updated_ambiguity.detected[0].key == "scope"
+    assert updated_ambiguity.detected[0].key == ["scope", "channels", "coverage"]
 
     assert result.update["messages"]
 
-    assert updated_ambiguity.detected[0].key == "scope"
+    assert updated_ambiguity.detected[0].key == ["scope", "channels", "coverage"]
     assert updated_ambiguity.resolved == []
     assert updated_ambiguity.eligible is False

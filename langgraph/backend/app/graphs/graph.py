@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, cast
 
+from langchain_core.runnables import Runnable
 from langgraph.graph import START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
@@ -27,18 +28,14 @@ def build_main_app(
     *,
     supervisor_node: NodeFn,
     guardrails_node: NodeFn,
-    retrieve_context_node: NodeFn,
-    ambiguity_clarification_node: NodeFn,
-    ambiguity_scan_node: NodeFn,
+    ambiguity_preflight_graph: Runnable[SageState, Any],
 ) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
     """Graph factory for the main SageCompass graph.
 
     Args:
         supervisor_node: DI-injected supervisor node callable.
         guardrails_node: DI-injected guardrails gate node callable.
-        retrieve_context_node: DI-injected retrieval node callable.
-        ambiguity_clarification_node: DI-injected ambiguity clarification node callable.
-        ambiguity_scan_node: DI-injected ambiguity scan node callable.
+        ambiguity_preflight_graph: DI-injected ambiguity preflight subgraph.
 
     Side effects/state writes:
         None (graph wiring only).
@@ -50,22 +47,12 @@ def build_main_app(
 
     # Add control nodes
     graph.add_node("supervisor", _as_runtime_node(supervisor_node))  # type: ignore[call-overload]
-    graph.add_node(
-        "ambiguity_clarification",
-        _as_runtime_node(ambiguity_clarification_node),  # type: ignore[call-overload]
-    )
-    graph.add_node(
-        "ambiguity_scan",
-        _as_runtime_node(ambiguity_scan_node),  # type: ignore[call-overload]
-    )
+    graph.add_node("ambiguity_preflight", ambiguity_preflight_graph)
     graph.add_node(
         "guardrails_check",
         _as_runtime_node(guardrails_node),  # type: ignore[call-overload]
     )
-    graph.add_node(
-        "retrieve_context",
-        _as_runtime_node(retrieve_context_node),  # type: ignore[call-overload]
-    )
+    graph.add_edge("ambiguity_preflight", "supervisor")
 
     # Add phase subgraphs from the phase registry
     for phase in PHASES.values():

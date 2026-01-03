@@ -19,6 +19,13 @@ def get_latest_user_input(messages: Sequence[AnyMessage]) -> str | None:
     return None
 
 
+def is_latest_message_human(messages: Sequence[AnyMessage]) -> bool:
+    """Return True if the most recent message is from the user."""
+    if not messages:
+        return False
+    return isinstance(messages[-1], HumanMessage)
+
+
 def phase_to_node(phase: str) -> str:
     """Map a phase name to its entry node."""
     mapping = {
@@ -30,12 +37,17 @@ def phase_to_node(phase: str) -> str:
     return mapping.get(phase, "phase_supervisor")
 
 
+def format_ambiguity_key(categories: Sequence[str]) -> str:
+    """Return a stable label for an ambiguity category list."""
+    return " | ".join(categories)
+
+
 def _get_ambiguity_question(item: AmbiguityItem) -> str:
     """Return the most specific question text for an ambiguity."""
     return (
         item.clarifying_question
         or item.description
-        or item.key
+        or format_ambiguity_key(item.key)
     )
 
 
@@ -52,16 +64,16 @@ def get_pending_ambiguity_keys(context: AmbiguityContext) -> list[str]:
     """Return the pending ambiguity keys yet to be resolved."""
     resolved_keys = get_clarified_keys(context)
     return [
-        item.key
+        format_ambiguity_key(item.key)
         for item in context.detected
-        if item.key not in resolved_keys
+        if format_ambiguity_key(item.key) not in resolved_keys
     ]
 
 
 def get_pending_ambiguity_questions(context: AmbiguityContext) -> list[str]:
     """Return the clarifying questions for unresolved ambiguity keys."""
     question_map = {
-        item.key: _get_ambiguity_question(item)
+        format_ambiguity_key(item.key): _get_ambiguity_question(item)
         for item in context.detected
     }
     return [
@@ -80,6 +92,9 @@ def get_current_clarifying_question(context: AmbiguityContext) -> str | None:
 def reset_clarification_context(
     state: SageState,
     target_step: str | None = None,
+    *,
+    context_retrieval_round: int = 0,
+    last_scan_retrieval_round: int = 0,
 ) -> AmbiguityContext:
     """Reset the ambiguity context for the given target phase."""
     ambiguity = state.ambiguity
@@ -90,6 +105,8 @@ def reset_clarification_context(
             "eligible": False,
             "detected": [],
             "resolved": [],
+            "context_retrieval_round": context_retrieval_round,
+            "last_scan_retrieval_round": last_scan_retrieval_round,
             "exhausted": False,
         }
     )

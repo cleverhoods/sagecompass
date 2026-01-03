@@ -187,8 +187,11 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
 - Agents are stateless and recreatable via `build_agent()`.
 - Prompts are files (`system.prompt` required; few-shot requires `few-shots.prompt` + `examples.json`).
 - Agents return **structured outputs** via a Pydantic `OutputSchema`, validated before state writes.
-- Agent output schemas MUST be flat:
-  - The top-level `OutputSchema` and any items inside lists MUST NOT contain nested custom Pydantic sub-models.
+- `OutputSchema` MUST be a Pydantic `BaseModel` with explicit Pydantic field definitions so
+  `create_agent(..., response_format=OutputSchema)` can derive the structured output schema.
+  (Docs: https://docs.langchain.com/oss/python/langchain/structured-output)
+- Nested Pydantic models are allowed (including list items), but keep nesting shallow and avoid
+  raw `dict`/`Any` fields in `OutputSchema` unless strictly necessary.
 
 ### SHOULD
 - One agent = one responsibility aligned to a business function.

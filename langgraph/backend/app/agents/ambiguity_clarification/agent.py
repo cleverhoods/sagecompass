@@ -69,7 +69,7 @@ def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runn
     # Compose system + prompt using Jinja template
     agent_prompt = compose_agent_prompt(
         agent_name=AGENT_NAME,
-        prompt_names=["system", "clarification"],
+        prompt_names=["system", "clarification_autonomous"],
         include_global=True,
         include_format_instructions=False,
     )
@@ -83,7 +83,7 @@ def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runn
             placeholders=[
                 "user_input",
                 "ambiguous_items",
-                "clarified_keys",
+                "keys_to_clarify",
                 "phase",
             ],
             output_schema=OutputSchema,

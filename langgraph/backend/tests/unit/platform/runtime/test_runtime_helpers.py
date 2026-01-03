@@ -11,6 +11,7 @@ from app.platform.runtime import (
     get_latest_user_input,
     get_pending_ambiguity_keys,
     get_pending_ambiguity_questions,
+    format_ambiguity_key,
     get_phase_names,
     phase_to_node,
     reset_clarification_context,
@@ -32,10 +33,10 @@ def test_phase_to_node_falls_back_to_phase_supervisor() -> None:
     assert phase_to_node("unknown_phase") == "phase_supervisor"
 
 
-def _build_ambiguity_item(key: str, question: str) -> AmbiguityItem:
+def _build_ambiguity_item(key: list[str], question: str) -> AmbiguityItem:
     return AmbiguityItem(
         key=key,
-        description=f"{key} description",
+        description=f"{format_ambiguity_key(key)} description",
         clarifying_question=question,
         resolution_assumption="Default assumption.",
         resolution_impact_direction="+",
@@ -46,10 +47,13 @@ def _build_ambiguity_item(key: str, question: str) -> AmbiguityItem:
 
 
 def test_reset_clarification_context_clears_state() -> None:
-    item = _build_ambiguity_item("scope", "Which channels?")
+    item = _build_ambiguity_item(
+        ["scope", "channels", "coverage"],
+        "Which channels?",
+    )
     response = ClarificationResponse(
         clarified_input="scope confirmed",
-        clarified_keys=["scope"],
+        clarified_keys=[format_ambiguity_key(item.key)],
         clarification_output="Thanks for confirming scope.",
     )
 
@@ -60,6 +64,8 @@ def test_reset_clarification_context_clears_state() -> None:
             eligible=True,
             detected=[item],
             resolved=[response],
+            context_retrieval_round=1,
+            last_scan_retrieval_round=1,
             exhausted=True,
         )
     )
@@ -70,15 +76,23 @@ def test_reset_clarification_context_clears_state() -> None:
     assert updated.checked is False
     assert updated.detected == []
     assert updated.resolved == []
+    assert updated.context_retrieval_round == 0
+    assert updated.last_scan_retrieval_round == 0
     assert updated.exhausted is False
 
 
 def test_pending_ambiguity_helpers() -> None:
-    item_scope = _build_ambiguity_item("scope", "Which channels are in scope?")
-    item_metric = _build_ambiguity_item("metric", "Which metric matters?")
+    item_scope = _build_ambiguity_item(
+        ["scope", "channels", "coverage"],
+        "Which channels are in scope?",
+    )
+    item_metric = _build_ambiguity_item(
+        ["metric", "kpi", "success_measure"],
+        "Which metric matters?",
+    )
     response = ClarificationResponse(
         clarified_input="scope is marketing",
-        clarified_keys=["scope"],
+        clarified_keys=[format_ambiguity_key(item_scope.key)],
         clarification_output="Thanks for confirming scope.",
     )
     context = AmbiguityContext(
@@ -87,10 +101,10 @@ def test_pending_ambiguity_helpers() -> None:
         resolved=[response],
     )
 
-    assert get_pending_ambiguity_keys(context) == ["metric"]
+    assert get_pending_ambiguity_keys(context) == [format_ambiguity_key(item_metric.key)]
     assert get_pending_ambiguity_questions(context) == ["Which metric matters?"]
     assert get_current_clarifying_question(context) == "Which metric matters?"
-    assert get_clarified_keys(context) == {"scope"}
+    assert get_clarified_keys(context) == {format_ambiguity_key(item_scope.key)}
 
 
 def test_get_phase_names_returns_registry_keys() -> None:

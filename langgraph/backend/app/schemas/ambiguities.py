@@ -5,18 +5,21 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AmbiguityItem(BaseModel):
     """Structured ambiguity item with question and flat resolution guidance.
 
     Invariants:
+        key contains exactly three category labels.
         importance and confidence are decimals between 0.01 and 0.99.
     """
-    key: str = Field(
+    key: list[str] = Field(
         ...,
-        description="Short identifier for the ambiguous aspect."
+        min_length=3,
+        max_length=3,
+        description="Three most fitting categories for the ambiguity.",
     )
     description: str = Field(
         ...,
@@ -60,3 +63,13 @@ class AmbiguityItem(BaseModel):
             "Combine with importance to sort clarifications."
         )
     )]
+
+    @field_validator("key")
+    @classmethod
+    def _validate_key_categories(cls, value: list[str]) -> list[str]:
+        cleaned = [item.strip() for item in value if item and item.strip()]
+        if len(cleaned) != 3:
+            raise ValueError("key must contain exactly three non-empty categories")
+        if len(set(cleaned)) != 3:
+            raise ValueError("key categories must be unique")
+        return cleaned

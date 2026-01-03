@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, dynamic_prompt
@@ -16,6 +16,7 @@ from langchain_core.prompts import (
 from pydantic import BaseModel
 
 PromptLike = str | ChatPromptTemplate | SystemMessagePromptTemplate | BasePromptTemplate
+PromptSource = PromptLike | Callable[[ModelRequest], PromptLike]
 
 
 def _as_mapping(value: Any) -> Mapping[str, Any]:
@@ -39,12 +40,14 @@ def _apply_placeholders_to_string(
 
 
 def make_dynamic_prompt_middleware(
-    prompt: PromptLike,
+    prompt: PromptSource,
     placeholders: Sequence[str],
     output_schema: type[BaseModel] | None = None,
 ) -> AgentMiddleware:
     """Return an AgentMiddleware that renders the prompt from SageState at runtime."""
     # Invariant: placeholders are injected at runtime so prompt suffix ordering stays intact.
+    if isinstance(placeholders, str):
+        placeholders = [placeholders]
 
     parser = (
         PydanticOutputParser(pydantic_object=output_schema)
@@ -57,15 +60,24 @@ def make_dynamic_prompt_middleware(
         inputs = _as_mapping(
             getattr(request, "inputs", None) or getattr(request, "input", None) or {}
         )
+        nested_input = _as_mapping(inputs.get("input", {})) if inputs else {}
         values: dict[str, Any] = {}
 
         for key in placeholders:
             if key == "format_instructions" and parser is not None:
                 values["format_instructions"] = parser.get_format_instructions()
             else:
-                values[key] = inputs.get(key, state.get(key))
+                values[key] = inputs.get(key, nested_input.get(key, state.get(key)))
 
         return values
+
+    def _resolve_prompt_source(request: ModelRequest) -> PromptLike:
+        if callable(prompt) and not isinstance(
+            prompt,
+            (str, ChatPromptTemplate, SystemMessagePromptTemplate, BasePromptTemplate),
+        ):
+            return prompt(request)
+        return prompt
 
     def _render_to_system_message(prompt_obj: PromptLike, request: ModelRequest) -> SystemMessage:
         values = _values_from_request(request)
@@ -95,6 +107,7 @@ def make_dynamic_prompt_middleware(
 
     @dynamic_prompt
     def _dynamic_prompt(request: ModelRequest) -> SystemMessage | str:
-        return _render_to_system_message(prompt, request)
+        resolved_prompt = _resolve_prompt_source(request)
+        return _render_to_system_message(resolved_prompt, request)
 
     return _dynamic_prompt

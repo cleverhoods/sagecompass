@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
+from langgraph.types import Command
 
 from app.agents.problem_framing.agent import build_agent as build_problem_framing_agent
 from app.nodes import (
@@ -44,26 +45,32 @@ def build_problem_framing_subgraph(
         problem_framing_agent or build_problem_framing_agent()
     )
 
-    graph.add_node(
-        "problem_framing",
-        _as_runtime_node(
-            make_node_problem_framing(
-                agent=resolved_problem_framing_agent,
-                phase=phase,
-                goto="phase_supervisor",
-            )
-        ),
+    problem_framing_node = make_node_problem_framing(
+        agent=resolved_problem_framing_agent,
+        phase=phase,
+        goto="phase_supervisor",
     )
+    phase_supervisor_node = make_node_phase_supervisor(phase=phase)
+
+    def _problem_framing(
+        state: SageState,
+        runtime: Runtime[SageRuntimeContext] | None = None,
+    ) -> Command[Literal["phase_supervisor"]]:
+        return cast(Command[Literal["phase_supervisor"]], problem_framing_node(state, runtime))
+
+    def _phase_supervisor(
+        state: SageState,
+        runtime: Runtime[SageRuntimeContext] | None = None,
+    ) -> Command[Literal["problem_framing", "__end__"]]:
+        cmd = phase_supervisor_node(state, runtime)
+        if cmd.goto == "problem_framing":
+            return cast(Command[Literal["problem_framing", "__end__"]], cmd)
+        return cast(Command[Literal["problem_framing", "__end__"]], Command(update=cmd.update, goto="__end__"))
+
+    graph.add_node("problem_framing", _as_runtime_node(_problem_framing))
 
     # Supervisor reused across all phases
-    graph.add_node(
-        "phase_supervisor",
-        _as_runtime_node(
-            make_node_phase_supervisor(
-                phase=phase,
-            )
-        ),
-    )
+    graph.add_node("phase_supervisor", _as_runtime_node(_phase_supervisor))
 
     # Control flow (loop + termination)
     graph.set_entry_point("phase_supervisor")

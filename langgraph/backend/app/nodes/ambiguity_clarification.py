@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
@@ -17,11 +17,9 @@ from app.agents.ambiguity_clarification.schema import (
 )
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (
-    get_clarified_keys,
-    get_current_clarifying_question,
+    format_ambiguity_key,
     get_latest_user_input,
     get_pending_ambiguity_keys,
-    get_pending_ambiguity_questions,
     reset_clarification_context,
 )
 from app.runtime import SageRuntimeContext
@@ -30,21 +28,25 @@ from app.state import SageState
 logger = get_logger("nodes.ambiguity_clarification")
 
 
+AmbiguityClarificationRoute = Literal["ambiguity_supervisor"]
+
+
 def make_node_ambiguity_clarification(
     node_agent: Runnable | None = None,
     *,
     phase: str | None = None,
     max_context_items: int = 3,
     max_rounds: int = 3,
-    goto: str = "supervisor",
+    goto: AmbiguityClarificationRoute = "ambiguity_supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[str],
+    Command[AmbiguityClarificationRoute],
 ]:
     """Node: ambiguity_clarification.
 
     Purpose:
-        Refine user input via ambiguity clarification agent and manage clarification context state.
+        Refine user input via the internal ambiguity clarification agent and manage
+        clarification context state.
 
     Args:
         node_agent: Optional injected clarification agent runnable.
@@ -66,7 +68,7 @@ def make_node_ambiguity_clarification(
     def node_ambiguity_clarification(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[AmbiguityClarificationRoute]:
         user_input = get_latest_user_input(state.messages)
         if not user_input:
             logger.warning("ambiguity_clarification.empty_user_input", phase=phase)
@@ -114,18 +116,29 @@ def make_node_ambiguity_clarification(
                 goto=goto,
             )
 
+        detected_items = ambiguity_context.detected
+        labeled_items = [
+            (format_ambiguity_key(item.key), item)
+            for item in detected_items
+        ]
         question_map = {
-            item.key: (
+            label: (
                 item.clarifying_question
                 or item.description
-                or item.key
+                or label
             )
-            for item in ambiguity_context.detected
+            for label, item in labeled_items
         }
-        pending_questions = get_pending_ambiguity_questions(ambiguity_context)
+        pending_items = [
+            item for label, item in labeled_items if label in pending_keys
+        ]
+        pending_questions = [
+            question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key))
+            for item in pending_items
+        ]
         if not pending_questions:
-            pending_questions = pending_keys
-        current_question = get_current_clarifying_question(ambiguity_context)
+            pending_questions = list(pending_keys)
+        current_question = pending_questions[0] if pending_questions else None
 
         rounds_attempted = len(ambiguity_context.resolved)
         if rounds_attempted >= max_rounds:
@@ -145,15 +158,26 @@ def make_node_ambiguity_clarification(
                 goto=goto,
             )
 
-        selected_keys = [item.key for item in ambiguity_context.detected]
-        resolved_keys = get_clarified_keys(ambiguity_context)
-        clarified_keys = [key for key in selected_keys if key in resolved_keys]
+        selected_keys = [label for label, _ in labeled_items]
+        ambiguous_items_text = (
+            "\n".join(
+                (
+                    f"- {format_ambiguity_key(item.key)}: "
+                    f"{question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key))}"
+                    f" (assumption: {item.resolution_assumption})"
+                )
+                for item in pending_items
+            )
+            if pending_items
+            else "None."
+        )
+        keys_to_clarify = list(pending_keys)
 
         result = agent.invoke(
             {
                 "user_input": user_input,
-                "ambiguous_items": pending_questions,
-                "clarified_keys": clarified_keys,
+                "ambiguous_items": ambiguous_items_text,
+                "keys_to_clarify": keys_to_clarify,
                 "phase": target_phase,
                 "messages": state.messages,
             }
@@ -182,7 +206,7 @@ def make_node_ambiguity_clarification(
         if not isinstance(structured, OutputSchema):
             structured = OutputSchema.model_validate(structured)
 
-        responses: list[ClarificationResponse] = structured.responses
+        responses = structured.responses
         if not responses:
             logger.warning(
                 "ambiguity_clarification.empty_response",
@@ -198,12 +222,31 @@ def make_node_ambiguity_clarification(
                 goto=goto,
             )
 
-        normalized_responses = [
-            response
-            if response.clarified_input is not None
-            else response.model_copy(update={"clarified_input": user_input})
-            for response in responses
-        ]
+        valid_keys = {format_ambiguity_key(item.key) for item in ambiguity_context.detected}
+        fallback_keys = list(dict.fromkeys(pending_keys))
+        normalized_responses: list[ClarificationResponse] = []
+        for response in responses:
+            raw_clarified_input = response.clarified_input
+            clarified_input = raw_clarified_input or user_input
+            cleaned_keys = [
+                key.strip() for key in response.clarified_keys if isinstance(key, str)
+            ]
+            filtered_keys = [key for key in cleaned_keys if key in valid_keys]
+            unique_keys = list(dict.fromkeys(filtered_keys))
+            if not unique_keys and raw_clarified_input is not None and fallback_keys:
+                logger.warning(
+                    "ambiguity_clarification.empty_clarified_keys",
+                    phase=target_phase,
+                )
+                unique_keys = fallback_keys
+            normalized_responses.append(
+                response.model_copy(
+                    update={
+                        "clarified_input": clarified_input,
+                        "clarified_keys": unique_keys,
+                    }
+                )
+            )
         latest_response = normalized_responses[-1]
         updated_resolved = [*ambiguity_context.resolved, *normalized_responses]
         updated_resolved_keys = {

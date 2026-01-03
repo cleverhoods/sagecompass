@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Literal
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
@@ -18,15 +19,18 @@ from app.tools.context_lookup import context_lookup
 logger = get_logger("nodes.retrieve_context")
 
 
+RetrieveContextRoute = Literal["ambiguity_supervisor", "supervisor"]
+
+
 def make_node_retrieve_context(
     tool: Runnable | None = None,
     *,
     phase: str | None = None,
     collection: str | None = None,
-    goto: str = "supervisor",
+    goto: RetrieveContextRoute = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[str],
+    Command[RetrieveContextRoute],
 ]:
     """Node: retrieve_context.
 
@@ -51,7 +55,7 @@ def make_node_retrieve_context(
     def node_retrieve_context(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[str]:
+    ) -> Command[RetrieveContextRoute]:
         query = get_latest_user_input(state.messages) or ""
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:

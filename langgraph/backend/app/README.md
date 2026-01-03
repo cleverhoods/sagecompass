@@ -65,6 +65,9 @@ app/
 │   │   ├── problem_framing/
 │   │   │   ├── contract.py
 │   │   │   └── subgraph.py
+│   │   ├── ambiguity_preflight/
+│   │   │   ├── contract.py
+│   │   │   └── subgraph.py
 │   │   └── contract.py             -> Phase subgraph contract.
 │   ├── README.md
 │   ├── graph.py                    -> Main graph of SageCompass
@@ -80,6 +83,7 @@ app/
 ├── nodes/
 │   ├── ambiguity_scan.py      -> Ambiguity scan agent node.
 │   ├── ambiguity_clarification.py        -> Ambiguity clarification agent node.
+│   ├── ambiguity_supervisor.py -> Ambiguity routing supervisor node.
 │   ├── gating_guardrails.py        -> Gating guardrail node, checks agains allowed_topics and blocked_keywords.
 │   ├── phase_supervisor.py         -> Phase subgraph supervisor node.
 │   ├── problem_framing.py          -> Problem framing node for the Problem Framing Agent.

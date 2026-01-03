@@ -79,7 +79,7 @@ def build_agent(config: AmbiguityScanAgentConfig | None = None) -> Runnable:
         make_guardrails_middleware(allowed_tools=allowed_tools),
         make_dynamic_prompt_middleware(
             agent_prompt,
-            placeholders="task_input",
+            placeholders=["task_input"],
             output_schema=OutputSchema,
         )
     ]
