@@ -1,4 +1,4 @@
-"""Node for clarification loop orchestration."""
+"""Node for ambiguity clarification loop orchestration."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
-from app.agents.ambiguity.agent import build_agent
+from app.agents.ambiguity_clarification.agent import build_agent
 from app.runtime import SageRuntimeContext
 from app.state import ClarificationSession, SageState
 from app.platform.observability.logger import get_logger
@@ -18,10 +18,10 @@ from app.platform.runtime.state_helpers import (
     reset_clarification_session,
 )
 
-logger = get_logger("nodes.clarify_ambiguity")
+logger = get_logger("nodes.ambiguity_clarification")
 
 
-def make_node_clarify_ambiguity(
+def make_node_ambiguity_clarification(
     node_agent: Runnable | None = None,
     *,
     phase: str = "problem_framing",
@@ -31,10 +31,10 @@ def make_node_clarify_ambiguity(
     [SageState, Runtime[SageRuntimeContext] | None],
     Command[str],
 ]:
-    """Node: clarify_ambiguity.
+    """Node: ambiguity_clarification.
 
     Purpose:
-        Refine user input via clarification agent and manage clarification session state.
+        Refine user input via ambiguity clarification agent and manage clarification session state.
 
     Args:
         node_agent: Optional injected clarification agent runnable.
@@ -50,13 +50,13 @@ def make_node_clarify_ambiguity(
     """
     agent = node_agent or build_agent()
 
-    def node_clarify_ambiguity(
+    def node_ambiguity_clarification(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
         user_input = get_latest_user_input(state.messages)
         if not user_input:
-            logger.warning("clarify_ambiguity.empty_user_input", phase=phase)
+            logger.warning("ambiguity_clarification.empty_user_input", phase=phase)
             return Command(
                 update={"messages": [AIMessage(content="Waiting for more details.")]},
                 goto="__end__",
@@ -75,7 +75,7 @@ def make_node_clarify_ambiguity(
 
         # Check cutoff
         if session.round >= max_rounds:
-            logger.warning("clarify_ambiguity.max_rounds_exceeded", phase=phase)
+            logger.warning("ambiguity_clarification.max_rounds_exceeded", phase=phase)
             return Command(
                 update={
                     "messages": [
@@ -120,7 +120,7 @@ def make_node_clarify_ambiguity(
 
         if ambiguous_items:
             logger.info(
-                "clarify_ambiguity.continue",
+                "ambiguity_clarification.continue",
                 round=updated_session.round,
                 items=ambiguous_items,
             )
@@ -132,7 +132,7 @@ def make_node_clarify_ambiguity(
                 goto=goto,
             )
 
-        logger.info("clarify_ambiguity.resolved", round=updated_session.round)
+        logger.info("ambiguity_clarification.resolved", round=updated_session.round)
         return Command(
             update={
                 "clarification": reset_clarification_session(state, phase),
@@ -141,4 +141,4 @@ def make_node_clarify_ambiguity(
             goto=goto,
         )
 
-    return node_clarify_ambiguity
+    return node_ambiguity_clarification

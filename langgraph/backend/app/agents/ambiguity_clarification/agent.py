@@ -1,4 +1,4 @@
-"""Clarification agent builder for ambiguity resolution."""
+"""Ambiguity clarification agent builder."""
 
 from __future__ import annotations
 
@@ -18,15 +18,15 @@ from app.platform.utils.model_factory import get_model_for_agent
 
 from .schema import OutputSchema
 
-AGENT_NAME = "ambiguity"
+AGENT_NAME = "ambiguity_clarification"
 
 
 def _logger():
     return get_logger(f"agents.{AGENT_NAME}")
 
 
-class ClarificationAgentConfig:
-    """Configuration for the Clarification Agent."""
+class AmbiguityClarificationAgentConfig:
+    """Configuration for the Ambiguity Clarification agent."""
 
     def __init__(
         self,
@@ -46,14 +46,14 @@ class ClarificationAgentConfig:
         return self._extra_middleware
 
 
-def build_agent(config: ClarificationAgentConfig | None = None) -> Runnable:
-    """Construct a clarification agent to refine ambiguous user input.
+def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runnable:
+    """Construct an ambiguity clarification agent to refine ambiguous user input.
 
     Returns:
         A Runnable agent that outputs a structured ClarificationResponse.
     """
     if config is None:
-        config = ClarificationAgentConfig()
+        config = AmbiguityClarificationAgentConfig()
 
     model = config.get_model()
 

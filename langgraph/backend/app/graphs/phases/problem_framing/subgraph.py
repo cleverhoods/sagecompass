@@ -9,12 +9,12 @@ from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 
-from app.agents.ambiguity.agent import build_agent as build_ambiguity_agent
-from app.agents.ambiguity_detector.agent import build_agent as build_ambiguity_detector_agent
+from app.agents.ambiguity_clarification.agent import build_agent as build_ambiguity_clarification_agent
+from app.agents.ambiguity_scan.agent import build_agent as build_ambiguity_scan_agent
 from app.agents.problem_framing.agent import build_agent as build_problem_framing_agent
 from app.nodes import (
-    make_node_ambiguity_detection,
-    make_node_clarify_ambiguity,
+    make_node_ambiguity_scan,
+    make_node_ambiguity_clarification,
     make_node_guardrails_check,
     make_node_phase_supervisor,
     make_node_problem_framing,
@@ -27,15 +27,15 @@ from app.tools.context_lookup import context_lookup
 
 def build_problem_framing_subgraph(
     *,
-    ambiguity_detector_agent: Any | None = None,
-    ambiguity_agent: Any | None = None,
+    ambiguity_scan_agent: Any | None = None,
+    ambiguity_clarification_agent: Any | None = None,
     problem_framing_agent: Any | None = None,
     retrieval_tool: Any | None = None,
 ) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
     """Phase Subgraph: problem_framing.
 
     Purpose:
-        Wire retrieval, ambiguity detection, clarification, and framing nodes.
+        Wire retrieval, ambiguity scan, clarification, and framing nodes.
 
     Side effects/state writes:
         None (graph wiring only).
@@ -51,8 +51,10 @@ def build_problem_framing_subgraph(
 
     # Inject all nodes
     resolved_retrieval_tool = retrieval_tool or context_lookup
-    resolved_ambiguity_detector = ambiguity_detector_agent or build_ambiguity_detector_agent()
-    resolved_ambiguity_agent = ambiguity_agent or build_ambiguity_agent()
+    resolved_ambiguity_scan = ambiguity_scan_agent or build_ambiguity_scan_agent()
+    resolved_ambiguity_clarification = (
+        ambiguity_clarification_agent or build_ambiguity_clarification_agent()
+    )
     resolved_problem_framing_agent = problem_framing_agent or build_problem_framing_agent()
 
     graph.add_node(
@@ -67,10 +69,10 @@ def build_problem_framing_subgraph(
     )
 
     graph.add_node(
-        "ambiguity_detection",
+        "ambiguity_scan",
         _as_runtime_node(
-            make_node_ambiguity_detection(
-                node_agent=resolved_ambiguity_detector,
+            make_node_ambiguity_scan(
+                node_agent=resolved_ambiguity_scan,
                 phase=phase,
                 goto="phase_supervisor",
             )
@@ -78,10 +80,10 @@ def build_problem_framing_subgraph(
     )
 
     graph.add_node(
-        "clarify_ambiguity",
+        "ambiguity_clarification",
         _as_runtime_node(
-            make_node_clarify_ambiguity(
-                node_agent=resolved_ambiguity_agent,
+            make_node_ambiguity_clarification(
+                node_agent=resolved_ambiguity_clarification,
                 phase=phase,
                 goto="phase_supervisor",
             )
@@ -112,8 +114,8 @@ def build_problem_framing_subgraph(
             make_node_phase_supervisor(
                 phase=phase,
                 retrieve_node="retrieve_context",
-                ambiguity_node="ambiguity_detection",
-                clarify_node="clarify_ambiguity",
+                ambiguity_node="ambiguity_scan",
+                clarify_node="ambiguity_clarification",
                 retrieval_enabled=True,
                 requires_evidence=True,
                 clarification_enabled=True,

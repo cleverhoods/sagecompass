@@ -28,8 +28,8 @@ def build_main_app(
     supervisor_node: NodeFn,
     guardrails_node: NodeFn,
     retrieve_context_node: NodeFn,
-    clarify_ambiguity_node: NodeFn,
-    ambiguity_detection_node: NodeFn,
+    ambiguity_clarification_node: NodeFn,
+    ambiguity_scan_node: NodeFn,
 ) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
     """Graph factory for the main SageCompass graph.
 
@@ -37,8 +37,8 @@ def build_main_app(
         supervisor_node: DI-injected supervisor node callable.
         guardrails_node: DI-injected guardrails gate node callable.
         retrieve_context_node: DI-injected retrieval node callable.
-        clarify_ambiguity_node: DI-injected clarification node callable.
-        ambiguity_detection_node: DI-injected ambiguity detection node callable.
+        ambiguity_clarification_node: DI-injected ambiguity clarification node callable.
+        ambiguity_scan_node: DI-injected ambiguity scan node callable.
 
     Side effects/state writes:
         None (graph wiring only).
@@ -51,12 +51,12 @@ def build_main_app(
     # Add control nodes
     graph.add_node("supervisor", _as_runtime_node(supervisor_node))  # type: ignore[call-overload]
     graph.add_node(
-        "clarify_ambiguity",
-        _as_runtime_node(clarify_ambiguity_node),  # type: ignore[call-overload]
+        "ambiguity_clarification",
+        _as_runtime_node(ambiguity_clarification_node),  # type: ignore[call-overload]
     )
     graph.add_node(
-        "ambiguity_detection",
-        _as_runtime_node(ambiguity_detection_node),  # type: ignore[call-overload]
+        "ambiguity_scan",
+        _as_runtime_node(ambiguity_scan_node),  # type: ignore[call-overload]
     )
     graph.add_node(
         "guardrails_check",

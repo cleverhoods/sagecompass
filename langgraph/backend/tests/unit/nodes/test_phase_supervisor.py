@@ -19,8 +19,8 @@ def _build_node():
     return make_node_phase_supervisor(
         phase="problem_framing",
         retrieve_node="retrieve_context",
-        ambiguity_node="ambiguity_detection",
-        clarify_node="clarify_ambiguity",
+        ambiguity_node="ambiguity_scan",
+        clarify_node="ambiguity_clarification",
         retrieval_enabled=True,
         requires_evidence=True,
         clarification_enabled=True,
@@ -38,7 +38,7 @@ def test_phase_supervisor_routes_to_retrieval_when_evidence_missing() -> None:
     assert result.update["messages"]
 
 
-def test_phase_supervisor_routes_to_ambiguity_detection_after_retrieval() -> None:
+def test_phase_supervisor_routes_to_ambiguity_scan_after_retrieval() -> None:
     state = _build_state()
     state.phases["problem_framing"] = PhaseEntry(
         evidence=[EvidenceItem(namespace=["store"], key="doc", score=0.4)]
@@ -47,7 +47,7 @@ def test_phase_supervisor_routes_to_ambiguity_detection_after_retrieval() -> Non
 
     result = node(state, None)
 
-    assert result.goto == "ambiguity_detection"
+    assert result.goto == "ambiguity_scan"
     assert result.update is not None
     assert result.update["messages"]
 
@@ -72,7 +72,7 @@ def test_phase_supervisor_routes_to_clarification_when_ambiguous() -> None:
 
     result = node(state, None)
 
-    assert result.goto == "clarify_ambiguity"
+    assert result.goto == "ambiguity_clarification"
     assert result.update is not None
     assert result.update["messages"]
 

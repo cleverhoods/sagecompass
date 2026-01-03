@@ -78,8 +78,8 @@ app/
 │   ├── runtime/                    -> Phase routing + state helpers.
 │   └── utils/                      -> Shared helpers (agent prompts, providers, model factory).
 ├── nodes/
-│   ├── ambiguity_detection.py      -> Ambiguity detector agent node.
-│   ├── clarify_ambiguity.py        -> Ambiguity clarifying agent node.
+│   ├── ambiguity_scan.py      -> Ambiguity scan agent node.
+│   ├── ambiguity_clarification.py        -> Ambiguity clarification agent node.
 │   ├── gating_guardrails.py        -> Gating guardrail node, checks agains allowed_topics and blocked_keywords.
 │   ├── phase_supervisor.py         -> Phase subgraph supervisor node.
 │   ├── problem_framing.py          -> Problem framing node for the Problem Framing Agent.

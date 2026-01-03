@@ -21,8 +21,8 @@ def make_node_phase_supervisor(
     *,
     phase: str = "problem_framing",
     retrieve_node: str = "retrieve_context",
-    ambiguity_node: str = "ambiguity_detection",
-    clarify_node: str = "clarify_ambiguity",
+    ambiguity_node: str = "ambiguity_scan",
+    clarify_node: str = "ambiguity_clarification",
     retrieval_enabled: bool = True,
     requires_evidence: bool = True,
     clarification_enabled: bool = True,
@@ -38,11 +38,11 @@ def make_node_phase_supervisor(
     Args:
         phase: Phase key used for status/evidence lookups.
         retrieve_node: Node name used for retrieval when evidence is missing.
-        ambiguity_node: Node name used to detect ambiguity.
-        clarify_node: Node name used to run clarification loops.
+        ambiguity_node: Node name used to run ambiguity scans.
+        clarify_node: Node name used to run ambiguity clarification loops.
         retrieval_enabled: Whether to run retrieval in this phase.
         requires_evidence: Whether the phase requires evidence before continuing.
-        clarification_enabled: Whether to run ambiguity detection/clarification.
+        clarification_enabled: Whether to run ambiguity scan/clarification.
 
     Side effects/state writes:
         May reset clarification session entries in `state.clarification`.

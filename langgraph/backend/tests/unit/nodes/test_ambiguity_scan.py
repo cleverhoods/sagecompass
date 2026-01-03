@@ -6,7 +6,7 @@ from typing import cast
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable
 
-from app.nodes.ambiguity_detection import make_node_ambiguity_detection
+from app.nodes.ambiguity_scan import make_node_ambiguity_scan
 from app.schemas.ambiguities import AmbiguityItem
 from app.state import SageState
 from app.state.gating import GatingContext, GuardrailResult
@@ -37,13 +37,13 @@ def _build_ambiguity_item() -> AmbiguityItem:
     )
 
 
-def test_ambiguity_detection_updates_gating_and_clarification() -> None:
+def test_ambiguity_scan_updates_gating_and_clarification() -> None:
     ambiguity = _build_ambiguity_item()
     dummy = DummyAgent(
         {"structured_response": {"ambiguities": [ambiguity.model_dump()]}}
     )
 
-    node = make_node_ambiguity_detection(
+    node = make_node_ambiguity_scan(
         node_agent=cast(Runnable, dummy),
         phase="problem_framing",
         goto="phase_supervisor",
@@ -66,7 +66,7 @@ def test_ambiguity_detection_updates_gating_and_clarification() -> None:
     assert result.update["messages"]
 
     updated_clarification = result.update["clarification"]
-    assert updated_clarification[0].ambiguous_items == ["scope"]
+    assert updated_clarification[0].ambiguous_items == ["Is this limited to Q4?"]
 
     updated_phase = result.update["phases"]["problem_framing"]
     assert updated_phase.ambiguity_checked is True

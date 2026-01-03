@@ -6,8 +6,8 @@ from langgraph.graph.state import CompiledStateGraph
 
 from app.graphs.graph import build_main_app
 from app.graphs.write_graph import build_write_graph
-from app.nodes.ambiguity_detection import make_node_ambiguity_detection
-from app.nodes.clarify_ambiguity import make_node_clarify_ambiguity
+from app.nodes.ambiguity_scan import make_node_ambiguity_scan
+from app.nodes.ambiguity_clarification import make_node_ambiguity_clarification
 from app.nodes.gating_guardrails import make_node_guardrails_check
 from app.nodes.retrieve_context import make_node_retrieve_context
 from app.nodes.supervisor import make_node_supervisor
@@ -40,8 +40,8 @@ def build_app() -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, 
         supervisor_node=make_node_supervisor(),
         guardrails_node=make_node_guardrails_check(),
         retrieve_context_node=make_node_retrieve_context(),
-        clarify_ambiguity_node=make_node_clarify_ambiguity(),
-        ambiguity_detection_node=make_node_ambiguity_detection(),
+        ambiguity_clarification_node=make_node_ambiguity_clarification(),
+        ambiguity_scan_node=make_node_ambiguity_scan(),
     )
 
 

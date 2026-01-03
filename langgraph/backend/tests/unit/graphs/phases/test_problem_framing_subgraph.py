@@ -9,8 +9,8 @@ def test_problem_framing_subgraph_routes_via_phase_supervisor() -> None:
     dummy = SimpleNamespace(invoke=lambda *args, **kwargs: {})
 
     graph = build_problem_framing_subgraph(
-        ambiguity_detector_agent=dummy,
-        ambiguity_agent=dummy,
+        ambiguity_scan_agent=dummy,
+        ambiguity_clarification_agent=dummy,
         problem_framing_agent=dummy,
         retrieval_tool=dummy,
     )

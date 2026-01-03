@@ -1,4 +1,4 @@
-"""Node for ambiguity detection orchestration."""
+"""Node for ambiguity scan orchestration."""
 
 from __future__ import annotations
 
@@ -11,30 +11,30 @@ from langgraph.config import get_store
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
-from app.agents.ambiguity_detector.agent import build_agent  # lazy import to respect SRP
-from app.agents.ambiguity_detector.schema import OutputSchema
+from app.agents.ambiguity_scan.agent import build_agent  # lazy import to respect SRP
+from app.agents.ambiguity_scan.schema import OutputSchema
 from app.runtime import SageRuntimeContext
 from app.state import ClarificationSession, PhaseEntry, SageState
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
 
-logger = get_logger("nodes.ambiguity_detection")
+logger = get_logger("nodes.ambiguity_scan")
 
 
-def make_node_ambiguity_detection(
+def make_node_ambiguity_scan(
     node_agent: Runnable | None = None,
     *,
     phase: str = "problem_framing",
-    max_context_items: int = 8,
+    max_context_items: int = 3,
     goto: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
     Command[str],
 ]:
-    """Node: ambiguity_detection.
+    """Node: ambiguity_scan.
 
     Purpose:
-        Detect ambiguity for the current phase using the ambiguity detector agent.
+        Scan for ambiguity for the current phase using the ambiguity scan agent.
 
     Args:
         node_agent: Optional injected agent runnable.
@@ -44,14 +44,14 @@ def make_node_ambiguity_detection(
 
     Side effects/state writes:
         Updates `state.ambiguity.detected` and phase clarification session.
-        Marks `state.phases[phase].ambiguity_checked` after the detector runs.
+        Marks `state.phases[phase].ambiguity_checked` after the scan runs.
 
     Returns:
         A Command routing back to `supervisor`.
     """
     agent = node_agent or build_agent()
 
-    def node_ambiguity_detection(
+    def node_ambiguity_scan(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
@@ -145,7 +145,10 @@ def make_node_ambiguity_detection(
             structured = OutputSchema.model_validate(structured)
 
         ambiguities = structured.ambiguities
-        ambiguity_keys = [item.key for item in ambiguities]
+        ambiguity_questions = [
+            item.clarifying_question or item.description or item.key
+            for item in ambiguities
+        ]
 
         phase_entry.ambiguity_checked = True
         state.phases[phase] = phase_entry
@@ -153,7 +156,7 @@ def make_node_ambiguity_detection(
         updated_session = ClarificationSession(
             phase=phase,
             round=0,
-            ambiguous_items=ambiguity_keys,
+            ambiguous_items=ambiguity_questions,
             clarified_input=user_input,
             clarification_message="",
         )
@@ -186,4 +189,4 @@ def make_node_ambiguity_detection(
             goto=goto,
         )
 
-    return node_ambiguity_detection
+    return node_ambiguity_scan

@@ -1,4 +1,4 @@
-"""Ambiguity detector agent builder."""
+"""Ambiguity scan agent builder."""
 
 from __future__ import annotations
 
@@ -20,15 +20,15 @@ from app.platform.utils.model_factory import get_model_for_agent
 
 from .schema import OutputSchema
 
-AGENT_NAME = "ambiguity_detector"
+AGENT_NAME = "ambiguity_scan"
 
 
 def _logger():
     return get_logger(f"agents.{AGENT_NAME}")
 
 
-class AmbiguityDetectorAgentConfig(BaseModel):
-    """Configuration for the Ambiguity Detector agent build.
+class AmbiguityScanAgentConfig(BaseModel):
+    """Configuration for the Ambiguity Scan agent build.
 
     Assumptions:
         If model is not provided, ProviderFactory supplies a default instance.
@@ -42,7 +42,7 @@ class AmbiguityDetectorAgentConfig(BaseModel):
         return tuple(self._extra_middleware)
 
 
-def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
+def build_agent(config: AmbiguityScanAgentConfig | None = None) -> Runnable:
     """Builds a LangChain agent runnable for use in LangGraph or standalone.
 
     Args:
@@ -52,7 +52,7 @@ def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
         Runnable agent ready for invocation.
     """
     if config is None:
-        config = AmbiguityDetectorAgentConfig()
+        config = AmbiguityScanAgentConfig()
 
     model = config.model or get_model_for_agent(AGENT_NAME)
 

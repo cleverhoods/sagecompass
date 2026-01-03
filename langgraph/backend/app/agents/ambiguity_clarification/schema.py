@@ -1,4 +1,4 @@
-"""Schema for clarification agent output."""
+"""Schema for ambiguity clarification agent output."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class ClarificationResponse(BaseModel):
-    """Final clarified result from the Clarification Agent.
+    """Final clarified result from the Ambiguity Clarification agent.
 
     Invariants:
         clarified_input is non-empty when a clarification message is returned.
