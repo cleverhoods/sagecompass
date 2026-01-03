@@ -10,6 +10,7 @@ from langgraph.graph import END
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
+from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import phase_to_node
 from app.runtime import SageRuntimeContext
@@ -75,19 +76,23 @@ def make_node_phase_supervisor(
 
         # Phase still in progress
         if status != "complete" or not has_data:
+            update = {
+                "messages": [
+                    AIMessage(content=f"Running {phase} analysis.")
+                ]
+            }
+            validate_state_update(update)
             return Command(
-                update={
-                    "messages": [
-                        AIMessage(content=f"Running {phase} analysis.")
-                    ]
-                },
+                update=update,
                 goto=cast(PhaseSupervisorRoute, phase_to_node(phase)),
             )
 
         # Phase complete
         logger.info("supervisor.complete", phase=phase)
+        update = {"messages": [AIMessage(content=f"{phase} phase complete.")]}
+        validate_state_update(update)
         return Command(
-            update={"messages": [AIMessage(content=f"{phase} phase complete.")]},
+            update=update,
             goto=cast(PhaseSupervisorRoute, END),
         )
 

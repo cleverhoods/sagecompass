@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from app.graphs.phases.ambiguity_preflight.subgraph import (
+from app.graphs.subgraphs.ambiguity_preflight.subgraph import (
     build_ambiguity_preflight_subgraph,
 )
 

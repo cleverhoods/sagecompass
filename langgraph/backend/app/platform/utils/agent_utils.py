@@ -13,6 +13,7 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel
 
 from app.platform.config.file_loader import FileLoader
+from app.platform.contract.prompts import validate_prompt_suffix_order
 
 
 def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}") -> str:
@@ -112,6 +113,11 @@ def compose_agent_prompt(
     # Append few-shots last, so the prompt ends with "Output:".
     if want_few_shots:
         parts.append(_render_few_shots(agent_name))
+
+    full_sequence = [*normal_prompt_names]
+    if want_few_shots:
+        full_sequence.append("few-shots")
+        validate_prompt_suffix_order(full_sequence, ("few-shots",))
 
     return "\n\n".join(parts)
 

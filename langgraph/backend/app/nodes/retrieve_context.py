@@ -10,6 +10,7 @@ from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
+from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
 from app.runtime import SageRuntimeContext
@@ -60,12 +61,14 @@ def make_node_retrieve_context(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("retrieve_context.missing_target_step")
+            update = {
+                "messages": [
+                    AIMessage(content="Unable to determine retrieval target.")
+                ]
+            }
+            validate_state_update(update)
             return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Unable to determine retrieval target.")
-                    ]
-                },
+                update=update,
                 goto=goto,
             )
         collection_name = collection or target_phase
@@ -100,14 +103,17 @@ def make_node_retrieve_context(
         # Update phase entry
         phase_entry = state.phases.get(target_phase) or PhaseEntry()
         phase_entry.evidence = evidence
-        state.phases[target_phase] = phase_entry
+        phases = dict(state.phases)
+        phases[target_phase] = phase_entry
 
         message = f"Retrieved {len(evidence)} context items."
+        update = {
+            "phases": phases,
+            "messages": [AIMessage(content=message)],
+        }
+        validate_state_update(update)
         return Command(
-            update={
-                "phases": state.phases,
-                "messages": [AIMessage(content=message)],
-            },
+            update=update,
             goto=goto,
         )
 

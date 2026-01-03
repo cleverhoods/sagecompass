@@ -15,6 +15,8 @@ from langchain_core.prompts import (
 )
 from pydantic import BaseModel
 
+from app.platform.contract.prompts import validate_prompt_placeholders
+
 PromptLike = str | ChatPromptTemplate | SystemMessagePromptTemplate | BasePromptTemplate
 PromptSource = PromptLike | Callable[[ModelRequest], PromptLike]
 
@@ -83,6 +85,7 @@ def make_dynamic_prompt_middleware(
         values = _values_from_request(request)
 
         if isinstance(prompt_obj, str):
+            validate_prompt_placeholders(prompt_obj, placeholders)
             text = _apply_placeholders_to_string(prompt_obj, values, placeholders)
             return SystemMessage(content=text)
 

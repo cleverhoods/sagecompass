@@ -15,6 +15,11 @@ from langgraph.types import Command
 
 from app.agents.ambiguity_scan.agent import build_agent  # lazy import to respect SRP
 from app.agents.ambiguity_scan.schema import OutputSchema
+from app.platform.contract.structured_output import (
+    extract_structured_response,
+    validate_structured_response,
+)
+from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (
     get_latest_user_input,
@@ -77,14 +82,11 @@ def make_node_ambiguity_scan(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_scan.missing_target_step")
-            return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Unable to determine ambiguity scan target.")
-                    ]
-                },
-                goto=goto,
-            )
+            update = {
+                "messages": [AIMessage(content="Unable to determine ambiguity scan target.")]
+            }
+            validate_state_update(update)
+            return Command(update=update, goto=goto)
         importance_limit = Decimal(str(importance_threshold))
         confidence_limit = Decimal(str(confidence_threshold))
 
@@ -148,9 +150,7 @@ def make_node_ambiguity_scan(
         }
 
         result = agent.invoke(agent_input)
-        structured = (
-            result.get("structured_response") if isinstance(result, dict) else None
-        )
+        structured = extract_structured_response(result)
 
         if structured is None:
             logger.warning("agent.missing_structured_response", phase=target_phase)
@@ -161,14 +161,15 @@ def make_node_ambiguity_scan(
             }
             state.phases[target_phase] = phase_entry
             state.errors.append(f"{target_phase}: missing structured_response")
+            update = {"phases": state.phases, "errors": state.errors}
+            validate_state_update(update)
             return Command(
-                update={"phases": state.phases, "errors": state.errors},
+                update=update,
                 goto=goto,
             )
 
         # Enforce schema
-        if not isinstance(structured, OutputSchema):
-            structured = OutputSchema.model_validate(structured)
+        structured = validate_structured_response(structured, OutputSchema)
 
         ambiguities = structured.ambiguities
         high_priority = [
@@ -204,16 +205,13 @@ def make_node_ambiguity_scan(
                     "exhausted": False,
                 }
             )
-            return Command(
-                update={
-                    "ambiguity": resolved_context,
-                    "phases": state.phases,
-                    "messages": [
-                        AIMessage(content="No high-priority ambiguities detected.")
-                    ],
-                },
-                goto=goto,
-            )
+            update = {
+                "ambiguity": resolved_context,
+                "phases": state.phases,
+                "messages": [AIMessage(content="No high-priority ambiguities detected.")],
+            }
+            validate_state_update(update)
+            return Command(update=update, goto=goto)
 
         updated_context = base_context.model_copy(
             update={
@@ -233,13 +231,12 @@ def make_node_ambiguity_scan(
             else f"Ambiguities detected: {len(ambiguities)}."
         )
 
-        return Command(
-            update={
-                "ambiguity": updated_context,
-                "phases": state.phases,
-                "messages": [AIMessage(content=summary)],
-            },
-            goto=goto,
-        )
+        update = {
+            "ambiguity": updated_context,
+            "phases": state.phases,
+            "messages": [AIMessage(content=summary)],
+        }
+        validate_state_update(update)
+        return Command(update=update, goto=goto)
 
     return node_ambiguity_scan

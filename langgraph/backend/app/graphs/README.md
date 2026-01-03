@@ -1,4 +1,4 @@
-# `graphs/` — Graph Composition (Main Graph + Phase Subgraphs)
+# `graphs/` — Graph Composition (Main Graph + Subgraphs)
 
 Graphs are **composition-only**: they wire nodes and control flow. No business logic.
 
@@ -7,7 +7,8 @@ Graphs are **composition-only**: they wire nodes and control flow. No business l
 
 ## What goes here
 - `graph.py`: main SageCompass graph
-- `phases/<phase>/`: phase subgraphs (each with a contract + subgraph builder)
+- `subgraphs/phases/<phase>/`: phase subgraphs (each with a contract + subgraph builder)
+- `subgraphs/<name>/`: non-phase subgraphs (e.g., ambiguity_preflight)
 - `write_graph.py`: vector-store writer graph (if applicable)
 
 ## Key docs

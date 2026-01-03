@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from app.graphs.phases.ambiguity_preflight.subgraph import (
+from app.graphs.subgraphs.ambiguity_preflight.subgraph import (
     build_ambiguity_preflight_subgraph,
 )
-from app.graphs.phases.contract import PhaseContract
+from app.graphs.subgraphs.phases.contract import PhaseContract
 from app.state.ambiguity import AmbiguityContext
 
 ambiguity_preflight_contract = PhaseContract(

@@ -8,7 +8,7 @@ from langchain_core.documents import Document
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable
 
-from app.graphs.phases.ambiguity_preflight.subgraph import (
+from app.graphs.subgraphs.ambiguity_preflight.subgraph import (
     build_ambiguity_preflight_subgraph,
 )
 from app.nodes import (

@@ -10,7 +10,8 @@ from langgraph.graph import START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 
-from app.graphs.phases import PHASES
+from app.graphs.subgraphs.phases import PHASES
+from app.platform.contract.phases import validate_phase_registry
 from app.runtime import SageRuntimeContext
 from app.state import SageState
 
@@ -44,6 +45,8 @@ def build_main_app(
         A compiled LangGraph instance with phase subgraphs attached.
     """
     graph = StateGraph(SageState, context_schema=SageRuntimeContext)
+
+    validate_phase_registry(PHASES)
 
     # Add control nodes
     graph.add_node("supervisor", _as_runtime_node(supervisor_node))  # type: ignore[call-overload]

@@ -21,7 +21,7 @@ This folder contains the LangGraph backend application code: state, graphs, node
 #### `graphs/`
 - Graph composition only (no business logic).
 - Main graph lives in `graphs/graph.py`.
-- Phase subgraphs live in `graphs/phases/<phase>/`.
+- Phase subgraphs live in `graphs/subgraphs/phases/<phase>/`.
 - Each phase must have a `contract.py` describing the PhaseContract.
 
 #### `nodes/`
@@ -61,20 +61,22 @@ app/
 ├── agents/                         -> Read provided app/agents/README.md
 │   └── ...
 ├── graphs/                         -> All graphs/subgraphs location. 
-│   ├── phases/                     -> Phase subgraphs.
-│   │   ├── problem_framing/
-│   │   │   ├── contract.py
-│   │   │   └── subgraph.py
+│   ├── subgraphs/                   -> Subgraph library.
 │   │   ├── ambiguity_preflight/
 │   │   │   ├── contract.py
 │   │   │   └── subgraph.py
-│   │   └── contract.py             -> Phase subgraph contract.
+│   │   └── phases/
+│   │       ├── problem_framing/
+│   │       │   ├── contract.py
+│   │       │   └── subgraph.py
+│   │       └── contract.py         -> Phase subgraph contract.
 │   ├── README.md
 │   ├── graph.py                    -> Main graph of SageCompass
 │   └── write_graph.py              -> VectorStore writer graph
 ├── middlewares/
 │   └── dynamic_prompt.py           -> Prompt middleware for few-shots generation.
 ├── platform/
+│   ├── contract/                   -> Typed contracts + validators for backend invariants.
 │   ├── config/                     -> Env loading, file loaders, and path conventions.
 │   ├── observability/              -> Logging + debugging helpers.
 │   ├── policy/                     -> Policy engine functions used by nodes/middlewares.

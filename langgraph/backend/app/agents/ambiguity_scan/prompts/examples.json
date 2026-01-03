@@ -4,7 +4,7 @@
     "output": {
       "ambiguities": [
         {
-          "key": "channel_scope",
+          "key": ["channels", "scope", "coverage"],
           "description": "Which channels are included in 'customer support'?",
           "clarifying_question": "Does this include email, chat, and phone support?",
           "resolution_assumption": "Assume all major support channels are in scope.",

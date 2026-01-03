@@ -3,6 +3,8 @@
 ## [Unreleased]
 ### Added
 - [langgraph/backend] Add a bounded OpenAI integration test for Problem Framing with explicit API key checks.
+- [langgraph/backend] Add platform contract models for artifacts, namespaces, and prompt validation.
+- [langgraph/backend] Add contract helpers for state ownership, phases, agents, guardrails, tool allowlists, and structured outputs.
 - [langgraph/backend] Add an `ambiguity_supervisor` node to centralize ambiguity preflight routing.
 - [langgraph/backend] Introduce `ClarificationContext` plus runtime helpers to reset global clarification state for the preflight routing flow.
 - [langgraph/backend] Add an integration test that exercises guardrails -> ambiguity scan -> retrieval -> clarification -> phase supervisor routing.
@@ -37,7 +39,11 @@
 
 ### Changed
 - [langgraph/backend] Disable HILP routing in ambiguity preflight so clarification always uses the internal agent loop.
-- [docs] Document OpenAI integration test requirements in backend RULES and tests guidance.
+- [langgraph/backend] Validate SageState updates in ambiguity supervisor, retrieval, phase supervisor, and external clarification nodes.
+- [langgraph/backend] Remove legacy `graphs/phases` and tests directories after the subgraph layout move.
+- [docs] Document OpenAI integration test requirements in backend tests guidance and reference it from RULES.
+- [docs] Compress backend RULES into a policy index that points to contract implementations.
+- [langgraph/backend] Move phase and non-phase subgraphs under `app/graphs/subgraphs/` and update imports/docs.
 - [langgraph/backend] Represent ambiguity keys as three-category lists and update clarification flow to track the new labels.
 - [langgraph/backend] Route ambiguity clarification to internal vs external nodes based on `hilp_enabled`, with a placeholder external path that ends the graph.
 - [langgraph/backend] Move ambiguity preflight routing into a reusable phase subgraph and route the supervisor through it.

@@ -12,6 +12,11 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.problem_framing.schema import ProblemFrame
+from app.platform.contract.structured_output import (
+    extract_structured_response,
+    validate_structured_response,
+)
+from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
 from app.runtime import SageRuntimeContext
@@ -113,7 +118,7 @@ def make_node_problem_framing(
         }
 
         result = agent.invoke(agent_input)
-        pf = result.get("structured_response") if isinstance(result, dict) else None
+        pf = extract_structured_response(result)
 
         if pf is None:
             logger.warning("problem_framing.structural_response_missing", phase=phase)
@@ -124,13 +129,11 @@ def make_node_problem_framing(
             }
             state.phases[phase] = phase_entry
             state.errors.append(f"{phase}: missing structured_response")
-            return Command(
-                update={"phases": state.phases, "errors": state.errors},
-                goto=goto,
-            )
+            update = {"phases": state.phases, "errors": state.errors}
+            validate_state_update(update)
+            return Command(update=update, goto=goto)
 
-        if not isinstance(pf, ProblemFrame):
-            pf = ProblemFrame.model_validate(pf)
+        pf = validate_structured_response(pf, ProblemFrame)
 
         logger.info("problem_framing.success", phase=phase)
 
@@ -140,6 +143,8 @@ def make_node_problem_framing(
             evidence=evidence,
         )
 
-        return Command(update={"phases": state.phases}, goto=goto)
+        update = {"phases": state.phases}
+        validate_state_update(update)
+        return Command(update=update, goto=goto)
 
     return node_problem_framing

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from app.graphs.phases.problem_framing.subgraph import build_problem_framing_subgraph
+from app.graphs.subgraphs.phases.problem_framing.subgraph import (
+    build_problem_framing_subgraph,
+)
 
 
 def test_problem_framing_subgraph_routes_via_phase_supervisor() -> None:

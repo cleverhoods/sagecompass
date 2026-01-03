@@ -10,7 +10,8 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from app.platform.config.file_loader import FileLoader
 from app.platform.observability.logger import get_logger
-from app.platform.policy.guardrails import GuardrailsConfig, build_guardrails_config, evaluate_guardrails
+from app.platform.contract.guardrails import evaluate_guardrails_contract
+from app.platform.policy.guardrails import GuardrailsConfig, build_guardrails_config
 
 logger = get_logger("middlewares.guardrails")
 
@@ -39,7 +40,10 @@ class GuardrailsMiddleware(AgentMiddleware):
         if not user_text:
             return None
 
-        result = evaluate_guardrails(user_text, self._config)
+        result = evaluate_guardrails_contract(
+            user_text,
+            {"allowed_topics": self._config.allowed_topics, "blocked_keywords": self._config.blocked_keywords},
+        )
         if result.is_safe and result.is_in_scope:
             return None
 

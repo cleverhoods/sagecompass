@@ -11,6 +11,7 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import ClarificationResponse
+from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (
     get_current_clarifying_question,
@@ -58,20 +59,26 @@ def make_node_ambiguity_clarification_external(
         target_phase = phase or ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_clarification_external.missing_target_step")
+            update = {
+                "messages": [
+                    AIMessage(content="Unable to determine clarification target.")
+                ]
+            }
+            validate_state_update(update)
             return Command(
-                update={
-                    "messages": [
-                        AIMessage(content="Unable to determine clarification target.")
-                    ]
-                },
+                update=update,
                 goto=END,
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)
         if not pending_keys:
             logger.info("ambiguity_clarification_external.no_pending", phase=target_phase)
+            update = {
+                "messages": [AIMessage(content="Clarification complete.")]
+            }
+            validate_state_update(update)
             return Command(
-                update={"messages": [AIMessage(content="Clarification complete.")]},
+                update=update,
                 goto=END,
             )
 
@@ -101,11 +108,13 @@ def make_node_ambiguity_clarification_external(
             }
         )
 
+        update = {
+            "ambiguity": updated_context,
+            "messages": [AIMessage(content=message)],
+        }
+        validate_state_update(update)
         return Command(
-            update={
-                "ambiguity": updated_context,
-                "messages": [AIMessage(content=message)],
-            },
+            update=update,
             goto=END,
         )
 

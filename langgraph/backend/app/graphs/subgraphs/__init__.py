@@ -1,0 +1,1 @@
+"""Subgraph library for SageCompass."""
