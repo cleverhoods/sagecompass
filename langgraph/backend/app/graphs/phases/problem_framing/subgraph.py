@@ -23,8 +23,14 @@ def build_problem_framing_subgraph() -> CompiledStateGraph[SageState]:
     """
     Phase Subgraph: problem_framing
 
-    - Handles retrieval, ambiguity detection, clarification loop, and framing agent
-    - Ends when a valid ProblemFrame has been produced
+    Purpose:
+        Wire retrieval, ambiguity detection, clarification, and framing nodes.
+
+    Side effects/state writes:
+        None (graph wiring only).
+
+    Returns:
+        A compiled phase subgraph for problem framing.
     """
     graph = StateGraph(SageState)
     phase = "problem_framing"

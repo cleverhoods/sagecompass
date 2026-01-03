@@ -36,6 +36,7 @@ def make_dynamic_prompt_middleware(
     output_schema: Type[BaseModel] | None = None,
 ) -> AgentMiddleware:
     """Return an AgentMiddleware that renders the prompt from SageState at runtime."""
+    # Invariant: placeholders are injected at runtime so prompt suffix ordering stays intact.
 
     parser = PydanticOutputParser(pydantic_object=output_schema) if output_schema is not None else None
 

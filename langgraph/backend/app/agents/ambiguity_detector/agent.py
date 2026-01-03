@@ -26,6 +26,11 @@ def _logger():
 
 
 class AmbiguityDetectorAgentConfig(BaseModel):
+    """Configuration for the Ambiguity Detector agent build.
+
+    Assumptions:
+        If model is not provided, ProviderFactory supplies a default instance.
+    """
     model: BaseChatModel | None = None
 
     _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)

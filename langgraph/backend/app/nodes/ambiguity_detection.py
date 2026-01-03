@@ -27,10 +27,20 @@ def make_node_ambiguity_detection(
 ) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor"]]]:
     """
     Node: ambiguity_detection
-    - Detects ambiguity in the current phase (e.g., problem_framing)
-    - Invokes the ambiguity detection agent and stores its output
-    - Updates: state.phases[phase] with ProblemFrame
-    - Goto: supervisor
+    Purpose:
+        Detect ambiguity for the current phase using the ambiguity detector agent.
+
+    Args:
+        node_agent: Optional injected agent runnable.
+        phase: Phase key to update in `state.phases`.
+        max_context_items: Max evidence items to hydrate into context.
+
+    Side effects/state writes:
+        Updates `state.phases[phase]` with structured `ProblemFrame` output
+        and appends to `state.errors` on failure.
+
+    Returns:
+        A Command routing back to `supervisor`.
     """
 
     agent = node_agent or build_agent()
@@ -113,7 +123,10 @@ def make_node_ambiguity_detection(
             }
             state.phases[phase] = phase_entry
             state.errors.append(f"{phase}: missing structured_response")
-            return Command(update=state.model_dump(), goto="supervisor")
+            return Command(
+                update={"phases": state.phases, "errors": state.errors},
+                goto="supervisor",
+            )
 
         # Enforce schema
         if not isinstance(pf, ProblemFrame):

@@ -26,6 +26,11 @@ def _logger():
 
 
 class ProblemFramingAgentConfig(BaseModel):
+    """Configuration for the Problem Framing agent build.
+
+    Assumptions:
+        If model is not provided, ProviderFactory supplies a default instance.
+    """
     model: BaseChatModel | None = None
 
     _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)

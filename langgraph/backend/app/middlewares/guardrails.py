@@ -22,6 +22,7 @@ def _latest_user_text(messages: Iterable[object]) -> str:
 
 
 class GuardrailsMiddleware(AgentMiddleware):
+    """Enforce guardrails and tool allowlists at model/tool boundaries."""
     def __init__(
         self,
         config: GuardrailsConfig,
@@ -92,7 +93,10 @@ def make_guardrails_middleware(
     allowed_tools: Sequence[str] | None = None,
     config: GuardrailsConfig | None = None,
 ) -> GuardrailsMiddleware:
+    """Build guardrails middleware with a normalized config and tool allowlist."""
+    # Expectation: config is loaded once at middleware construction to keep runtime deterministic.
     if config is None:
         raw = FileLoader.load_guardrails_config() or {}
         config = build_guardrails_config(raw)
+    # Invariant: allowlist must include any structured output tool name when response_format is used.
     return GuardrailsMiddleware(config=config, allowed_tools=allowed_tools)

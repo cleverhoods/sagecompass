@@ -6,6 +6,9 @@ from typing import List
 class ClarificationResponse(BaseModel):
     """
     Final clarified result from the Clarification Agent.
+
+    Invariants:
+        clarified_input is non-empty when a clarification message is returned.
     """
     clarified_input: str = Field(
         ...,

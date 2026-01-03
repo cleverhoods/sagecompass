@@ -19,6 +19,18 @@ class ProviderFactory:
 
     @staticmethod
     def for_agent(agent_name: str = None):
+        """
+        Instantiate a provider model for an agent using config + env.
+
+        Args:
+            agent_name: Optional agent name for per-agent overrides.
+
+        Side effects/state writes:
+            Loads environment variables and reads provider config files.
+
+        Returns:
+            Tuple of (provider instance, merged params).
+        """
         logger = get_logger("utils.provider_config")
         try:
             load_project_env()

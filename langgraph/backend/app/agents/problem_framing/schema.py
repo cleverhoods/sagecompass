@@ -7,6 +7,11 @@ from decimal import Decimal
 # --- Problem framing ---
 
 class ProblemFrame(BaseModel):
+    """Structured summary of the framed business problem and confidence.
+
+    Invariants:
+        Confidence is a decimal between 0.01 and 0.99.
+    """
     business_domain: str = Field(
         ...,
         description="Short description of the business or functional domain (e.g. e-commerce retention)."

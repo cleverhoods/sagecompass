@@ -25,9 +25,19 @@ def make_node_retrieve_context(
 ) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor"]]]:
     """
     Node: retrieve_context
-    - Uses a context_lookup tool to fetch relevant documents from vector DB
-    - Updates: state.phases[phase].evidence
-    - Goto: supervisor
+    Purpose:
+        Fetch relevant context from the vector store using a lookup tool.
+
+    Args:
+        tool: DI-injected lookup tool runnable.
+        phase: Phase key to update in `state.phases`.
+        collection: Store namespace segment used for retrieval.
+
+    Side effects/state writes:
+        Updates `state.phases[phase].evidence` with retrieved EvidenceItem entries.
+
+    Returns:
+        A Command routing back to `supervisor`.
     """
     tool = tool or context_lookup
     def node_retrieve_context(

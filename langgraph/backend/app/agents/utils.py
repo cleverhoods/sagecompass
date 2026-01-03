@@ -81,6 +81,14 @@ def compose_agent_prompt(
     include_format_instructions: bool = False,
     output_schema: Type[BaseModel] | None = None,
 ) -> str:
+    """Compose an agent system prompt from prompt files and optional few-shots.
+
+    Prompt contracts:
+    - `system.prompt` is required for each agent.
+    - `few-shots` is a directive that requires `few-shots.prompt` + `examples.json`.
+    - `examples.json` must include >=1 real example and a trailing stub with
+      `task_input == "{task_input}"` and empty output.
+    """
     parts: list[str] = []
 
     # Treat "few-shots" as a directive, not a prompt file.
@@ -158,6 +166,7 @@ def build_tool_allowlist(
     tools: Sequence[BaseTool],
     response_schema: Type[BaseModel] | None = None,
 ) -> list[str]:
+    """Return allowed tool names, including the structured output tool name if present."""
     allowlist = [tool.name for tool in tools]
     if response_schema is not None:
         allowlist.append(response_schema.__name__)

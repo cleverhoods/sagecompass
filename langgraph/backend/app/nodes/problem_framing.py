@@ -26,9 +26,20 @@ def make_node_problem_framing(
 ) -> Callable[[SageState, Runtime | None], Command[Literal["supervisor"]]]:
     """
     Node: problem_framing
-    - Runs the Problem Framing agent with retrieved context
-    - Updates: phases[phase] with structured ProblemFrame output
-    - Goto: supervisor
+    Purpose:
+        Run the Problem Framing agent with retrieved context.
+
+    Args:
+        agent: Runnable agent to invoke for problem framing.
+        phase: Phase key to update in `state.phases`.
+        max_context_items: Max evidence items to hydrate into context.
+
+    Side effects/state writes:
+        Updates `state.phases[phase]` with structured `ProblemFrame` output
+        and appends to `state.errors` on failure.
+
+    Returns:
+        A Command routing back to `supervisor`.
     """
 
     def node_problem_framing(
@@ -97,7 +108,10 @@ def make_node_problem_framing(
             }
             state.phases[phase] = phase_entry
             state.errors.append(f"{phase}: missing structured_response")
-            return Command(update=state.dict(), goto="supervisor")
+            return Command(
+                update={"phases": state.phases, "errors": state.errors},
+                goto="supervisor",
+            )
 
         if not isinstance(pf, ProblemFrame):
             pf = ProblemFrame.model_validate(pf)

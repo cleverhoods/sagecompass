@@ -16,7 +16,7 @@ from app.utils.logger import configure_logging
 
 
 def _bootstrap() -> None:
-    """Run shared system setup."""
+    """Run shared system setup (logging + env load)."""
     configure_logging()
     load_project_env()
 
@@ -25,6 +25,12 @@ def build_app() -> CompiledStateGraph:
     """
     Factory for SageCompass main reasoning graph.
     This should be used in all internal code, tests, and LangServe integrations.
+
+    Side effects/state writes:
+        Initializes logging and loads environment variables.
+
+    Returns:
+        A compiled SageCompass LangGraph instance.
     """
     _bootstrap()
 
@@ -41,12 +47,23 @@ def get_app() -> CompiledStateGraph:
     """
     External runner entrypoint (e.g., LangGraph CLI, langgraph.yaml).
     Must always return a fresh compiled LangGraph instance.
+
+    Returns:
+        A compiled SageCompass LangGraph instance.
     """
     return build_app()
 
 
 def build_vector_write_graph() -> CompiledStateGraph:
-    """Build vector writer LangGraph."""
+    """
+    Build vector writer LangGraph.
+
+    Side effects/state writes:
+        Initializes logging and loads environment variables.
+
+    Returns:
+        A compiled vector write graph instance.
+    """
     _bootstrap()
     return build_write_graph()
 
@@ -55,5 +72,8 @@ def get_vector_write_graph() -> CompiledStateGraph:
     """
     External runner entrypoint for vector writing graph.
     Must always return a fresh compiled LangGraph instance.
+
+    Returns:
+        A compiled vector write graph instance.
     """
     return build_vector_write_graph()

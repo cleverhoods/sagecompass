@@ -15,11 +15,37 @@ This is the canonical reference for architecture and engineering rules for SageC
 - Prefer **explicit state + explicit routing** over “prompt magic”.
 - Keep graphs **inspectable**: topology explains behavior.
 - Design for **testability**: DI-first, deterministic boundaries, typed outputs.
+- Document contracts at the boundary:
+  - Every `pydantic.BaseModel` (especially `SageState`, phase entries, and OutputSchema models) MUST have a clear class docstring describing purpose, invariants, and assumptions.
+  - Shared utility functions and node/graph factory functions MUST have docstrings describing purpose, key args, expected side effects/state writes, and return values.
+- Prompt files are first-class assets:
+  - Prompt contracts (placeholders, suffix ordering, `examples.json` requirements) MUST be documented **in code** at the load/compose boundary.
+- No ambiguous “magic values”:
+  - State keys and sentinel values MUST be centralized as typed model fields (preferred) or as well-named constants/enums close to their use.
+  - Do not treat `SageState` as a dict (no `model_dump().get(...)` / `getattr(..., default)` fallbacks); define Pydantic defaults so typed attributes are always safe to read.
+- Middleware behavior MUST be transparent:
+  - Custom middleware factories MUST include inline comments explaining runtime expectations/invariants (e.g., prompt suffix must come last; placeholders are injected late; what may/may not be mutated).
 
 ### SHOULD
 - Keep each module single-purpose; factor shared logic into utilities or policies.
 
 ---
+
+## 0.1) Tooling and quality gates
+
+Tool configuration is centralized in `pyproject.toml` (single source of truth). Do not duplicate tool settings in ad-hoc config files unless explicitly justified.
+
+### MUST
+- Run these checks before proposing changes:
+  - Lint/format: `uv run poe lint`
+  - Type-check: `uv run poe type`
+  - Unit tests (default/offline): `uv run pytest`
+- Pytest markers MUST be registered under `[tool.pytest.ini_options]` and enforced with strict markers (unknown markers fail CI).
+
+### SHOULD
+- Keep optional lanes available and bounded:
+  - Real-deps lane: `uv run pytest -m real_deps`
+  - Integration lane (opt-in): `uv run pytest -m integration` (requires API keys)
 
 ## 1) Documentation and Version Alignment (UV Lock Discipline)
 
@@ -198,18 +224,18 @@ Guardrails are layered and share a single policy engine.
 
 ## 12) Testing (fast, meaningful, and bounded)
 
-SageCompass follows the LangChain testing approach for agentic systems: **fast deterministic unit tests** plus **targeted, bounded integration tests** for behaviors that only emerge with real providers. :contentReference[oaicite:0]{index=0}
+SageCompass follows the LangChain testing approach for agentic systems: **fast deterministic unit tests** plus **targeted, bounded integration tests** for behaviors that only emerge with real providers.
 
 ### MUST (Test against real pinned frameworks — no shadow stubs)
 - Tests MUST run against the **real installed** LangChain/LangGraph/Pydantic packages pinned by `uv.lock`.
 - Do NOT shadow/replace framework packages via `sys.path` tricks or a `tests/stubs/` shim (this breaks version alignment and can make tests pass while runtime fails).
-- “Offline” means **no network calls**, not “no framework”: use deterministic fakes and in-memory persistence instead. :contentReference[oaicite:1]{index=1}
+- “Offline” means **no network calls**, not “no framework”: use deterministic fakes and in-memory persistence instead.
 
 ### MUST (Prefer standard fakes + standard tests)
 - Prefer **LangChain/LangGraph-provided fakes and standard test suites** over custom stubs whenever possible:
-  - Chat models: `GenericFakeChatModel` (deterministic) :contentReference[oaicite:2]{index=2}
-  - Embeddings: `FakeEmbeddings` (deterministic embeddings for pipelines) :contentReference[oaicite:3]{index=3}
-  - Tools: adopt `langchain_tests.unit_tests.tools.ToolsUnitTests` for custom tool implementations :contentReference[oaicite:4]{index=4}
+  - Chat models: `GenericFakeChatModel` (deterministic)
+  - Embeddings: `FakeEmbeddings` (deterministic embeddings for pipelines)
+  - Tools: adopt `langchain_tests.unit_tests.tools.ToolsUnitTests` for custom tool implementations
 - Keep custom stubs only when framework fakes/standard tests cannot represent the needed behavior; **document why** in the test.
 
 ### MUST (Unit tests: deterministic, fast)
@@ -218,9 +244,9 @@ SageCompass follows the LangChain testing approach for agentic systems: **fast d
   - state helper utilities
   - node logic that does not require network calls (with DI-injected fakes)
 - Mock chat models using an in-memory fake:
-  - Use `GenericFakeChatModel` for deterministic responses and tool-call simulation. :contentReference[oaicite:5]{index=5}
+  - Use `GenericFakeChatModel` for deterministic responses and tool-call simulation.
 - When testing stateful / multi-turn behavior, use an in-memory checkpointer:
-  - Use `InMemorySaver` (or equivalent in-memory saver) to simulate persisted turns and verify state-dependent routing. :contentReference[oaicite:6]{index=6}
+  - Use `InMemorySaver` (or equivalent in-memory saver) to simulate persisted turns and verify state-dependent routing.
 
 ### MUST (Integration tests: real behavior, bounded scope)
 - Maintain a small set of integration tests that run with real providers to verify:
@@ -239,7 +265,7 @@ SageCompass follows the LangChain testing approach for agentic systems: **fast d
   - proposed explicitly
   - added as **dev/test-only** dependencies (not runtime)
   - pinned via `uv.lock`
-  - referenced with official docs/release notes in the PR description :contentReference[oaicite:7]{index=7}
+  - referenced with official docs/release notes in the PR description
 
 ### SHOULD (Layout for clarity)
 - Prefer organizing tests into:
@@ -248,9 +274,7 @@ SageCompass follows the LangChain testing approach for agentic systems: **fast d
 - Within each lane, mirroring the `app/` component layout is encouraged (agents/nodes/graphs/tools/middlewares) for navigability.
 
 ### SHOULD (Stability and reproducibility)
-- Where integration tests are sensitive to external flakiness, use record/replay of HTTP calls to stabilize CI runs (while maintaining at least one live smoke test in a controlled environment). :contentReference[oaicite:8]{index=8}
-- Organize tests into `tests/unit/**` and `tests/integration/**`.
-- Within each lane, mirror the `app/` component layout for clarity (subset allowed in integration).
+- Where integration tests are sensitive to external flakiness, use record/replay of HTTP calls to stabilize CI runs (while maintaining at least one live smoke test in a controlled environment).
 - Avoid asserting exact free-form text; prefer:
   - structured schema fields
   - tool call presence/arguments

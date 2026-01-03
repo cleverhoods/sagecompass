@@ -10,6 +10,9 @@ def get_latest_user_input(messages: list[AnyMessage]) -> Optional[str]:
     """
     Finds the most recent HumanMessage in the message stream.
 
+    Args:
+        messages: Message history for the current thread.
+
     Returns:
         The content of the most recent user message, or None if not found.
     """
@@ -20,8 +23,13 @@ def get_latest_user_input(messages: list[AnyMessage]) -> Optional[str]:
 
 def phase_to_node(phase: str) -> str:
     """
-    Maps each agentic phase to its entry node.
-    Update this as new phases are added.
+    Map a phase name to its entry node.
+
+    Args:
+        phase: Phase identifier.
+
+    Returns:
+        Graph node name for the phase entry.
     """
     mapping = {
         "problem_framing": "problem_framing",
@@ -33,6 +41,13 @@ def phase_to_node(phase: str) -> str:
 
 def reset_clarification_session(state: SageState, phase: str) -> list[ClarificationSession]:
     """
-    Removes the clarification session for the given phase.
+    Remove the clarification session for the given phase.
+
+    Args:
+        state: Current SageState.
+        phase: Phase identifier to remove.
+
+    Returns:
+        Updated clarification session list without the target phase.
     """
     return [s for s in state.clarification if s.phase != phase]

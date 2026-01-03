@@ -30,6 +30,8 @@
 
 
 ### Changed
+- [langgraph/backend] Add required docstrings and clarify middleware/prompt contracts to match updated RULES.md.
+- [langgraph/backend] Enforce strict pytest markers and register the real_deps marker in pytest config.
 - [langgraph/backend] Extend PhaseContract with `retrieval_enabled` to match phase flag requirements.
 - [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)

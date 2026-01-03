@@ -23,6 +23,21 @@ class FileLoader:
         loader=None,
         category: str = "file",
     ):
+        """
+        Read a file and optionally parse it via a loader.
+
+        Args:
+            file_path: Absolute path to the file.
+            mode: File open mode.
+            loader: Optional callable to parse the file handle.
+            category: Log category for observability.
+
+        Side effects/state writes:
+            Performs filesystem reads and emits structured logs.
+
+        Returns:
+            Parsed data if successful, otherwise False.
+        """
         logger = cls._logger()
         try:
             with open(file_path, mode, encoding="utf-8") as f:
@@ -48,6 +63,9 @@ class FileLoader:
         Load a YAML file relative to APP_ROOT (app/).
 
         Example: load_yaml("agents/problem_framing/config.yaml")
+
+        Returns:
+            Parsed YAML data or False if missing/invalid.
         """
         file_path = os.path.join(APP_ROOT, relative_path)
         return cls._read_file(file_path, loader=yaml.safe_load, category=category)
@@ -57,7 +75,12 @@ class FileLoader:
     @classmethod
     @lru_cache(maxsize=None)
     def load_prompt(cls, prompt_name: str, agent_name: str | None = None):
-        """Loads a specific .prompt file for a given agent (legacy)."""
+        """Load a .prompt file for a given agent.
+
+        Prompt contracts:
+        - `system.prompt` is required for every agent.
+        - few-shots require `few-shots.prompt` + `examples.json` in the agent prompts folder.
+        """
         if agent_name is None:
             file_path = os.path.join(
                 AGENTS_DIR, f"{prompt_name}.prompt"
@@ -70,7 +93,16 @@ class FileLoader:
 
     @classmethod
     def resolve_agent_prompt_path(cls, prompt_name: str, agent_name: str) -> Path:
-        """Resolve the path to an agent prompt and ensure it exists."""
+        """
+        Resolve the path to an agent prompt and ensure it exists.
+
+        Args:
+            prompt_name: Prompt filename without extension.
+            agent_name: Agent folder name.
+
+        Returns:
+            Path to the prompt file.
+        """
 
         prompt_path = AGENTS_DIR / agent_name / "prompts" / f"{prompt_name}.prompt"
         if not prompt_path.exists():
@@ -92,6 +124,9 @@ class FileLoader:
     def load_agent_config(cls, agent_name: str):
         """
         Loads agents/<agent_name>/config.yaml from app/.
+
+        Returns:
+            Parsed YAML data or False if missing/invalid.
         """
         path = os.path.join(APP_ROOT, "agents", agent_name, "config.yaml")
         return cls._read_file(path, loader=yaml.safe_load, category="agent.config")
@@ -103,6 +138,9 @@ class FileLoader:
         Loads config/provider/<provider>.yaml from the top-level config/ dir.
 
         This no longer assumes config lives under app/; it uses CONFIG_DIR.
+
+        Returns:
+            Parsed YAML data or False if missing/invalid.
         """
         category = "provider"
         provider_dir = CONFIG_DIR / category
@@ -116,6 +154,9 @@ class FileLoader:
     def load_guardrails_config(cls):
         """
         Loads guardrails.yaml from the top-level config/ dir.
+
+        Returns:
+            Parsed YAML data or False if missing/invalid.
         """
         file_path = CONFIG_DIR / "guardrails.yaml"
         return cls._read_file(

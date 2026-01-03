@@ -14,14 +14,19 @@ from app.utils.logger import get_logger
 def make_node_supervisor() -> Callable[[SageState, Runtime | None], Command[str]]:
     """
     Node: supervisor (global)
-    - Handles top-level orchestration and phase routing
-    - Checks: guardrails, unresolved clarifications, pending phases
-    - Goto: phase subgraph entry or END
+    Purpose:
+        Handle top-level orchestration and phase routing.
+
+    Side effects/state writes:
+        None (routing only).
+
+    Returns:
+        A Command routing to the next phase subgraph entry or END.
     """
     logger = get_logger("nodes.supervisor")
 
     def node_supervisor(state: SageState, runtime: Runtime[SageRuntimeContext] | None = None) -> Command[str]:
-        logger.info("supervisor.entry", state_keys=state.model_dump().keys())
+        logger.info("supervisor.entry", state_keys=state.model_fields.keys())
         from app.utils.phases import get_phase_names
         # 1. Run guardrails if not done yet
         if state.gating.guardrail is None:

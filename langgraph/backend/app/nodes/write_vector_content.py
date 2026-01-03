@@ -11,6 +11,18 @@ from app.utils.logger import get_logger
 
 
 def make_node_write_vector() -> Callable[[VectorWriteState, Runtime | None], Command[Literal[END]]]:
+    """
+    Node: vector_writer
+
+    Purpose:
+        Write vector content items to the LangGraph Store using the vector writer tool.
+
+    Side effects/state writes:
+        Writes to the LangGraph Store via `write_to_vectorstore`.
+
+    Returns:
+        A Command routing to END after processing all items.
+    """
     logger = get_logger("nodes.vector_writer")
 
     def node_write_vector(

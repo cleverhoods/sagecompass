@@ -8,11 +8,13 @@ from app.state.gating import GuardrailResult
 
 @dataclass(frozen=True)
 class GuardrailsConfig:
+    """Normalized guardrails configuration used by policy checks."""
     allowed_topics: tuple[str, ...]
     blocked_keywords: tuple[str, ...]
 
 
 def _normalize_terms(values: Iterable[object] | None) -> tuple[str, ...]:
+    """Normalize topic/keyword inputs into lower-cased tuples."""
     if not values:
         return tuple()
     normalized: list[str] = []
@@ -24,6 +26,7 @@ def _normalize_terms(values: Iterable[object] | None) -> tuple[str, ...]:
 
 
 def build_guardrails_config(raw: Mapping[str, object] | None) -> GuardrailsConfig:
+    """Build a normalized guardrails config from raw YAML/JSON data."""
     data = raw or {}
     allowed = _normalize_terms(data.get("allowed_topics"))
     blocked = _normalize_terms(data.get("blocked_keywords"))
@@ -31,6 +34,7 @@ def build_guardrails_config(raw: Mapping[str, object] | None) -> GuardrailsConfi
 
 
 def evaluate_guardrails(text: str, config: GuardrailsConfig) -> GuardrailResult:
+    """Evaluate safety and scope against normalized guardrail config."""
     normalized = (text or "").lower()
 
     is_safe = not any(keyword in normalized for keyword in config.blocked_keywords)

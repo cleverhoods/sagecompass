@@ -21,9 +21,14 @@ def build_write_graph(
     """
     Graph factory for vector write flow.
 
-    - Keeps the same DI-friendly contract as main_app.
-    - Uses `VectorWriteState`, NOT SageState.
-    - Reuses SageRuntimeContext unless vector write has a separate one later.
+    Args:
+        write_node: Optional DI-injected write node factory.
+
+    Side effects/state writes:
+        None (graph wiring only).
+
+    Returns:
+        A compiled graph that writes vector content and ends.
     """
     graph = StateGraph(VectorWriteState, context_schema=SageRuntimeContext)
 

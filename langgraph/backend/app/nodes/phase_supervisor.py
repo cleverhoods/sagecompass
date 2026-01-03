@@ -34,10 +34,18 @@ def make_node_phase_supervisor(
 ]:
     """
     Node: supervisor
-    - Governs control flow for a given reasoning phase (e.g. problem_framing)
-    - Handles: gate check, retrieval, ambiguity handling, clarification
-    - Updates: none directly, but may reset session
-    - Goto: the next required node, or END if complete
+    Purpose:
+        Govern control flow for a given reasoning phase (e.g., problem_framing).
+
+    Args:
+        phase: Phase key used for status/evidence lookups.
+        retrieve_node: Node name used for retrieval when evidence is missing.
+
+    Side effects/state writes:
+        May reset clarification session entries in `state.clarification`.
+
+    Returns:
+        A Command routing to the next required node or END if complete.
     """
 
     def node_phase_supervisor(

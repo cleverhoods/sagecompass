@@ -22,11 +22,16 @@ def make_node_guardrails_check(
     Node: guardrails_check
 
     Purpose:
-    - Perform deterministic safety & scope validation on raw user input.
-    - Update: state.gating.guardrail
-    - Routing:
-        - Safe + in-scope → supervisor
-        - Unsafe / out-of-scope → END
+        Perform deterministic safety & scope validation on raw user input.
+
+    Args:
+        goto_if_safe: Node name to route to when input is safe and in-scope.
+
+    Side effects/state writes:
+        Updates `state.gating.guardrail` with the guardrail decision.
+
+    Returns:
+        A Command routing to `goto_if_safe` on success or END on failure.
     """
 
     logger = get_logger("nodes.guardrails_check")

@@ -12,6 +12,11 @@ from app.schemas.ambiguities import AmbiguityItem
 # -----------------------------
 
 class GuardrailResult(BaseModel):
+    """Result of guardrail evaluation with safety/scope and reasons.
+
+    Invariants:
+        Reasons list is non-empty (either failure reasons or a pass message).
+    """
     is_safe: bool = Field(
         ...,
         description="Whether the input is safe to process."

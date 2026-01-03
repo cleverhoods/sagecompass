@@ -7,6 +7,11 @@ from typing import Annotated
 
 
 class AmbiguityResolutionAssumption(BaseModel):
+    """Assumption details for resolving a single ambiguity outcome.
+
+    Invariants:
+        impact_value is normalized between 0 and 1.
+    """
     impact_direction: Literal["++", "+", "0", "-", "--"] = Field(
         ...,
         description="Direction and rough magnitude of impact."
@@ -24,6 +29,7 @@ class AmbiguityResolutionAssumption(BaseModel):
 
 
 class AmbiguityResolution(BaseModel):
+    """Resolution mapping for yes/no/unknown responses to a clarifying question."""
     yes: AmbiguityResolutionAssumption = Field(
         ...,
         description=(
@@ -46,6 +52,11 @@ class AmbiguityResolution(BaseModel):
 
 
 class AmbiguityItem(BaseModel):
+    """Structured ambiguity item with question and resolution guidance.
+
+    Invariants:
+        importance and confidence are decimals between 0.01 and 0.99.
+    """
     key: str = Field(
         ...,
         description="Short identifier for the ambiguous aspect."

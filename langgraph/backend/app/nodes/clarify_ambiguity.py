@@ -28,9 +28,19 @@ def make_node_clarify_ambiguity(
 ) -> Callable[[SageState, Runtime | None], Command[Literal["ambiguity_detection", "__end__"]]]:
     """
     Node: clarify_ambiguity
-    - Refines the user's input via clarification agent
-    - Updates: state.clarification (per-phase ClarificationSession)
-    - Goto: ambiguity_detection | __end__ if loop exceeded
+    Purpose:
+        Refine user input via clarification agent and manage clarification session state.
+
+    Args:
+        node_agent: Optional injected clarification agent runnable.
+        phase: Phase key for clarification tracking.
+        max_rounds: Max clarification rounds before ending.
+
+    Side effects/state writes:
+        Updates `state.clarification` with per-phase ClarificationSession entries.
+
+    Returns:
+        A Command routing to `ambiguity_detection` or END when max rounds exceeded.
     """
     agent = node_agent or build_agent()
 

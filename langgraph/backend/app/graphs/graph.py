@@ -24,11 +24,18 @@ def build_main_app(
     """
     Graph factory for the main SageCompass graph.
 
-    Contracts:
-    - No import-time construction (factory only).
-    - Receives dependency-injected node callables.
-    - Only static edge is START -> entry node ("supervisor").
-    - Phases are registered via PHASES registry.
+    Args:
+        supervisor_node: DI-injected supervisor node callable.
+        guardrails_node: DI-injected guardrails gate node callable.
+        retrieve_context_node: DI-injected retrieval node callable.
+        clarify_ambiguity_node: DI-injected clarification node callable.
+        ambiguity_detection_node: DI-injected ambiguity detection node callable.
+
+    Side effects/state writes:
+        None (graph wiring only).
+
+    Returns:
+        A compiled LangGraph instance with phase subgraphs attached.
     """
     graph = StateGraph(SageState)
 
