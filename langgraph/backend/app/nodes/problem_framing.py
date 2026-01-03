@@ -59,29 +59,30 @@ def make_node_problem_framing(
         phase_entry = state.phases.get(phase) or PhaseEntry()
         evidence = list(phase_entry.evidence or [])
 
-        store = get_store()
         context_docs: list[dict[str, Any]] = []
-        for e in evidence[:max_context_items]:
-            ns = e.namespace
-            key = e.key
-            if not ns or not key:
-                continue
-            item = store.get(tuple(ns), key)
-            if not item or not getattr(item, "value", None):
-                continue
-            value = item.value or {}
-            context_docs.append({
-                "text": value.get("text", ""),
-                "metadata": {
-                    "title": value.get("title", ""),
-                    "tags": value.get("tags", []),
-                    "agents": value.get("agents", []),
-                    "changed": value.get("changed", 0),
-                    "store_namespace": ns,
-                    "store_key": key,
-                    "score": e.score,
-                },
-            })
+        if evidence:
+            store = get_store()
+            for e in evidence[:max_context_items]:
+                ns = e.namespace
+                key = e.key
+                if not ns or not key:
+                    continue
+                item = store.get(tuple(ns), key)
+                if not item or not getattr(item, "value", None):
+                    continue
+                value = item.value or {}
+                context_docs.append({
+                    "text": value.get("text", ""),
+                    "metadata": {
+                        "title": value.get("title", ""),
+                        "tags": value.get("tags", []),
+                        "agents": value.get("agents", []),
+                        "changed": value.get("changed", 0),
+                        "store_namespace": ns,
+                        "store_key": key,
+                        "score": e.score,
+                    },
+                })
 
         # Step 2: format context block
         if context_docs:
@@ -130,10 +131,12 @@ def make_node_problem_framing(
 
         logger.info("problem_framing.success", phase=phase)
 
+        existing_entry = state.phases.get(phase)
         state.phases[phase] = PhaseEntry(
             data=pf.model_dump(),
             status="complete",
             evidence=evidence,
+            ambiguity_checked=existing_entry.ambiguity_checked if existing_entry else False,
         )
 
         return Command(update={"phases": state.phases}, goto=goto)

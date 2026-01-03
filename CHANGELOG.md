@@ -89,6 +89,7 @@
 - [langgraph/backend] Preserve non-empty `gating.original_input` via reducer and populate it from incoming messages in guardrails.
 - [langgraph/backend] Add subgraph wiring test to ensure phase routes via `phase_supervisor` and avoids unknown supervisor edges.
 - [langgraph/backend] Fix phase subgraph routing to use `phase_supervisor` and avoid unknown node errors.
+- [langgraph/backend] Restore phase subgraph routing through retrieval and ambiguity detection by tracking ambiguity checks and clarification sessions.
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
 - [langgraph/backend] Escaped Problem Framing few-shot rendering to avoid placeholder collisions and restored format instructions in the system prompt.
 - [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.

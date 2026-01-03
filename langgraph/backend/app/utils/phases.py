@@ -39,6 +39,7 @@ def set_phase_data_update(
         status=existing.status if existing else "pending",
         evidence=existing.evidence if existing else [],
         error=existing.error if existing else {},
+        ambiguity_checked=existing.ambiguity_checked if existing else False,
     )
 
     phases[key] = entry
@@ -71,6 +72,7 @@ def set_phase_status_update(
         data=existing.data if existing else {},
         evidence=existing.evidence if existing else [],
         error=existing.error if existing else {},
+        ambiguity_checked=existing.ambiguity_checked if existing else False,
     )
 
     phases[key] = entry

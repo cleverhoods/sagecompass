@@ -69,11 +69,16 @@ class PhaseEntry(BaseModel):
     - `error`: Structured failure information if execution failed
     - `status`: Lifecycle status of the phase result
     - `evidence`: Inputs or support retrieved from memory/vector store
+    - `ambiguity_checked`: Whether ambiguity detection has been run for this phase
     """
     data: dict[str, object] = Field(default_factory=dict)
     error: dict[str, object] = Field(default_factory=dict)
     status: PhaseStatus = "pending"
     evidence: list[EvidenceItem] = Field(default_factory=list)
+    ambiguity_checked: bool = Field(
+        default=False,
+        description="Tracks whether ambiguity detection has executed for this phase."
+    )
 
 
 class SageState(BaseModel):

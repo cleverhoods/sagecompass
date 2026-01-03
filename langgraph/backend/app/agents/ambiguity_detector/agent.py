@@ -18,7 +18,7 @@ from app.tools import nothingizer_tool
 from app.utils.logger import get_logger
 from app.utils.model_factory import get_model_for_agent
 
-from .schema import AmbiguityItem
+from .schema import OutputSchema
 
 AGENT_NAME = "ambiguity_detector"
 
@@ -73,14 +73,14 @@ def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
         include_format_instructions=False,
     )
 
-    allowed_tools = build_tool_allowlist(tools, AmbiguityItem)
+    allowed_tools = build_tool_allowlist(tools, OutputSchema)
 
     middlewares: list[AgentMiddleware[AgentState, Any]] = [
         make_guardrails_middleware(allowed_tools=allowed_tools),
         make_dynamic_prompt_middleware(
             agent_prompt,
             placeholders="task_input",
-            output_schema=AmbiguityItem,
+            output_schema=OutputSchema,
         )
     ]
 
@@ -92,5 +92,5 @@ def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
         tools=tools,
         system_prompt=agent_prompt,
         middleware=middlewares,
-        response_format=AmbiguityItem,
+        response_format=OutputSchema,
     )

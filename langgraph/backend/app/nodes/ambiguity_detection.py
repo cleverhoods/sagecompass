@@ -12,9 +12,9 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.ambiguity_detector.agent import build_agent  # lazy import to respect SRP
-from app.agents.problem_framing.schema import ProblemFrame
+from app.agents.ambiguity_detector.schema import OutputSchema
 from app.runtime import SageRuntimeContext
-from app.state import PhaseEntry, SageState
+from app.state import ClarificationSession, PhaseEntry, SageState
 from app.utils.logger import get_logger
 from app.utils.state_helpers import get_latest_user_input
 
@@ -43,8 +43,8 @@ def make_node_ambiguity_detection(
         goto: Node name to route to after completion.
 
     Side effects/state writes:
-        Updates `state.phases[phase]` with structured `ProblemFrame` output
-        and appends to `state.errors` on failure.
+        Updates `state.gating.detected_ambiguities` and phase clarification session.
+        Marks `state.phases[phase].ambiguity_checked` after the detector runs.
 
     Returns:
         A Command routing back to `supervisor`.
@@ -61,41 +61,42 @@ def make_node_ambiguity_detection(
         phase_entry = state.phases.get(phase) or PhaseEntry()
         evidence = list(phase_entry.evidence or [])
 
-        store = get_store()
         context_docs: list[dict[str, Any]] = []
-        for e in evidence[:max_context_items]:
-            ns = getattr(e, "namespace", None)
-            key = getattr(e, "key", None)
-            score = getattr(e, "score", None)
+        if evidence:
+            store = get_store()
+            for e in evidence[:max_context_items]:
+                ns = getattr(e, "namespace", None)
+                key = getattr(e, "key", None)
+                score = getattr(e, "score", None)
 
-            if isinstance(e, dict):
-                ns = e.get("namespace")
-                key = e.get("key")
-                score = e.get("score")
+                if isinstance(e, dict):
+                    ns = e.get("namespace")
+                    key = e.get("key")
+                    score = e.get("score")
 
-            if not ns or not key:
-                continue
+                if not ns or not key:
+                    continue
 
-            ns_tuple = tuple(ns) if isinstance(ns, (list, tuple)) else None
-            if ns_tuple is None:
-                continue
+                ns_tuple = tuple(ns) if isinstance(ns, (list, tuple)) else None
+                if ns_tuple is None:
+                    continue
 
-            item = store.get(ns_tuple, key)
-            if not item or not getattr(item, "value", None):
-                continue
-            value = item.value or {}
-            context_docs.append({
-                "text": value.get("text", ""),
-                "metadata": {
-                    "title": value.get("title", ""),
-                    "tags": value.get("tags", []),
-                    "agents": value.get("agents", []),
-                    "changed": value.get("changed", 0),
-                    "store_namespace": ns,
-                    "store_key": key,
-                    "score": score if score is None else float(score),
-                },
-            })
+                item = store.get(ns_tuple, key)
+                if not item or not getattr(item, "value", None):
+                    continue
+                value = item.value or {}
+                context_docs.append({
+                    "text": value.get("text", ""),
+                    "metadata": {
+                        "title": value.get("title", ""),
+                        "tags": value.get("tags", []),
+                        "agents": value.get("agents", []),
+                        "changed": value.get("changed", 0),
+                        "store_namespace": ns,
+                        "store_key": key,
+                        "score": score if score is None else float(score),
+                    },
+                })
 
         # Step 2: add context into messages
         if context_docs:
@@ -123,9 +124,9 @@ def make_node_ambiguity_detection(
         }
 
         result = agent.invoke(agent_input)
-        pf = result.get("structured_response") if isinstance(result, dict) else None
+        structured = result.get("structured_response") if isinstance(result, dict) else None
 
-        if pf is None:
+        if structured is None:
             logger.warning("agent.missing_structured_response", phase=phase)
             phase_entry.status = "stale"
             phase_entry.error = {
@@ -140,16 +141,42 @@ def make_node_ambiguity_detection(
             )
 
         # Enforce schema
-        if not isinstance(pf, ProblemFrame):
-            pf = ProblemFrame.model_validate(pf)
+        if not isinstance(structured, OutputSchema):
+            structured = OutputSchema.model_validate(structured)
 
-        # Update state
-        state.phases[phase] = PhaseEntry(
-            data=pf.model_dump(),
-            status="complete",
-            evidence=evidence,
+        ambiguities = structured.ambiguities
+        ambiguity_keys = [item.key for item in ambiguities]
+
+        phase_entry.ambiguity_checked = True
+        state.phases[phase] = phase_entry
+
+        updated_session = ClarificationSession(
+            phase=phase,
+            round=0,
+            ambiguous_items=ambiguity_keys,
+            clarified_input=user_input,
+            clarification_message="",
         )
 
-        return Command(update={"phases": state.phases}, goto=goto)
+        if any(session.phase == phase for session in state.clarification):
+            updated_clarification = [
+                updated_session if session.phase == phase else session
+                for session in state.clarification
+            ]
+        else:
+            updated_clarification = [updated_session, *state.clarification]
+
+        updated_gating = state.gating.model_copy(
+            update={"detected_ambiguities": ambiguities}
+        )
+
+        return Command(
+            update={
+                "gating": updated_gating,
+                "clarification": updated_clarification,
+                "phases": state.phases,
+            },
+            goto=goto,
+        )
 
     return node_ambiguity_detection

@@ -83,6 +83,7 @@ def build_problem_framing_subgraph(
             make_node_clarify_ambiguity(
                 node_agent=resolved_ambiguity_agent,
                 phase=phase,
+                goto="phase_supervisor",
             )
         ),
     )
@@ -111,6 +112,11 @@ def build_problem_framing_subgraph(
             make_node_phase_supervisor(
                 phase=phase,
                 retrieve_node="retrieve_context",
+                ambiguity_node="ambiguity_detection",
+                clarify_node="clarify_ambiguity",
+                retrieval_enabled=True,
+                requires_evidence=True,
+                clarification_enabled=True,
             )
         ),
     )

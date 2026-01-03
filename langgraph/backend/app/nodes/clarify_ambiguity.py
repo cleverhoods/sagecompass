@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
@@ -26,9 +25,10 @@ def make_node_clarify_ambiguity(
     *,
     phase: str = "problem_framing",
     max_rounds: int = 3,
+    goto: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[Literal["ambiguity_detection", "__end__"]],
+    Command[str],
 ]:
     """Node: clarify_ambiguity.
 
@@ -39,19 +39,20 @@ def make_node_clarify_ambiguity(
         node_agent: Optional injected clarification agent runnable.
         phase: Phase key for clarification tracking.
         max_rounds: Max clarification rounds before ending.
+        goto: Node name to route to after clarification updates.
 
     Side effects/state writes:
         Updates `state.clarification` with per-phase ClarificationSession entries.
 
     Returns:
-        A Command routing to `ambiguity_detection` or END when max rounds exceeded.
+        A Command routing to `goto` or END when max rounds exceeded.
     """
     agent = node_agent or build_agent()
 
     def node_clarify_ambiguity(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[Literal["ambiguity_detection", "__end__"]]:
+    ) -> Command[str]:
         user_input = get_latest_user_input(state.messages)
         if not user_input:
             logger.warning("clarify_ambiguity.empty_user_input", phase=phase)
@@ -108,13 +109,13 @@ def make_node_clarify_ambiguity(
             )
             return Command(
                 update={"clarification": state.clarification},
-                goto="ambiguity_detection",
+                goto=goto,
             )
 
         logger.info("clarify_ambiguity.resolved", round=updated_session.round)
         return Command(
             update={"clarification": reset_clarification_session(state, phase)},
-            goto="ambiguity_detection",
+            goto=goto,
         )
 
     return node_clarify_ambiguity

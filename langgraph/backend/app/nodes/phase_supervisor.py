@@ -20,6 +20,11 @@ def make_node_phase_supervisor(
     *,
     phase: str = "problem_framing",
     retrieve_node: str = "retrieve_context",
+    ambiguity_node: str = "ambiguity_detection",
+    clarify_node: str = "clarify_ambiguity",
+    retrieval_enabled: bool = True,
+    requires_evidence: bool = True,
+    clarification_enabled: bool = True,
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
     Command[str],
@@ -32,6 +37,11 @@ def make_node_phase_supervisor(
     Args:
         phase: Phase key used for status/evidence lookups.
         retrieve_node: Node name used for retrieval when evidence is missing.
+        ambiguity_node: Node name used to detect ambiguity.
+        clarify_node: Node name used to run clarification loops.
+        retrieval_enabled: Whether to run retrieval in this phase.
+        requires_evidence: Whether the phase requires evidence before continuing.
+        clarification_enabled: Whether to run ambiguity detection/clarification.
 
     Side effects/state writes:
         May reset clarification session entries in `state.clarification`.
@@ -54,6 +64,7 @@ def make_node_phase_supervisor(
         status = phase_entry.status if phase_entry else "pending"
         data = phase_entry.data if phase_entry else None
         evidence = phase_entry.evidence if phase_entry else []
+        ambiguity_checked = phase_entry.ambiguity_checked if phase_entry else False
 
         has_data = bool(data)
         has_evidence = bool(evidence)
@@ -68,19 +79,23 @@ def make_node_phase_supervisor(
 
         # 🔁 Phase still in progress
         if status != "complete" or not has_data:
-            # 1. Need context first
-            if not has_evidence:
+            # 1. Need context first (when required)
+            if retrieval_enabled and requires_evidence and not has_evidence:
                 return Command(goto=retrieve_node)
 
-            # 2. Is there an unresolved clarification session?
+            # 2. Handle ambiguity detection + clarification loop
             session: ClarificationSession | None = next(
                 (s for s in state.clarification if s.phase == phase), None
             )
 
-            if session:
+            if clarification_enabled and not ambiguity_checked:
+                logger.info("supervisor.detect_ambiguity", phase=phase)
+                return Command(goto=ambiguity_node)
+
+            if clarification_enabled and session:
                 if session.ambiguous_items:
                     logger.info("supervisor.needs_clarification", phase=phase)
-                    return Command(goto="clarify_ambiguity")
+                    return Command(goto=clarify_node)
                 else:
                     # ✅ Clarification resolved — reset session and proceed
                     logger.info("supervisor.clarification_resolved", phase=phase)
@@ -88,7 +103,7 @@ def make_node_phase_supervisor(
                         update={
                             "clarification": reset_clarification_session(state, phase)
                         },
-                        goto=phase_to_node(phase)
+                        goto=phase_to_node(phase),
                     )
 
             # 3. Continue to core phase node

@@ -70,6 +70,7 @@ def build_main_app(
     # Add phase subgraphs from the phase registry
     for phase in PHASES.values():
         graph.add_node(phase.name, phase.build_graph())
+        graph.add_edge(phase.name, "supervisor")
 
     graph.add_edge(START, "supervisor")
 
