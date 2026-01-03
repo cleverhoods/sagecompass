@@ -9,8 +9,8 @@ We do **not** shadow framework packages via `sys.path` stubs.
 
 ## Lanes
 
-- **Offline lane (default):** `SAGECOMPASS_USE_STUBS=1 uv run pytest`
-- **Real-deps lane:** `SAGECOMPASS_USE_STUBS=0 uv run pytest -m real_deps`
+- **Offline lane (default):** `UV_NO_SYNC=1 uv run pytest`
+- **Real-deps lane:** `uv run pytest -m real_deps`
 - **Integration lane (opt-in):** `uv run pytest -m integration` (requires any needed API keys)
 
 Testing approach follows `../RULES.md` §12 (LangChain “Test”):
@@ -30,10 +30,10 @@ Within each, you may mirror the `app/` component layout (agents/nodes/graphs/too
 
 ```bash
 # Offline lane (default)
-UV_NO_SYNC=1 SAGECOMPASS_USE_STUBS=1 uv run pytest
+UV_NO_SYNC=1 uv run pytest
 
 # Real-deps lane
-SAGECOMPASS_USE_STUBS=0 uv run pytest -m real_deps
+uv run pytest -m real_deps
 
 # Integration lane (opt-in)
 uv run pytest -m integration

@@ -46,6 +46,9 @@ This folder contains the LangGraph backend application code: state, graphs, node
   - dynamic prompt injection
   - normalization/error shaping
 
+#### `policies/`
+- Pure policy functions shared by gate nodes and middleware (guardrails, tool allowlists).
+
 #### `utils/`
 - Shared helpers (logging, env loading, model/provider factories, state helpers).
 
@@ -70,6 +73,7 @@ app/
 │   └── write_graph.py              -> VectorStore writer graph
 ├── middlewares/
 │   └── dynamic_prompt.py           -> Prompt middleware for few-shots generation.
+├── policies/                       -> Policy engine functions used by nodes/middlewares.
 ├── nodes/
 │   ├── ambiguity_detection.py      -> Ambiguity detector agent node.
 │   ├── clarify_ambiguity.py        -> Ambiguity clarifying agent node.

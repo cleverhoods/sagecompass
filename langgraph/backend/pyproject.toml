@@ -47,21 +47,18 @@ markers = [
 [tool.poe.tasks]
 
 # ---- Test lanes (matches your contract-first plan) ----
-test = { ref = "test_unit", help = "Default: run stubbed unit test lane" }
+test = { ref = "test_unit", help = "Default: run offline unit test lane" }
 
 [tool.poe.tasks.test_unit]
 cmd = "pytest -m \"not real_deps and not integration\""
-env = { SAGECOMPASS_USE_STUBS = "1" }
-help = "Unit lane (fast, stubs enabled)"
+help = "Unit lane (fast, offline)"
 
 [tool.poe.tasks.test_real]
 cmd = "pytest -m real_deps"
-env = { SAGECOMPASS_USE_STUBS = "0" }
-help = "Real-deps lane (no stubs; offline)"
+help = "Real-deps lane (offline)"
 
 [tool.poe.tasks.test_integration]
 cmd = "pytest -m integration"
-env = { SAGECOMPASS_USE_STUBS = "0" }
 help = "Integration lane (may require credentials)"
 
 # ---- Linting/Styling ----

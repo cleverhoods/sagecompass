@@ -7,6 +7,7 @@ from typing import Any, Callable, Sequence, Type
 
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate, FewShotPromptWithTemplates
+from langchain_core.tools import BaseTool
 
 from pydantic import BaseModel
 
@@ -151,3 +152,13 @@ def load_agent_builder(agent_name: str) -> Callable[..., Any]:
     if not callable(builder):
         raise TypeError(f"build_agent for agent {agent_name!r} must be callable")
     return builder
+
+
+def build_tool_allowlist(
+    tools: Sequence[BaseTool],
+    response_schema: Type[BaseModel] | None = None,
+) -> list[str]:
+    allowlist = [tool.name for tool in tools]
+    if response_schema is not None:
+        allowlist.append(response_schema.__name__)
+    return allowlist

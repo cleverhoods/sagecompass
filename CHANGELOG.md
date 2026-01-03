@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ### Added
+- [langgraph/backend] Add guardrails policy engine and middleware enforcement across model/tool boundaries.
+- [langgraph/backend] Add unit tests for guardrails policies and middleware enforcement behaviors.
 - [langgraph/backend] Add guardrail allow/deny unit tests and a tool-calling agent trajectory integration test.
 - [prompt] Created `few-shots.prompt` and `example.json` for Problem Framing agent.
 - [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
@@ -28,6 +30,8 @@
 
 
 ### Changed
+- [langgraph/backend] Extend PhaseContract with `retrieval_enabled` to match phase flag requirements.
+- [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
 - [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.
 - [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 

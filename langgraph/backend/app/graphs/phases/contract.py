@@ -33,6 +33,10 @@ class PhaseContract(BaseModel):
         default=False,
         description="Whether the phase expects supporting RAG context."
     )
+    retrieval_enabled: bool = Field(
+        default=False,
+        description="Whether retrieval is enabled for this phase."
+    )
     clarification_enabled: bool = Field(
         default=True,
         description="Whether ambiguity clarification loop is enabled."

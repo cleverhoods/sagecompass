@@ -21,10 +21,10 @@ Create deeper `AGENTS.md` files **only** to document *local overrides* (exceptio
 
 ## Test lanes (backend)
 
-- Stub lane (default):  
-  `SAGECOMPASS_USE_STUBS=1 UV_NO_SYNC=1 uv run pytest`
+- Offline lane (default):  
+  `UV_NO_SYNC=1 uv run pytest`
 - Real deps lane (explicit):  
-  `SAGECOMPASS_USE_STUBS=0 uv run pytest -m real_deps`
+  `uv run pytest -m real_deps`
 - Integration lane (opt-in):  
   `uv run pytest -m integration` (requires API keys)
 

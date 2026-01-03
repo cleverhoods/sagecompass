@@ -61,7 +61,7 @@ def test_problem_framing_tool_trajectory() -> None:
     )
 
     agent = build_agent(ProblemFramingAgentConfig(model=model))
-    result = agent.invoke({"messages": [HumanMessage(content="Help with churn")]})
+    result = agent.invoke({"messages": [HumanMessage(content="automation to reduce churn")]})
 
     tool_messages = [
         message for message in result["messages"] if isinstance(message, ToolMessage)

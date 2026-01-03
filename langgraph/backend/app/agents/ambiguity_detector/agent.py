@@ -10,7 +10,8 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, PrivateAttr
 
 from app.tools import nothingizer_tool
-from app.agents.utils import compose_agent_prompt
+from app.agents.utils import build_tool_allowlist, compose_agent_prompt
+from app.middlewares.guardrails import make_guardrails_middleware
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.utils.model_factory import get_model_for_agent
 from app.utils.logger import get_logger
@@ -65,7 +66,10 @@ def build_agent(config: AmbiguityDetectorAgentConfig | None = None) -> Runnable:
         include_format_instructions=False,
     )
 
+    allowed_tools = build_tool_allowlist(tools, AmbiguityItem)
+
     middlewares: list[AgentMiddleware[AgentState, Any]] = [
+        make_guardrails_middleware(allowed_tools=allowed_tools),
         make_dynamic_prompt_middleware(
             agent_prompt,
             placeholders="task_input",

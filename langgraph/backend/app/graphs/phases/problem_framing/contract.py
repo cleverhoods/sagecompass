@@ -14,5 +14,6 @@ problem_framing_contract = PhaseContract(
         "Ensures scope, ambiguity, and relevance are addressed."
     ),
     requires_evidence=True,
+    retrieval_enabled=True,
     clarification_enabled=True,
 )
