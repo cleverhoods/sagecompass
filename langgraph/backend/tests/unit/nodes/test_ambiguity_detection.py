@@ -7,11 +7,7 @@ from langchain_core.messages import HumanMessage
 from langchain_core.runnables import Runnable
 
 from app.nodes.ambiguity_detection import make_node_ambiguity_detection
-from app.schemas.ambiguities import (
-    AmbiguityItem,
-    AmbiguityResolution,
-    AmbiguityResolutionAssumption,
-)
+from app.schemas.ambiguities import AmbiguityItem
 from app.state import SageState
 from app.state.gating import GatingContext, GuardrailResult
 
@@ -33,23 +29,9 @@ def _build_ambiguity_item() -> AmbiguityItem:
         key="scope",
         description="Scope is unclear.",
         clarifying_question="Is this limited to Q4?",
-        resolution=AmbiguityResolution(
-            yes=AmbiguityResolutionAssumption(
-                impact_direction="+",
-                impact_value=0.6,
-                assumption="Assume Q4-only constraints.",
-            ),
-            no=AmbiguityResolutionAssumption(
-                impact_direction="0",
-                impact_value=0.1,
-                assumption="Assume no time-bound scope.",
-            ),
-            unknown=AmbiguityResolutionAssumption(
-                impact_direction="-",
-                impact_value=0.3,
-                assumption="Assume default quarter scope.",
-            ),
-        ),
+        resolution_assumption="Assume Q4-only constraints.",
+        resolution_impact_direction="+",
+        resolution_impact_value=0.6,
         importance=Decimal("0.6"),
         confidence=Decimal("0.7"),
     )

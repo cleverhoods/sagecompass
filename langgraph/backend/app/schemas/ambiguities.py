@@ -8,53 +8,8 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 
-class AmbiguityResolutionAssumption(BaseModel):
-    """Assumption details for resolving a single ambiguity outcome.
-
-    Invariants:
-        impact_value is normalized between 0 and 1.
-    """
-    impact_direction: Literal["++", "+", "0", "-", "--"] = Field(
-        ...,
-        description="Direction and rough magnitude of impact."
-    )
-    impact_value: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="Normalized strength (0–1) of this impact."
-    )
-    assumption: str = Field(
-        ...,
-        description="Short internal note: what the frame should assume in this case."
-    )
-
-
-class AmbiguityResolution(BaseModel):
-    """Resolution mapping for yes/no/unknown responses to a clarifying question."""
-    yes: AmbiguityResolutionAssumption = Field(
-        ...,
-        description=(
-            "Resolution if the user answers YES: what to assume and how it impacts the frame."
-        ),
-    )
-    no: AmbiguityResolutionAssumption = Field(
-        ...,
-        description=(
-            "Resolution if the user answers NO: what to assume and how it impacts the frame."
-        ),
-    )
-    unknown: AmbiguityResolutionAssumption = Field(
-        ...,
-        description=(
-            "Resolution if the user answers UNKNOWN / cannot say: "
-            "fallback assumption and its impact."
-        ),
-    )
-
-
 class AmbiguityItem(BaseModel):
-    """Structured ambiguity item with question and resolution guidance.
+    """Structured ambiguity item with question and flat resolution guidance.
 
     Invariants:
         importance and confidence are decimals between 0.01 and 0.99.
@@ -71,12 +26,19 @@ class AmbiguityItem(BaseModel):
         ...,
         description = "A single Yes/No/Unknown question that directly targets this ambiguity."
     )
-    resolution: AmbiguityResolution = Field(
+    resolution_assumption: str = Field(
         ...,
-        description=(
-            "Encodes how this ambiguity should be resolved and scored for each possible "
-            "user answer (YES / NO / UNKNOWN)."
-        ),
+        description="Default assumption to apply before clarification.",
+    )
+    resolution_impact_direction: Literal["++", "+", "0", "-", "--"] = Field(
+        ...,
+        description="Direction and rough magnitude of impact for the assumption.",
+    )
+    resolution_impact_value: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Normalized impact strength for the assumption (0–1).",
     )
     importance: Annotated[Decimal, Field(
         ...,
