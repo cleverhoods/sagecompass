@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from langchain_core.messages import HumanMessage
 from langchain_core.messages.utils import AnyMessage
 
-from app.state import ClarificationSession, SageState
+from app.state import ClarificationContext, SageState
 
 
-def get_latest_user_input(messages: list[AnyMessage]) -> str | None:
+def get_latest_user_input(messages: Sequence[AnyMessage]) -> str | None:
     """Finds the most recent HumanMessage in the message stream.
 
     Args:
@@ -41,14 +43,25 @@ def phase_to_node(phase: str) -> str:
     return mapping.get(phase, "phase_supervisor")
 
 
-def reset_clarification_session(state: SageState, phase: str) -> list[ClarificationSession]:
-    """Remove the clarification session for the given phase.
+def reset_clarification_context(
+    state: SageState,
+    target_step: str | None = None,
+) -> ClarificationContext:
+    """Reset the clarification context.
 
     Args:
         state: Current SageState.
-        phase: Phase identifier to remove.
+        target_step: Optional step name to set on the cleared context.
 
     Returns:
-        Updated clarification session list without the target phase.
+        A cleared ClarificationContext with an optional target step.
     """
-    return [s for s in state.clarification if s.phase != phase]
+    return ClarificationContext(
+        target_step=target_step,
+        round=0,
+        ambiguous_items=[],
+        clarified_fields=[],
+        clarification_message="",
+        clarified_input="",
+        status="idle",
+    )

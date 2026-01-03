@@ -2,31 +2,12 @@
   {
     "task_input": "We want to use AI to improve customer support efficiency.",
     "output": {
-      "ambiguities": [
-        {
-          "key": "channel_scope",
-          "description": "Which channels are included in 'customer support'?",
-          "clarifying_question": "Does this include email, chat, and phone support?",
-          "resolution": {
-            "yes": {
-              "impact_direction": "+",
-              "impact_value": 0.6,
-              "assumption": "Includes all major support channels"
-            },
-            "no": {
-              "impact_direction": "-",
-              "impact_value": 0.4,
-              "assumption": "Only one or two channels in scope"
-            },
-            "unknown": {
-              "impact_direction": "0",
-              "impact_value": 0.1,
-              "assumption": "Default to chat-only"
-            }
-          },
-          "importance": 0.8,
-          "confidence": 0.7
-        }
+      "clarified_input": "We want to use AI to improve customer support efficiency.",
+      "clarified_fields": [],
+      "clarification_message": "Which support channels are in scope, and which efficiency metric should we optimize (response time, resolution rate, or cost)?",
+      "ambiguous_items": [
+        "Support channels in scope",
+        "Primary efficiency metric"
       ]
     }
   },

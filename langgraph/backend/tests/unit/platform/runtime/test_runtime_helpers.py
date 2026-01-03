@@ -6,9 +6,9 @@ from app.platform.runtime import (
     get_latest_user_input,
     get_phase_names,
     phase_to_node,
-    reset_clarification_session,
+    reset_clarification_context,
 )
-from app.state import ClarificationSession, SageState
+from app.state import ClarificationContext, SageState
 
 
 def test_get_latest_user_input_returns_last_human_message() -> None:
@@ -24,17 +24,20 @@ def test_phase_to_node_falls_back_to_phase_supervisor() -> None:
     assert phase_to_node("unknown_phase") == "phase_supervisor"
 
 
-def test_reset_clarification_session_removes_target_phase() -> None:
-    state = SageState()
-    state.clarification = [
-        ClarificationSession(phase="problem_framing", round=1),
-        ClarificationSession(phase="other", round=1),
-    ]
+def test_reset_clarification_context_clears_state() -> None:
+    state = SageState(
+        clarification=ClarificationContext(
+            target_step="problem_framing",
+            round=2,
+            clarification_message="need clarity",
+            clarified_input="initial",
+        )
+    )
 
-    updated = reset_clarification_session(state, "problem_framing")
+    updated = reset_clarification_context(state, target_step="problem_framing")
 
-    assert len(updated) == 1
-    assert updated[0].phase == "other"
+    assert updated.target_step == "problem_framing"
+    assert updated.round == 0
 
 
 def test_get_phase_names_returns_registry_keys() -> None:

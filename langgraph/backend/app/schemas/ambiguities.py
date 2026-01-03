@@ -24,7 +24,7 @@ class AmbiguityItem(BaseModel):
     )
     clarifying_question: str = Field(
         ...,
-        description = "A single Yes/No/Unknown question that directly targets this ambiguity."
+        description="A concise question that directly targets this ambiguity.",
     )
     resolution_assumption: str = Field(
         ...,

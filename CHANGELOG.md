@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 ### Added
+- [langgraph/backend] Introduce `ClarificationContext` plus runtime helpers to reset global clarification state for the preflight routing flow.
+- [langgraph/backend] Add an integration test that exercises guardrails -> ambiguity scan -> retrieval -> clarification -> phase supervisor routing.
 - [langgraph/backend] Add guardrails policy engine and middleware enforcement across model/tool boundaries.
 - [langgraph/backend] Add unit tests for guardrails policies and middleware enforcement behaviors.
 - [langgraph/backend] Add guardrail allow/deny unit tests and a tool-calling agent trajectory integration test.
@@ -32,6 +34,7 @@
 
 
 ### Changed
+- [langgraph/backend] Route ambiguity scan/retrieval/clarification nodes and the global supervisor through the new context models so evidence, status, and messaging stay in sync.
 - [langgraph/backend] Add required docstrings and clarify middleware/prompt contracts to match updated RULES.md.
 - [langgraph/backend] Enforce strict pytest markers and register the real_deps marker in pytest config.
 - [langgraph/backend] Resolve lint/type gate failures by tightening node/runtime typing and suppressing add_node overload false positives.
@@ -43,6 +46,10 @@
 - [langgraph/backend] Simplify ambiguity resolution fields to a single assumption and impact trio.
 - [langgraph/backend] Limit ambiguity detection context to three items and route clarification using clarifying questions.
 - [langgraph/backend] Rename ambiguity agents/nodes to `ambiguity_scan` and `ambiguity_clarification`.
+- [langgraph/backend] Reorder phase supervision to scan before retrieval and clarify before framing, with max-round clarification exit messaging.
+- [langgraph/backend] Clarify global supervisor messaging to reflect phase supervisor handoff.
+- [langgraph/backend] Move ambiguity and clarification tracking into global contexts and run preflight scan/retrieval/clarification before phases.
+- [langgraph/backend] Replace per-phase clarification sessions with a ClarificationContext and align global preflight routing.
 - [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
 - [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.
@@ -95,6 +102,8 @@
 
 
 ### Fixed
+- [langgraph/backend] Use the resolved target phase when ambiguity scan fails to return structured output.
+- [langgraph/backend] Align ambiguity clarification schema, prompts, and node inputs so clarification loops carry structured fields and context.
 - [langgraph/backend] Preserve non-empty `gating.original_input` via reducer and populate it from incoming messages in guardrails.
 - [langgraph/backend] Add subgraph wiring test to ensure phase routes via `phase_supervisor` and avoids unknown supervisor edges.
 - [langgraph/backend] Fix phase subgraph routing to use `phase_supervisor` and avoid unknown node errors.

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from .ambiguity import AmbiguityContext
+from .clarification import ClarificationContext
 from .gating import GatingContext
-from .state import ClarificationSession, EvidenceItem, PhaseEntry, PhaseStatus, SageState
+from .state import EvidenceItem, PhaseEntry, PhaseStatus, SageState
 from .write_state import VectorWriteState
 
 __all__ = [
     "SageState",
     "AmbiguityContext",
-    "ClarificationSession",
+    "ClarificationContext",
     "EvidenceItem",
     "PhaseEntry",
     "PhaseStatus",

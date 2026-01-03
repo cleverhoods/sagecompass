@@ -9,6 +9,9 @@ from app.state.ambiguity import AmbiguityContext
 def test_ambiguity_context_defaults() -> None:
     context = AmbiguityContext()
 
+    assert context.target_step is None
+    assert context.checked is False
+    assert context.eligible is False
     assert context.detected == []
     assert context.resolved == []
 

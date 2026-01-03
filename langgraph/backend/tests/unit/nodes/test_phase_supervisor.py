@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.nodes.phase_supervisor import make_node_phase_supervisor
-from app.state import ClarificationSession, EvidenceItem, PhaseEntry, SageState
+from app.state import PhaseEntry, SageState
 from app.state.gating import GatingContext, GuardrailResult
 
 
@@ -18,86 +18,25 @@ def _build_state() -> SageState:
 def _build_node():
     return make_node_phase_supervisor(
         phase="problem_framing",
-        retrieve_node="retrieve_context",
-        ambiguity_node="ambiguity_scan",
-        clarify_node="ambiguity_clarification",
-        retrieval_enabled=True,
-        requires_evidence=True,
-        clarification_enabled=True,
     )
 
 
-def test_phase_supervisor_routes_to_retrieval_when_evidence_missing() -> None:
+def test_phase_supervisor_routes_to_phase_when_incomplete() -> None:
     state = _build_state()
-    node = _build_node()
-
-    result = node(state, None)
-
-    assert result.goto == "retrieve_context"
-    assert result.update is not None
-    assert result.update["messages"]
-
-
-def test_phase_supervisor_routes_to_ambiguity_scan_after_retrieval() -> None:
-    state = _build_state()
-    state.phases["problem_framing"] = PhaseEntry(
-        evidence=[EvidenceItem(namespace=["store"], key="doc", score=0.4)]
-    )
-    node = _build_node()
-
-    result = node(state, None)
-
-    assert result.goto == "ambiguity_scan"
-    assert result.update is not None
-    assert result.update["messages"]
-
-
-def test_phase_supervisor_routes_to_clarification_when_ambiguous() -> None:
-    state = _build_state()
-    phase_entry = PhaseEntry(
-        evidence=[EvidenceItem(namespace=["store"], key="doc", score=0.4)],
-        ambiguity_checked=True,
-    )
-    state.phases["problem_framing"] = phase_entry
-    state.clarification = [
-        ClarificationSession(
-            phase="problem_framing",
-            round=1,
-            ambiguous_items=["scope"],
-            clarified_input="hi",
-            clarification_message="Need more detail.",
-        )
-    ]
-    node = _build_node()
-
-    result = node(state, None)
-
-    assert result.goto == "ambiguity_clarification"
-    assert result.update is not None
-    assert result.update["messages"]
-
-
-def test_phase_supervisor_routes_to_phase_when_clarification_resolved() -> None:
-    state = _build_state()
-    phase_entry = PhaseEntry(
-        evidence=[EvidenceItem(namespace=["store"], key="doc", score=0.4)],
-        ambiguity_checked=True,
-    )
-    state.phases["problem_framing"] = phase_entry
-    state.clarification = [
-        ClarificationSession(
-            phase="problem_framing",
-            round=1,
-            ambiguous_items=[],
-            clarified_input="hi",
-            clarification_message="",
-        )
-    ]
     node = _build_node()
 
     result = node(state, None)
 
     assert result.goto == "problem_framing"
     assert result.update is not None
-    assert result.update["clarification"] == []
     assert result.update["messages"]
+
+
+def test_phase_supervisor_routes_to_end_when_complete() -> None:
+    state = _build_state()
+    state.phases["problem_framing"] = PhaseEntry(status="complete", data={"ok": True})
+    node = _build_node()
+
+    result = node(state, None)
+
+    assert result.goto == "__end__"

@@ -21,8 +21,8 @@ logger = get_logger("nodes.retrieve_context")
 def make_node_retrieve_context(
     tool: Runnable | None = None,
     *,
-    phase: str = "problem_framing",
-    collection: str = "problem_framing",
+    phase: str | None = None,
+    collection: str | None = None,
     goto: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
@@ -35,29 +35,45 @@ def make_node_retrieve_context(
 
     Args:
         tool: DI-injected lookup tool runnable.
-        phase: Phase key to update in `state.phases`.
-        collection: Store namespace segment used for retrieval.
+        phase: Optional phase key to update in `state.phases`.
+        collection: Optional store namespace segment used for retrieval.
         goto: Node name to route to after completion.
 
     Side effects/state writes:
         Updates `state.phases[phase].evidence` with retrieved EvidenceItem entries.
+        When phase is not provided, uses `state.ambiguity.target_step`.
 
     Returns:
         A Command routing back to `supervisor`.
     """
     tool = tool or context_lookup
+
     def node_retrieve_context(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
         query = get_latest_user_input(state.messages) or ""
+        target_phase = phase or state.ambiguity.target_step
+        if not target_phase:
+            logger.warning("retrieve_context.missing_target_step")
+            return Command(
+                update={
+                    "messages": [
+                        AIMessage(content="Unable to determine retrieval target.")
+                    ]
+                },
+                goto=goto,
+            )
+        collection_name = collection or target_phase
 
-        logger.info("retrieve_context.start", phase=phase, query=query)
+        logger.info("retrieve_context.start", phase=target_phase, query=query)
 
-        results = tool.invoke({
-            "query": query,
-            "collection": collection
-        }) or []
+        results = tool.invoke(
+            {
+                "query": query,
+                "collection": collection_name,
+            }
+        ) or []
 
         evidence: list[EvidenceItem] = []
         for d in results:
@@ -71,12 +87,16 @@ def make_node_retrieve_context(
                 e = EvidenceItem(namespace=ns, key=key, score=score_value)
                 evidence.append(e)
 
-        logger.info("retrieve_context.complete", phase=phase, results=len(evidence))
+        logger.info(
+            "retrieve_context.complete",
+            phase=target_phase,
+            results=len(evidence),
+        )
 
         # Update phase entry
-        phase_entry = state.phases.get(phase) or PhaseEntry()
+        phase_entry = state.phases.get(target_phase) or PhaseEntry()
         phase_entry.evidence = evidence
-        state.phases[phase] = phase_entry
+        state.phases[target_phase] = phase_entry
 
         message = f"Retrieved {len(evidence)} context items."
         return Command(

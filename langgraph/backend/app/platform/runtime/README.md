@@ -5,7 +5,7 @@ Purpose: shared runtime helpers for phase routing and message/state introspectio
 Public entrypoints:
 - `get_latest_user_input`
 - `phase_to_node`
-- `reset_clarification_session`
+- `reset_clarification_context`
 - `get_phase_names`
 
 Non-goals:

@@ -6,22 +6,26 @@ from pydantic import BaseModel, Field
 
 
 class ClarificationResponse(BaseModel):
-    """Final clarified result from the Ambiguity Clarification agent.
+    """Structured response from the Ambiguity Clarification agent.
 
     Invariants:
-        clarified_input is non-empty when a clarification message is returned.
+        ambiguous_items is empty when clarification is complete.
     """
-    clarified_input: str = Field(
-        ...,
-        description="The clarified version of the user's original input."
+    clarified_input: str | None = Field(
+        default=None,
+        description="Clarified version of the user's input, if updated.",
     )
     clarified_fields: list[str] = Field(
         default_factory=list,
-        description="The specific fields that were clarified."
+        description="Fields that were clarified in this round.",
     )
-    clarification_message: str = Field(
-        ...,
-        description="A conversational message for the user requesting or confirming clarifications."
+    clarification_message: str | None = Field(
+        default=None,
+        description="Conversational message requesting or confirming clarifications.",
+    )
+    ambiguous_items: list[str] = Field(
+        default_factory=list,
+        description="Ambiguities still requiring clarification.",
     )
 
 # Generic loader convention.

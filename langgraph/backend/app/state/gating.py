@@ -59,9 +59,10 @@ GatingDecision = Literal[
 # -----------------------------
 
 class GatingContext(BaseModel):
-    """Holds all gating-related information.
+    """Holds global gating information for preflight checks.
 
-    This object is mutated progressively by gating nodes and agents.
+    This object is mutated progressively by gating nodes and agents
+    before any phase execution begins.
     """
 
     # --- Raw input ---

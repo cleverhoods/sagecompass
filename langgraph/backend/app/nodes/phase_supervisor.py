@@ -10,9 +10,9 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.runtime import SageRuntimeContext
-from app.state import ClarificationSession, SageState
+from app.state import SageState
 from app.platform.observability.logger import get_logger
-from app.platform.runtime.state_helpers import phase_to_node, reset_clarification_session
+from app.platform.runtime.state_helpers import phase_to_node
 
 logger = get_logger("nodes.phase_supervisor")
 
@@ -20,12 +20,6 @@ logger = get_logger("nodes.phase_supervisor")
 def make_node_phase_supervisor(
     *,
     phase: str = "problem_framing",
-    retrieve_node: str = "retrieve_context",
-    ambiguity_node: str = "ambiguity_scan",
-    clarify_node: str = "ambiguity_clarification",
-    retrieval_enabled: bool = True,
-    requires_evidence: bool = True,
-    clarification_enabled: bool = True,
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
     Command[str],
@@ -37,15 +31,9 @@ def make_node_phase_supervisor(
 
     Args:
         phase: Phase key used for status/evidence lookups.
-        retrieve_node: Node name used for retrieval when evidence is missing.
-        ambiguity_node: Node name used to run ambiguity scans.
-        clarify_node: Node name used to run ambiguity clarification loops.
-        retrieval_enabled: Whether to run retrieval in this phase.
-        requires_evidence: Whether the phase requires evidence before continuing.
-        clarification_enabled: Whether to run ambiguity scan/clarification.
 
     Side effects/state writes:
-        May reset clarification session entries in `state.clarification`.
+        None (routing only).
 
     Returns:
         A Command routing to the next required node or END if complete.
@@ -64,74 +52,17 @@ def make_node_phase_supervisor(
         phase_entry = state.phases.get(phase)
         status = phase_entry.status if phase_entry else "pending"
         data = phase_entry.data if phase_entry else None
-        evidence = phase_entry.evidence if phase_entry else []
-        ambiguity_checked = phase_entry.ambiguity_checked if phase_entry else False
-
         has_data = bool(data)
-        has_evidence = bool(evidence)
 
         logger.info(
             "supervisor.status",
             phase=phase,
             status=status,
             has_data=has_data,
-            has_evidence=has_evidence,
         )
 
         # Phase still in progress
         if status != "complete" or not has_data:
-            # 1. Need context first (when required)
-            if retrieval_enabled and requires_evidence and not has_evidence:
-                return Command(
-                    update={
-                        "messages": [
-                            AIMessage(content="Retrieving context for this phase.")
-                        ]
-                    },
-                    goto=retrieve_node,
-                )
-
-            # 2. Handle ambiguity detection + clarification loop
-            session: ClarificationSession | None = next(
-                (s for s in state.clarification if s.phase == phase), None
-            )
-
-            if clarification_enabled and not ambiguity_checked:
-                logger.info("supervisor.detect_ambiguity", phase=phase)
-                return Command(
-                    update={
-                        "messages": [
-                            AIMessage(content="Checking for ambiguities.")
-                        ]
-                    },
-                    goto=ambiguity_node,
-                )
-
-            if clarification_enabled and session:
-                if session.ambiguous_items:
-                    logger.info("supervisor.needs_clarification", phase=phase)
-                    return Command(
-                        update={
-                            "messages": [
-                                AIMessage(content="Requesting clarification.")
-                            ]
-                        },
-                        goto=clarify_node,
-                    )
-                else:
-                    # Clarification resolved; reset session and proceed
-                    logger.info("supervisor.clarification_resolved", phase=phase)
-                    return Command(
-                        update={
-                            "clarification": reset_clarification_session(state, phase),
-                            "messages": [
-                                AIMessage(content="Clarification resolved. Continuing.")
-                            ],
-                        },
-                        goto=phase_to_node(phase),
-                    )
-
-            # 3. Continue to core phase node
             return Command(
                 update={
                     "messages": [

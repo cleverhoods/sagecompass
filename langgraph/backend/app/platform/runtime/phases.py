@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pydantic import BaseModel
@@ -119,7 +120,7 @@ def get_phase_status(
     entry = state.phases.get(key)
     return entry.status if entry else "pending"
 
-def get_phase_names(phases: dict[str, object]) -> list[str]:
+def get_phase_names(phases: Mapping[str, object]) -> list[str]:
     """Return ordered phase names from the provided phase registry.
 
     Returns:

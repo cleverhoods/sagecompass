@@ -66,7 +66,7 @@ def test_ambiguity_scan_updates_gating_and_clarification() -> None:
     assert result.update["messages"]
 
     updated_clarification = result.update["clarification"]
-    assert updated_clarification[0].ambiguous_items == ["Is this limited to Q4?"]
+    assert updated_clarification.ambiguous_items == ["Is this limited to Q4?"]
 
     updated_phase = result.update["phases"]["problem_framing"]
     assert updated_phase.ambiguity_checked is True

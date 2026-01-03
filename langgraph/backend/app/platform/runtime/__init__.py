@@ -6,12 +6,12 @@ from app.platform.runtime.phases import get_phase_names
 from app.platform.runtime.state_helpers import (
     get_latest_user_input,
     phase_to_node,
-    reset_clarification_session,
+    reset_clarification_context,
 )
 
 __all__ = [
     "get_phase_names",
     "get_latest_user_input",
     "phase_to_node",
-    "reset_clarification_session",
+    "reset_clarification_context",
 ]

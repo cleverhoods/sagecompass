@@ -5,13 +5,13 @@ from app.state import SageState
 from app.state.gating import GatingContext, GuardrailResult
 
 
-def test_supervisor_routes_to_phase_subgraph_supervisor() -> None:
+def test_supervisor_starts_global_preflight() -> None:
     guardrail = GuardrailResult(is_safe=True, is_in_scope=True, reasons=["ok"])
     state = SageState(gating=GatingContext(original_input="hi", guardrail=guardrail))
     node = make_node_supervisor()
 
     result = node(state, None)
 
-    assert result.goto == "problem_framing_supervisor"
+    assert result.goto == "ambiguity_scan"
     assert result.update is not None
-    assert result.update["messages"]
+    assert result.update["ambiguity"].target_step == "problem_framing"

@@ -14,7 +14,8 @@ from langgraph.types import Command
 from app.agents.ambiguity_scan.agent import build_agent  # lazy import to respect SRP
 from app.agents.ambiguity_scan.schema import OutputSchema
 from app.runtime import SageRuntimeContext
-from app.state import ClarificationSession, PhaseEntry, SageState
+from app.state import ClarificationContext, PhaseEntry, SageState
+from app.state.clarification import ClarificationStatus
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
 
@@ -24,7 +25,7 @@ logger = get_logger("nodes.ambiguity_scan")
 def make_node_ambiguity_scan(
     node_agent: Runnable | None = None,
     *,
-    phase: str = "problem_framing",
+    phase: str | None = None,
     max_context_items: int = 3,
     goto: str = "supervisor",
 ) -> Callable[
@@ -38,13 +39,14 @@ def make_node_ambiguity_scan(
 
     Args:
         node_agent: Optional injected agent runnable.
-        phase: Phase key to update in `state.phases`.
+        phase: Optional phase key to update in `state.phases`.
         max_context_items: Max evidence items to hydrate into context.
         goto: Node name to route to after completion.
 
     Side effects/state writes:
-        Updates `state.ambiguity.detected` and phase clarification session.
-        Marks `state.phases[phase].ambiguity_checked` after the scan runs.
+        Updates `state.ambiguity.detected` and clarification context.
+        Marks `state.phases[phase]` ambiguity_checked after the scan runs.
+        When phase is not provided, uses `state.ambiguity.target_step`.
 
     Returns:
         A Command routing back to `supervisor`.
@@ -56,9 +58,20 @@ def make_node_ambiguity_scan(
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
         user_input = get_latest_user_input(state.messages) or ""
+        target_phase = phase or state.ambiguity.target_step
+        if not target_phase:
+            logger.warning("ambiguity_scan.missing_target_step")
+            return Command(
+                update={
+                    "messages": [
+                        AIMessage(content="Unable to determine ambiguity scan target.")
+                    ]
+                },
+                goto=goto,
+            )
 
         # Step 1: hydrate evidence
-        phase_entry = state.phases.get(phase) or PhaseEntry()
+        phase_entry = state.phases.get(target_phase) or PhaseEntry()
         evidence = list(phase_entry.evidence or [])
 
         context_docs: list[dict[str, Any]] = []
@@ -124,17 +137,19 @@ def make_node_ambiguity_scan(
         }
 
         result = agent.invoke(agent_input)
-        structured = result.get("structured_response") if isinstance(result, dict) else None
+        structured = (
+            result.get("structured_response") if isinstance(result, dict) else None
+        )
 
         if structured is None:
-            logger.warning("agent.missing_structured_response", phase=phase)
+            logger.warning("agent.missing_structured_response", phase=target_phase)
             phase_entry.status = "stale"
             phase_entry.error = {
                 "code": "missing_structured_response",
                 "message": "Agent response missing structured_response.",
             }
-            state.phases[phase] = phase_entry
-            state.errors.append(f"{phase}: missing structured_response")
+            state.phases[target_phase] = phase_entry
+            state.errors.append(f"{target_phase}: missing structured_response")
             return Command(
                 update={"phases": state.phases, "errors": state.errors},
                 goto=goto,
@@ -151,26 +166,27 @@ def make_node_ambiguity_scan(
         ]
 
         phase_entry.ambiguity_checked = True
-        state.phases[phase] = phase_entry
+        state.phases[target_phase] = phase_entry
 
-        updated_session = ClarificationSession(
-            phase=phase,
+        clarification_status: ClarificationStatus = (
+            "awaiting" if ambiguity_questions else "resolved"
+        )
+        updated_clarification = ClarificationContext(
+            target_step=target_phase,
             round=0,
             ambiguous_items=ambiguity_questions,
             clarified_input=user_input,
             clarification_message="",
+            status=clarification_status,
         )
 
-        if any(session.phase == phase for session in state.clarification):
-            updated_clarification = [
-                updated_session if session.phase == phase else session
-                for session in state.clarification
-            ]
-        else:
-            updated_clarification = [updated_session, *state.clarification]
-
         updated_ambiguity = state.ambiguity.model_copy(
-            update={"detected": ambiguities}
+            update={
+                "target_step": target_phase,
+                "checked": True,
+                "eligible": not ambiguity_questions,
+                "detected": ambiguities,
+            }
         )
 
         summary = (

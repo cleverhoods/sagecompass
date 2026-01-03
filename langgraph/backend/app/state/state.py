@@ -9,6 +9,7 @@ from langgraph.graph import add_messages
 from pydantic import BaseModel, Field
 
 from app.state.ambiguity import AmbiguityContext
+from app.state.clarification import ClarificationContext
 from app.state.gating import GatingContext
 
 
@@ -32,36 +33,6 @@ Lifecycle marker for each agentic phase result:
 - "stale": outdated due to upstream changes
 """
 
-class ClarificationSession(BaseModel):
-    """Represents a clarification loop for a specific agentic phase.
-
-    - Each session tracks one round of clarification for a given phase.
-    - Enables safe, phase-scoped handling of ambiguity resolution.
-    """
-    phase: str = Field(
-        ...,
-        description="The agentic phase this clarification session belongs to."
-    )
-    round: int = Field(
-        0,
-        description="The number of clarification rounds attempted for this phase."
-    )
-    ambiguous_items: list[str] = Field(
-        default_factory=list,
-        description="List of items still requiring clarification."
-    )
-    clarified_fields: list[str] = Field(
-        default_factory=list,
-        description="Fields that were clarified by the user."
-    )
-    clarification_message: str = Field(
-        "",
-        description="The most recent assistant message asking for clarification."
-    )
-    clarified_input: str = Field(
-        "",
-        description="The latest version of the clarified user input."
-    )
 
 class PhaseEntry(BaseModel):
     """Container for a single phase (agent) result.
@@ -88,7 +59,7 @@ class SageState(BaseModel):
     This object is passed between all nodes. It stores:
     - `gating`: Gating decision metadata (safety, scope, etc.)
     - `ambiguity`: ambiguity detection and resolution state
-    - `clarification`: clarification data
+    - `clarification`: clarification data for the next step
     - `messages`: Full conversation history (user + agents)
     - `phases`: Structured outputs of each processing phase (e.g., problem_framing)
     - `errors`: Global error log
@@ -101,9 +72,16 @@ class SageState(BaseModel):
         default_factory=AmbiguityContext,
         description="Ambiguity detection and resolution state.",
     )
-    clarification: list[ClarificationSession] = Field(
-        default_factory=list,
-        description="Per-phase clarification sessions used to track ambiguity resolution attempts."
+    clarification: ClarificationContext = Field(
+        default_factory=lambda: ClarificationContext(
+            round=0,
+            ambiguous_items=[],
+            clarified_fields=[],
+            clarification_message="",
+            clarified_input="",
+            status="idle",
+        ),
+        description="Clarification state for the next step being prepared.",
     )
     messages: Annotated[list[AnyMessage], add_messages] = Field(
         default_factory=list,
