@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
 from langgraph.types import Command
@@ -77,6 +78,13 @@ def make_node_retrieve_context(
         phase_entry.evidence = evidence
         state.phases[phase] = phase_entry
 
-        return Command(update={"phases": state.phases}, goto=goto)
+        message = f"Retrieved {len(evidence)} context items."
+        return Command(
+            update={
+                "phases": state.phases,
+                "messages": [AIMessage(content=message)],
+            },
+            goto=goto,
+        )
 
     return node_retrieve_context

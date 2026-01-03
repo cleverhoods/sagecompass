@@ -81,6 +81,8 @@ def test_ambiguity_detection_updates_gating_and_clarification() -> None:
     assert len(updated_ambiguity.detected) == 1
     assert updated_ambiguity.detected[0].key == "scope"
 
+    assert result.update["messages"]
+
     updated_clarification = result.update["clarification"]
     assert updated_clarification[0].ambiguous_items == ["scope"]
 

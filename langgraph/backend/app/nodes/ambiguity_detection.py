@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import Runnable
 from langgraph.config import get_store
 from langgraph.runtime import Runtime
@@ -170,11 +170,18 @@ def make_node_ambiguity_detection(
             update={"detected": ambiguities}
         )
 
+        summary = (
+            "No ambiguities detected."
+            if not ambiguities
+            else f"Ambiguities detected: {len(ambiguities)}."
+        )
+
         return Command(
             update={
                 "ambiguity": updated_ambiguity,
                 "clarification": updated_clarification,
                 "phases": state.phases,
+                "messages": [AIMessage(content=summary)],
             },
             goto=goto,
         )

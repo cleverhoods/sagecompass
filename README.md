@@ -64,10 +64,10 @@ before anyone spends time and money building it.
    ```
    The UI binds to `http://localhost:1111`.
 
-4) **Run tests (offline, using stubs)**
+4) **Run tests (offline: no network calls; uses deterministic fakes + in-memory persistence) (default)**
    ```bash
    cd langgraph/backend
-   UV_NO_SYNC=1 uv run pytest
+   UV_NO_SYNC=1 uv run pytest -v
    ```
 
 ## Component docs

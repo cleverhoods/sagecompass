@@ -105,7 +105,7 @@ def build_problem_framing_subgraph(
         _as_runtime_node(make_node_guardrails_check(goto_if_safe="phase_supervisor")),
     )
 
-    # 🧠 Supervisor reused across all phases
+    # Supervisor reused across all phases
     graph.add_node(
         "phase_supervisor",
         _as_runtime_node(

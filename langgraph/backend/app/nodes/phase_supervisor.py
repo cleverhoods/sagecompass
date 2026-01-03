@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from langchain_core.messages import AIMessage
 from langgraph.graph import END
 from langgraph.runtime import Runtime
 from langgraph.types import Command
@@ -54,12 +55,12 @@ def make_node_phase_supervisor(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
-        # 🔐 Enforce guardrails (once per graph, before any phase)
+        # Enforce guardrails (once per graph, before any phase)
         if state.gating.guardrail is None:
             logger.info("supervisor.guardrails_check")
             return Command(goto="guardrails_check")
 
-        # 🔄 Look up phase state
+        # Look up phase state
         phase_entry = state.phases.get(phase)
         status = phase_entry.status if phase_entry else "pending"
         data = phase_entry.data if phase_entry else None
@@ -77,11 +78,18 @@ def make_node_phase_supervisor(
             has_evidence=has_evidence,
         )
 
-        # 🔁 Phase still in progress
+        # Phase still in progress
         if status != "complete" or not has_data:
             # 1. Need context first (when required)
             if retrieval_enabled and requires_evidence and not has_evidence:
-                return Command(goto=retrieve_node)
+                return Command(
+                    update={
+                        "messages": [
+                            AIMessage(content="Retrieving context for this phase.")
+                        ]
+                    },
+                    goto=retrieve_node,
+                )
 
             # 2. Handle ambiguity detection + clarification loop
             session: ClarificationSession | None = next(
@@ -90,27 +98,54 @@ def make_node_phase_supervisor(
 
             if clarification_enabled and not ambiguity_checked:
                 logger.info("supervisor.detect_ambiguity", phase=phase)
-                return Command(goto=ambiguity_node)
+                return Command(
+                    update={
+                        "messages": [
+                            AIMessage(content="Checking for ambiguities.")
+                        ]
+                    },
+                    goto=ambiguity_node,
+                )
 
             if clarification_enabled and session:
                 if session.ambiguous_items:
                     logger.info("supervisor.needs_clarification", phase=phase)
-                    return Command(goto=clarify_node)
+                    return Command(
+                        update={
+                            "messages": [
+                                AIMessage(content="Requesting clarification.")
+                            ]
+                        },
+                        goto=clarify_node,
+                    )
                 else:
-                    # ✅ Clarification resolved — reset session and proceed
+                    # Clarification resolved; reset session and proceed
                     logger.info("supervisor.clarification_resolved", phase=phase)
                     return Command(
                         update={
-                            "clarification": reset_clarification_session(state, phase)
+                            "clarification": reset_clarification_session(state, phase),
+                            "messages": [
+                                AIMessage(content="Clarification resolved. Continuing.")
+                            ],
                         },
                         goto=phase_to_node(phase),
                     )
 
             # 3. Continue to core phase node
-            return Command(goto=phase_to_node(phase))
+            return Command(
+                update={
+                    "messages": [
+                        AIMessage(content=f"Running {phase} analysis.")
+                    ]
+                },
+                goto=phase_to_node(phase),
+            )
 
-        # ✅ Phase complete
+        # Phase complete
         logger.info("supervisor.complete", phase=phase)
-        return Command(goto=END)
+        return Command(
+            update={"messages": [AIMessage(content=f"{phase} phase complete.")]},
+            goto=END,
+        )
 
     return node_phase_supervisor

@@ -13,3 +13,5 @@ def test_supervisor_routes_to_phase_subgraph_supervisor() -> None:
     result = node(state, None)
 
     assert result.goto == "problem_framing_supervisor"
+    assert result.update is not None
+    assert result.update["messages"]

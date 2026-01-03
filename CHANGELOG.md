@@ -38,6 +38,7 @@
 - [langgraph/backend] Extend PhaseContract with `retrieval_enabled` to match phase flag requirements.
 - [langgraph/backend] Move policies/utilities into `app/platform/*` domains and update imports/tests to match platform governance.
 - [langgraph/backend] Separate ambiguity tracking from gating state with a dedicated ambiguity context.
+- [langgraph/backend] Add user-facing status messages for supervisor, retrieval, ambiguity detection, and clarification steps.
 - [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
 - [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.

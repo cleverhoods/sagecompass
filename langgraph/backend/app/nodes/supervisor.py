@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from langchain_core.messages import AIMessage
 from langgraph.graph import END
 from langgraph.runtime import Runtime
 from langgraph.types import Command
@@ -38,7 +39,10 @@ def make_node_supervisor(
         # 1. Run guardrails if not done yet
         if state.gating.guardrail is None:
             logger.info("supervisor.guardrails_check.required")
-            return Command(goto="guardrails_check")
+            return Command(
+                update={"messages": [AIMessage(content="Running safety checks.")]},
+                goto="guardrails_check",
+            )
 
         # 2. TODO: Handle global clarification logic here if designed
 
@@ -47,9 +51,19 @@ def make_node_supervisor(
             phase_state = state.phases.get(phase_name)
             if not phase_state or phase_state.status != "complete":
                 logger.info("supervisor.routing.phase_start", phase=phase_name)
-                return Command(goto=f"{phase_name}_supervisor")
+                return Command(
+                    update={
+                        "messages": [
+                            AIMessage(content=f"Starting {phase_name} phase.")
+                        ]
+                    },
+                    goto=f"{phase_name}_supervisor",
+                )
 
         logger.info("supervisor.complete")
-        return Command(goto=END)
+        return Command(
+            update={"messages": [AIMessage(content="All phases complete.")]},
+            goto=END,
+        )
 
     return node_supervisor

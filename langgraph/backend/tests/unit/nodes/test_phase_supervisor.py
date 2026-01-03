@@ -34,6 +34,8 @@ def test_phase_supervisor_routes_to_retrieval_when_evidence_missing() -> None:
     result = node(state, None)
 
     assert result.goto == "retrieve_context"
+    assert result.update is not None
+    assert result.update["messages"]
 
 
 def test_phase_supervisor_routes_to_ambiguity_detection_after_retrieval() -> None:
@@ -46,6 +48,8 @@ def test_phase_supervisor_routes_to_ambiguity_detection_after_retrieval() -> Non
     result = node(state, None)
 
     assert result.goto == "ambiguity_detection"
+    assert result.update is not None
+    assert result.update["messages"]
 
 
 def test_phase_supervisor_routes_to_clarification_when_ambiguous() -> None:
@@ -69,6 +73,8 @@ def test_phase_supervisor_routes_to_clarification_when_ambiguous() -> None:
     result = node(state, None)
 
     assert result.goto == "clarify_ambiguity"
+    assert result.update is not None
+    assert result.update["messages"]
 
 
 def test_phase_supervisor_routes_to_phase_when_clarification_resolved() -> None:
@@ -94,3 +100,4 @@ def test_phase_supervisor_routes_to_phase_when_clarification_resolved() -> None:
     assert result.goto == "problem_framing"
     assert result.update is not None
     assert result.update["clarification"] == []
+    assert result.update["messages"]

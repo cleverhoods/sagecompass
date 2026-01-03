@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
 from langgraph.types import Command
@@ -56,7 +57,10 @@ def make_node_clarify_ambiguity(
         user_input = get_latest_user_input(state.messages)
         if not user_input:
             logger.warning("clarify_ambiguity.empty_user_input", phase=phase)
-            return Command(goto="__end__")
+            return Command(
+                update={"messages": [AIMessage(content="Waiting for more details.")]},
+                goto="__end__",
+            )
 
         # Lookup or create session
         session = next((s for s in state.clarification if s.phase == phase), None)
@@ -72,7 +76,14 @@ def make_node_clarify_ambiguity(
         # Check cutoff
         if session.round >= max_rounds:
             logger.warning("clarify_ambiguity.max_rounds_exceeded", phase=phase)
-            return Command(goto="__end__")
+            return Command(
+                update={
+                    "messages": [
+                        AIMessage(content="Reached clarification limit. Continuing.")
+                    ]
+                },
+                goto="__end__",
+            )
 
         # Invoke agent
         result = agent.invoke({
@@ -101,6 +112,12 @@ def make_node_clarify_ambiguity(
             state.clarification = [updated_session, *state.clarification]
 
         # Next step depends on ambiguity status
+        clarification_ai_message = (
+            AIMessage(content=clarification_message)
+            if clarification_message
+            else AIMessage(content="Clarification needed to proceed.")
+        )
+
         if ambiguous_items:
             logger.info(
                 "clarify_ambiguity.continue",
@@ -108,13 +125,19 @@ def make_node_clarify_ambiguity(
                 items=ambiguous_items,
             )
             return Command(
-                update={"clarification": state.clarification},
+                update={
+                    "clarification": state.clarification,
+                    "messages": [clarification_ai_message],
+                },
                 goto=goto,
             )
 
         logger.info("clarify_ambiguity.resolved", round=updated_session.round)
         return Command(
-            update={"clarification": reset_clarification_session(state, phase)},
+            update={
+                "clarification": reset_clarification_session(state, phase),
+                "messages": [AIMessage(content="Clarification complete. Continuing.")],
+            },
             goto=goto,
         )
 
