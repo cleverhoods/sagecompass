@@ -26,6 +26,11 @@ from app.tools.context_lookup import context_lookup
 
 
 def build_problem_framing_subgraph(
+    *,
+    ambiguity_detector_agent: Any | None = None,
+    ambiguity_agent: Any | None = None,
+    problem_framing_agent: Any | None = None,
+    retrieval_tool: Any | None = None,
 ) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
     """Phase Subgraph: problem_framing.
 
@@ -45,12 +50,18 @@ def build_problem_framing_subgraph(
         return cast(Callable[[SageState, Runtime[SageRuntimeContext]], Any], node)
 
     # Inject all nodes
+    resolved_retrieval_tool = retrieval_tool or context_lookup
+    resolved_ambiguity_detector = ambiguity_detector_agent or build_ambiguity_detector_agent()
+    resolved_ambiguity_agent = ambiguity_agent or build_ambiguity_agent()
+    resolved_problem_framing_agent = problem_framing_agent or build_problem_framing_agent()
+
     graph.add_node(
         "retrieve_context",
         _as_runtime_node(
             make_node_retrieve_context(
-                tool=context_lookup,
+                tool=resolved_retrieval_tool,
                 phase=phase,
+                goto="phase_supervisor",
             )
         ),
     )
@@ -59,8 +70,9 @@ def build_problem_framing_subgraph(
         "ambiguity_detection",
         _as_runtime_node(
             make_node_ambiguity_detection(
-                node_agent=build_ambiguity_detector_agent(),
+                node_agent=resolved_ambiguity_detector,
                 phase=phase,
+                goto="phase_supervisor",
             )
         ),
     )
@@ -69,7 +81,7 @@ def build_problem_framing_subgraph(
         "clarify_ambiguity",
         _as_runtime_node(
             make_node_clarify_ambiguity(
-                node_agent=build_ambiguity_agent(),
+                node_agent=resolved_ambiguity_agent,
                 phase=phase,
             )
         ),
@@ -79,14 +91,18 @@ def build_problem_framing_subgraph(
         "problem_framing",
         _as_runtime_node(
             make_node_problem_framing(
-                agent=build_problem_framing_agent(),
+                agent=resolved_problem_framing_agent,
                 phase=phase,
+                goto="phase_supervisor",
             )
         ),
     )
 
 
-    graph.add_node("guardrails_check", _as_runtime_node(make_node_guardrails_check()))
+    graph.add_node(
+        "guardrails_check",
+        _as_runtime_node(make_node_guardrails_check(goto_if_safe="phase_supervisor")),
+    )
 
     # 🧠 Supervisor reused across all phases
     graph.add_node(
@@ -100,8 +116,7 @@ def build_problem_framing_subgraph(
     )
 
     # Control flow (loop + termination)
-    graph.set_entry_point("retrieve_context")
-    graph.set_finish_point("problem_framing")
+    graph.set_entry_point("phase_supervisor")
 
     return cast(
         CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState],

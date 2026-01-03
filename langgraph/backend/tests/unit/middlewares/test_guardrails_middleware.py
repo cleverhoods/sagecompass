@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
+
 from langchain.agents.middleware.types import ModelRequest
 from langchain_core.language_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-from typing import Any
-
 from langgraph.prebuilt.tool_node import ToolCallRequest, ToolRuntime
 
 from app.middlewares.guardrails import GuardrailsMiddleware

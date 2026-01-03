@@ -1,6 +1,6 @@
 # SageCompass Engineering Rules (Canonical)
 
-This is the canonical reference for architecture and engineering rules for SageCompass (LangGraph backend + Store-based “brain/memory”).
+This is the canonical reference for architecture and engineering rules for SageCompass (LangGraph backend + Store-based "brain/memory").
 
 **Reading order:**
 1) **MUSTs** (hard rules)
@@ -12,7 +12,7 @@ This is the canonical reference for architecture and engineering rules for SageC
 ## 0) Principles
 
 ### MUST
-- Prefer **explicit state + explicit routing** over “prompt magic”.
+- Prefer **explicit state + explicit routing** over "prompt magic".
 - Keep graphs **inspectable**: topology explains behavior.
 - Design for **testability**: DI-first, deterministic boundaries, typed outputs.
 - Document contracts at the boundary:
@@ -20,7 +20,7 @@ This is the canonical reference for architecture and engineering rules for SageC
   - Shared utility functions and node/graph factory functions MUST have docstrings describing purpose, key args, expected side effects/state writes, and return values.
 - Prompt files are first-class assets:
   - Prompt contracts (placeholders, suffix ordering, `examples.json` requirements) MUST be documented **in code** at the load/compose boundary.
-- No ambiguous “magic values”:
+- No ambiguous "magic values":
   - State keys and sentinel values MUST be centralized as typed model fields (preferred) or as well-named constants/enums close to their use.
   - Do not treat `SageState` as a dict (no `model_dump().get(...)` / `getattr(..., default)` fallbacks); define Pydantic defaults so typed attributes are always safe to read.
 - Middleware behavior MUST be transparent:
@@ -56,7 +56,7 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
 - When making recommendations, adding code, or updating docs:
   - verify the relevant package versions in `uv.lock`
   - use APIs that exist in those versions
-  - avoid “latest” instructions that do not match pinned versions
+  - avoid "latest" instructions that do not match pinned versions
 - Prefer **official, primary documentation**:
   - LangGraph / LangChain / LangSmith official docs
   - official API references
@@ -65,7 +65,7 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
   - an API, pattern, or hook
   - a configuration or deployment recommendation
   - a security/safety claim
-- Do not introduce new dependencies “because it’s convenient”.
+- Do not introduce new dependencies "because it’s convenient".
   - If a new dependency is required, it must be proposed explicitly and pinned, with rationale and migration notes.
 
 ### SHOULD
@@ -85,7 +85,7 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
 - Any other side effects occur via DI-injected **tools** or **store/checkpointer**.
 
 ### SHOULD
-- Side-effecting nodes are idempotent (dedupe keys, transactional writes, or “already processed” markers).
+- Side-effecting nodes are idempotent (dedupe keys, transactional writes, or "already processed" markers).
 
 ---
 
@@ -98,9 +98,20 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
   - conditional edges when pure state routing is enough
   - `Command(goto=...)` when a node must update state + route atomically
 - Fan-out (`Send`) only for intentional map/reduce patterns (and reducers must exist)
+- Routing decisions must be owned by a **single node** — typically a **supervisor**.
+  - That node must evaluate routing conditions and return `Command(goto=...)`.
+  - Downstream nodes must be fully decoupled from routing logic.
+
+### Supervisors
+- Supervisors control orchestration and routing for either:
+  - the **entire app** (`node_supervisor`)
+  - a specific **phase** (`node_phase_supervisor`)
+- Supervisors must be **stateless**, deterministic, and route based on keys in `SageState`.
+- Each phase subgraph should be routed via a dedicated `node_phase_supervisor`.
+- Phase supervisors may be reused across phases, if parametrized accordingly.
 
 ### SHOULD
-- Prefer readability over cleverness: fewer “mega nodes”, more small orchestration nodes.
+- Prefer readability to cleverness: fewer "mega nodes", more small orchestration nodes.
 
 ---
 
@@ -113,7 +124,7 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
   - OutputSchema
   - subgraph builder
   - flags: `clarification_enabled`, `retrieval_enabled`, `requires_evidence`
-- The main graph delegates phase execution to the phase subgraph (no phase business logic in main).
+- The main graph delegates phase execution to the phase subgraph (no phase business logic in the main graph).
 
 ### SHOULD
 - Reuse generic nodes via config (avoid phase-specific duplication unless necessary).
@@ -126,6 +137,15 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
 - Nodes are orchestration units: invoke model/tool, validate outputs, update owned state keys.
 - Nodes are created via `make_node_<name>()` factories.
 - Nodes log: entry, routing decisions, errors/fallback, output summary (no sensitive raw content).
+- Nodes must be phase-agnostic orchestration units where possible:
+- Nodes that retrieve, validate, or transform input must not hardcode phase names. 
+- Pass `phase` as a parameter to node factories if a phase-specific behavior is needed. 
+- Phase-specific logic belongs in the subgraph config (`PhaseContract`) or entry supervisor, not in generic nodes.
+- Follow naming conventions:
+  - `node_supervisor`: global routing entrypoint
+  - `node_phase_supervisor`: routes within a specific phase subgraph
+  - Other nodes: must use functional, phase-neutral names (e.g., `node_extract_problem_frame`)
+
 
 ### SHOULD
 - Nodes remain small; push domain reasoning into agents.
@@ -140,7 +160,7 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
 - Agents return **structured outputs** via a Pydantic `OutputSchema`, validated before state writes.
 
 ### SHOULD
-- One agent = one responsibility aligned to business function.
+- One agent = one responsibility aligned to a business function.
 
 ---
 
@@ -156,7 +176,7 @@ SageCompass is documentation-driven and version-locked. Guidance, examples, and 
 
 ---
 
-## 8) Guardrails and Policy (enterprise “defense in depth”)
+## 8) Guardrails and Policy (enterprise "defense in depth")
 
 ### MUST
 Guardrails are layered and share a single policy engine.
@@ -176,7 +196,7 @@ Guardrails are layered and share a single policy engine.
 - Both gate node and middleware call the same policies (no duplicated logic).
 
 ### SHOULD
-- Keep guardrails “fail-closed” for unknown risk conditions in production modes.
+- Keep guardrails "fail-closed" for unknown risk conditions in production modes.
 
 ---
 
@@ -206,7 +226,7 @@ Guardrails are layered and share a single policy engine.
 - Side-effecting operations must be idempotent or guarded.
 
 ### SHOULD
-- Cache deterministic “expensive” steps (retrieval, formatting) where it reduces cost/latency.
+- Cache deterministic "expensive" steps (retrieval, formatting) where it reduces cost/latency.
 - Budget enforcement (rounds/tokens/cost) is explicit and routes to a safe end state.
 
 ---
@@ -229,14 +249,14 @@ SageCompass follows the LangChain testing approach for agentic systems: **fast d
 ### MUST (Test against real pinned frameworks — no shadow stubs)
 - Tests MUST run against the **real installed** LangChain/LangGraph/Pydantic packages pinned by `uv.lock`.
 - Do NOT shadow/replace framework packages via `sys.path` tricks or a `tests/stubs/` shim (this breaks version alignment and can make tests pass while runtime fails).
-- “Offline” means **no network calls**, not “no framework”: use deterministic fakes and in-memory persistence instead.
+- "Offline" means **no network calls**, not "no framework": use deterministic fakes and in-memory persistence instead.
 
 ### MUST (Prefer standard fakes + standard tests)
 - Prefer **LangChain/LangGraph-provided fakes and standard test suites** over custom stubs whenever possible:
   - Chat models: `GenericFakeChatModel` (deterministic)
   - Embeddings: `FakeEmbeddings` (deterministic embeddings for pipelines)
   - Tools: adopt `langchain_tests.unit_tests.tools.ToolsUnitTests` for custom tool implementations
-- Keep custom stubs only when framework fakes/standard tests cannot represent the needed behavior; **document why** in the test.
+- Keep custom stubs only when framework fakes/standard tests cannot represent the necessary behavior; **document why** in the test.
 
 ### MUST (Unit tests: deterministic, fast)
 - Prefer **unit tests** for small, deterministic behavior:

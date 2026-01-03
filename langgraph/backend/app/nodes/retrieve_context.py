@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
@@ -23,9 +22,10 @@ def make_node_retrieve_context(
     *,
     phase: str = "problem_framing",
     collection: str = "problem_framing",
+    goto: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[Literal["supervisor"]],
+    Command[str],
 ]:
     """Node: retrieve_context.
 
@@ -36,6 +36,7 @@ def make_node_retrieve_context(
         tool: DI-injected lookup tool runnable.
         phase: Phase key to update in `state.phases`.
         collection: Store namespace segment used for retrieval.
+        goto: Node name to route to after completion.
 
     Side effects/state writes:
         Updates `state.phases[phase].evidence` with retrieved EvidenceItem entries.
@@ -47,7 +48,7 @@ def make_node_retrieve_context(
     def node_retrieve_context(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[Literal["supervisor"]]:
+    ) -> Command[str]:
         query = get_latest_user_input(state.messages) or ""
 
         logger.info("retrieve_context.start", phase=phase, query=query)
@@ -76,6 +77,6 @@ def make_node_retrieve_context(
         phase_entry.evidence = evidence
         state.phases[phase] = phase_entry
 
-        return Command(update={"phases": state.phases}, goto="supervisor")
+        return Command(update={"phases": state.phases}, goto=goto)
 
     return node_retrieve_context

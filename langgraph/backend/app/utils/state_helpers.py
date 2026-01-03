@@ -37,7 +37,7 @@ def phase_to_node(phase: str) -> str:
         "evaluation": "evaluate_feasibility",
         "summary": "business_summary",
     }
-    return mapping.get(phase, "supervisor")  # fallback to supervisor if unknown
+    return mapping.get(phase, "phase_supervisor")
 
 def reset_clarification_session(state: SageState, phase: str) -> list[ClarificationSession]:
     """Remove the clarification session for the given phase.

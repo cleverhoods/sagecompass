@@ -52,6 +52,11 @@ def build_write_graph(
     graph.add_edge(START, "vector_writer")
 
     return cast(
-        CompiledStateGraph[VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState],
+        CompiledStateGraph[
+            VectorWriteState,
+            SageRuntimeContext,
+            VectorWriteState,
+            VectorWriteState,
+        ],
         graph.compile(),
     )

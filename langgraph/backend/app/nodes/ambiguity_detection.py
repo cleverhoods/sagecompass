@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any
 
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables import Runnable
@@ -26,9 +26,10 @@ def make_node_ambiguity_detection(
     *,
     phase: str = "problem_framing",
     max_context_items: int = 8,
+    goto: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
-    Command[Literal["supervisor"]],
+    Command[str],
 ]:
     """Node: ambiguity_detection.
 
@@ -39,6 +40,7 @@ def make_node_ambiguity_detection(
         node_agent: Optional injected agent runnable.
         phase: Phase key to update in `state.phases`.
         max_context_items: Max evidence items to hydrate into context.
+        goto: Node name to route to after completion.
 
     Side effects/state writes:
         Updates `state.phases[phase]` with structured `ProblemFrame` output
@@ -52,7 +54,7 @@ def make_node_ambiguity_detection(
     def node_ambiguity_detection(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[Literal["supervisor"]]:
+    ) -> Command[str]:
         user_input = get_latest_user_input(state.messages) or ""
 
         # Step 1: hydrate evidence
@@ -134,7 +136,7 @@ def make_node_ambiguity_detection(
             state.errors.append(f"{phase}: missing structured_response")
             return Command(
                 update={"phases": state.phases, "errors": state.errors},
-                goto="supervisor",
+                goto=goto,
             )
 
         # Enforce schema
@@ -148,6 +150,6 @@ def make_node_ambiguity_detection(
             evidence=evidence,
         )
 
-        return Command(update={"phases": state.phases}, goto="supervisor")
+        return Command(update={"phases": state.phases}, goto=goto)
 
     return node_ambiguity_detection

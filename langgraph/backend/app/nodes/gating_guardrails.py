@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal
 
 from langgraph.graph import END
 from langgraph.runtime import Runtime
@@ -14,11 +13,12 @@ from app.runtime import SageRuntimeContext
 from app.state import SageState
 from app.utils.file_loader import FileLoader
 from app.utils.logger import get_logger
+from app.utils.state_helpers import get_latest_user_input
 
 
 def make_node_guardrails_check(
     *,
-    goto_if_safe: Literal["supervisor"] = "supervisor",
+    goto_if_safe: str = "supervisor",
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
     Command[str],
@@ -47,7 +47,9 @@ def make_node_guardrails_check(
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
 
-        original_input = state.gating.original_input
+        original_input = state.gating.original_input or (
+            get_latest_user_input(state.messages) or ""
+        )
         guardrail = evaluate_guardrails(original_input, config)
 
         logger.info(
@@ -59,7 +61,9 @@ def make_node_guardrails_check(
 
         # Always update gating state
         update = {
-            "gating": state.gating.model_copy(update={"guardrail": guardrail})
+            "gating": state.gating.model_copy(
+                update={"guardrail": guardrail, "original_input": original_input}
+            )
         }
 
         # Stop only if unsafe

@@ -3,11 +3,21 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field
 
 from app.schemas.ambiguities import AmbiguityItem
+
+# -----------------------------
+# Reducers
+# -----------------------------
+
+def keep_first_non_empty(current: str, update: str) -> str:
+    """Keep the first non-empty value for a string field."""
+    if current:
+        return current
+    return update or current
 
 # -----------------------------
 # Guardrail evaluation result
@@ -56,7 +66,7 @@ class GatingContext(BaseModel):
     """
 
     # --- Raw input ---
-    original_input: str = Field(
+    original_input: Annotated[str, keep_first_non_empty] = Field(
         ...,
         description="The original, unmodified user input."
     )
