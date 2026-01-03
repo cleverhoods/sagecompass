@@ -47,6 +47,31 @@ Tool configuration is centralized in `pyproject.toml` (single source of truth). 
   - Real-deps lane: `uv run pytest -m real_deps`
   - Integration lane (opt-in): `uv run pytest -m integration` (requires API keys)
 
+## 0.2) Platform folder governance (adding new `app/platform/*` domains)
+#### MUST (When a new `app/platform/<domain>/` folder is allowed)
+A new platform domain folder MAY be added only if **all** are true:
+1) **Cross-cutting:** Used by at least **two** of: `agents/`, `nodes/`, `graphs/`, `tools/`, `middlewares/`.
+2) **Non-domain:** Contains no business/domain reasoning (that belongs in `agents/`).
+3) **Stable contract:** Exposes a stable API that others depend on (e.g., provider wiring, persistence conventions, observability).
+4) **Not a grab-bag:** The contents share a single responsibility and can be described in one sentence.
+
+If these aren’t true, the code MUST live in the closest existing domain (usually `utils/`, `nodes/`, or `middlewares/`).
+
+#### MUST (Folder contract requirements)
+When introducing `app/platform/<domain>/`, you MUST include:
+- `app/platform/<domain>/README.md` with:
+  - purpose (1–2 sentences)
+  - public entrypoints (what other modules import)
+  - non-goals / what does *not* belong here
+- A public surface via `__init__.py` (re-export intended entrypoints) so imports stay stable.
+- Tests for the new domain under `tests/unit/platform/<domain>/` for the critical contract behavior.
+
+#### SHOULD (Naming & structure)
+- Folder names SHOULD be nouns: `config/`, `providers/`, `observability/`, `runtime/`, `persistence/`, `registry/`.
+- Keep layers clean:
+  - `platform/*` may depend on low-level libs and Pydantic, but SHOULD NOT import `nodes/` or `graphs/`.
+  - `nodes/` and `middlewares/` may import `platform/*`.
+
 ## 1) Documentation and Version Alignment (UV Lock Discipline)
 
 SageCompass is documentation-driven and version-locked. Guidance, examples, and implementation choices must match what is *actually installed*.

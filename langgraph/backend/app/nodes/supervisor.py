@@ -10,7 +10,7 @@ from langgraph.types import Command
 
 from app.runtime import SageRuntimeContext
 from app.state import SageState
-from app.utils.logger import get_logger
+from app.platform.observability.logger import get_logger
 
 
 def make_node_supervisor(
@@ -32,8 +32,9 @@ def make_node_supervisor(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[str]:
-        logger.info("supervisor.entry", state_keys=state.model_fields.keys())
-        from app.utils.phases import get_phase_names
+        logger.info("supervisor.entry", state_keys=SageState.model_fields.keys())
+        from app.graphs.phases import PHASES
+        from app.platform.runtime.phases import get_phase_names
         # 1. Run guardrails if not done yet
         if state.gating.guardrail is None:
             logger.info("supervisor.guardrails_check.required")
@@ -42,11 +43,11 @@ def make_node_supervisor(
         # 2. TODO: Handle global clarification logic here if designed
 
         # 3. Route to first incomplete phase
-        for phase_name in get_phase_names():
+        for phase_name in get_phase_names(PHASES):
             phase_state = state.phases.get(phase_name)
             if not phase_state or phase_state.status != "complete":
                 logger.info("supervisor.routing.phase_start", phase=phase_name)
-                return Command(goto=f"{phase_name}")
+                return Command(goto=f"{phase_name}_supervisor")
 
         logger.info("supervisor.complete")
         return Command(goto=END)

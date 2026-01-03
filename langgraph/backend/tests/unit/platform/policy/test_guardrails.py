@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.policies.guardrails import build_guardrails_config, evaluate_guardrails
+from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
 
 
 def test_evaluate_guardrails_allows_in_scope() -> None:

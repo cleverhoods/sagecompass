@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent # langgraph/backend
+BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent.parent  # langgraph/backend
 
 APP_ROOT = BACKEND_ROOT / "app"
 
@@ -16,7 +16,7 @@ GRAPHS_DIR = APP_ROOT / "graphs"
 
 # Utilities / Services
 SERVICES_DIR = APP_ROOT / "services"
-UTILS_DIR = APP_ROOT / "utils"
+PLATFORM_DIR = APP_ROOT / "platform"
 
 
 # Provider config - temp

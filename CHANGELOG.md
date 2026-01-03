@@ -5,6 +5,7 @@
 - [langgraph/backend] Add guardrails policy engine and middleware enforcement across model/tool boundaries.
 - [langgraph/backend] Add unit tests for guardrails policies and middleware enforcement behaviors.
 - [langgraph/backend] Add guardrail allow/deny unit tests and a tool-calling agent trajectory integration test.
+- [langgraph/backend] Add contract tests to enforce platform domain folder governance requirements.
 - [prompt] Created `few-shots.prompt` and `example.json` for Problem Framing agent.
 - [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
 - [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
@@ -34,6 +35,7 @@
 - [langgraph/backend] Enforce strict pytest markers and register the real_deps marker in pytest config.
 - [langgraph/backend] Resolve lint/type gate failures by tightening node/runtime typing and suppressing add_node overload false positives.
 - [langgraph/backend] Extend PhaseContract with `retrieval_enabled` to match phase flag requirements.
+- [langgraph/backend] Move policies/utilities into `app/platform/*` domains and update imports/tests to match platform governance.
 - [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
 - [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
 - [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.
@@ -90,6 +92,9 @@
 - [langgraph/backend] Add subgraph wiring test to ensure phase routes via `phase_supervisor` and avoids unknown supervisor edges.
 - [langgraph/backend] Fix phase subgraph routing to use `phase_supervisor` and avoid unknown node errors.
 - [langgraph/backend] Restore phase subgraph routing through retrieval and ambiguity detection by tracking ambiguity checks and clarification sessions.
+- [langgraph/backend] Default clarification sessions to the last known input when agents return a null clarified_input.
+- [langgraph/backend] Route global supervisor to phase subgraph supervisor nodes to avoid skipping phase-specific entrypoints.
+- [langgraph/backend] Avoid Pydantic instance access to `model_fields` in supervisor logging.
 - [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
 - [langgraph/backend] Escaped Problem Framing few-shot rendering to avoid placeholder collisions and restored format instructions in the system prompt.
 - [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.

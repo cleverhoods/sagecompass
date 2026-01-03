@@ -22,6 +22,7 @@ def get_latest_user_input(messages: list[AnyMessage]) -> str | None:
             return str(msg.content) if msg.content is not None else None
     return None
 
+
 def phase_to_node(phase: str) -> str:
     """Map a phase name to its entry node.
 
@@ -38,6 +39,7 @@ def phase_to_node(phase: str) -> str:
         "summary": "business_summary",
     }
     return mapping.get(phase, "phase_supervisor")
+
 
 def reset_clarification_session(state: SageState, phase: str) -> list[ClarificationSession]:
     """Remove the clarification session for the given phase.

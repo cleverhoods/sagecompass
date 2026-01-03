@@ -46,11 +46,9 @@ This folder contains the LangGraph backend application code: state, graphs, node
   - dynamic prompt injection
   - normalization/error shaping
 
-#### `policies/`
-- Pure policy functions shared by gate nodes and middleware (guardrails, tool allowlists).
-
-#### `utils/`
-- Shared helpers (logging, env loading, model/provider factories, state helpers).
+#### `platform/`
+- Cross-cutting platform domains (config, policy, runtime, observability, utils).
+  - policies are now in `platform/policy/`.
 
 #### Entry point
 - `main.py`: centralized building/entrypoint for graphs.
@@ -73,7 +71,12 @@ app/
 │   └── write_graph.py              -> VectorStore writer graph
 ├── middlewares/
 │   └── dynamic_prompt.py           -> Prompt middleware for few-shots generation.
-├── policies/                       -> Policy engine functions used by nodes/middlewares.
+├── platform/
+│   ├── config/                     -> Env loading, file loaders, and path conventions.
+│   ├── observability/              -> Logging + debugging helpers.
+│   ├── policy/                     -> Policy engine functions used by nodes/middlewares.
+│   ├── runtime/                    -> Phase routing + state helpers.
+│   └── utils/                      -> Shared helpers (agent prompts, providers, model factory).
 ├── nodes/
 │   ├── ambiguity_detection.py      -> Ambiguity detector agent node.
 │   ├── clarify_ambiguity.py        -> Ambiguity clarifying agent node.
@@ -94,16 +97,6 @@ app/
 │   ├── context_lookup.py           -> Retrieve agent-scoped context relevant to a query from long-term memory.
 │   ├── nothingizer.py              -> The famous nothingizer tool (does absolutely nothing)
 │   └── vector_writer.py            -> Core logic for writing content to the LangGraph Store.
-├── utils/
-│   ├── debug.py                    -> Debugging utilities.
-│   ├── env.py                      -> Loads environment variables from the backend .env file exactly once.
-│   ├── file_loader.py              -> Loads prompts/config ymls. 
-│   ├── logger.py                   -> Lightweight configured python logger.
-│   ├── model_factory.py            -> Returns a configured model instance for a given agent.
-│   ├── paths.py                    -> Defines folder locations.
-│   ├── phases.py                   -> Helper methods around Phases.
-│   ├── provider_config.py          -> Instantiates an LLM provider for a given agent
-│   └── state_helpers.py            -> Helper methods around State.
 ├── main.py                         -> Centralized building and entrypoint for the graphs.
 └── runtime.py                      -> Defines SageRuntimeContext, the runtime context for the main application.
 ```

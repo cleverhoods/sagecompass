@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.prebuilt.tool_node import ToolCallRequest, ToolRuntime
 
 from app.middlewares.guardrails import GuardrailsMiddleware
-from app.policies.guardrails import build_guardrails_config
+from app.platform.policy.guardrails import build_guardrails_config
 
 
 def _fake_model() -> GenericFakeChatModel:

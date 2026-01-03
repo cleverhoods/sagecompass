@@ -6,7 +6,7 @@ from langgraph.graph import END
 from app.nodes.gating_guardrails import make_node_guardrails_check
 from app.state import SageState
 from app.state.gating import GatingContext
-from app.utils.file_loader import FileLoader
+from app.platform.config.file_loader import FileLoader
 
 
 def test_guardrails_allow_in_scope(monkeypatch) -> None:

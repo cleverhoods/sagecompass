@@ -14,8 +14,8 @@ from langgraph.types import Command
 from app.agents.problem_framing.schema import ProblemFrame
 from app.runtime import SageRuntimeContext
 from app.state import PhaseEntry, SageState
-from app.utils.logger import get_logger
-from app.utils.state_helpers import get_latest_user_input
+from app.platform.observability.logger import get_logger
+from app.platform.runtime.state_helpers import get_latest_user_input
 
 logger = get_logger("nodes.problem_framing")
 

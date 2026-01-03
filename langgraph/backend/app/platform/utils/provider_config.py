@@ -3,10 +3,10 @@
 import importlib
 import os
 
-from app.utils.env import load_project_env
-from app.utils.file_loader import FileLoader
-from app.utils.logger import get_logger
-from app.utils.paths import CONFIG_DIR
+from app.platform.config.env import load_project_env
+from app.platform.config.file_loader import FileLoader
+from app.platform.observability.logger import get_logger
+from app.platform.config.paths import CONFIG_DIR
 
 PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
 

@@ -6,8 +6,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from app.utils.logger import get_logger
-from app.utils.paths import BACKEND_ROOT
+from app.platform.observability.logger import get_logger
+from app.platform.config.paths import BACKEND_ROOT
 
 _ENV_LOADED = False
 

@@ -12,7 +12,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel
 
-from app.utils.file_loader import FileLoader
+from app.platform.config.file_loader import FileLoader
 
 
 def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}") -> str:

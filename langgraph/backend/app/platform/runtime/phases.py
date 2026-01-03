@@ -6,10 +6,10 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from app.graphs.phases import PHASES
 from app.state import PhaseEntry, PhaseStatus, SageState
 
 # ---- WRITE HELPERS (return updates, do NOT mutate state) ----
+
 
 def set_phase_data_update(
     state: SageState,
@@ -119,10 +119,10 @@ def get_phase_status(
     entry = state.phases.get(key)
     return entry.status if entry else "pending"
 
-def get_phase_names() -> list[str]:
-    """Return ordered phase names from the PHASES registry.
+def get_phase_names(phases: dict[str, object]) -> list[str]:
+    """Return ordered phase names from the provided phase registry.
 
     Returns:
         List of phase names.
     """
-    return [f"{phase.name}" for phase in PHASES.values()]
+    return [str(name) for name in phases.keys()]

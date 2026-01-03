@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from langchain_core.language_models import BaseChatModel
 
-from app.utils.provider_config import ProviderFactory
+from app.platform.utils.provider_config import ProviderFactory
 
 
 def get_model_for_agent(agent_name: str) -> BaseChatModel:

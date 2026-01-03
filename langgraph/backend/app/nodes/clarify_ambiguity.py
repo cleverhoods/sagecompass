@@ -11,8 +11,8 @@ from langgraph.types import Command
 from app.agents.ambiguity.agent import build_agent
 from app.runtime import SageRuntimeContext
 from app.state import ClarificationSession, SageState
-from app.utils.logger import get_logger
-from app.utils.state_helpers import (
+from app.platform.observability.logger import get_logger
+from app.platform.runtime.state_helpers import (
     get_latest_user_input,
     reset_clarification_session,
 )
@@ -81,7 +81,7 @@ def make_node_clarify_ambiguity(
             "messages": state.messages,
         })
 
-        updated_clarified_input = result.get("clarified_input")
+        updated_clarified_input = result.get("clarified_input") or session.clarified_input
         ambiguous_items = result.get("ambiguous_items", [])
         clarification_message = result.get("clarification_message", "")
 
