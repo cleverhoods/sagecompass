@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal
+from typing import Any, Literal, cast
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -55,6 +55,7 @@ def make_node_ambiguity_clarification_external(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[AmbiguityClarificationExternalRoute]:
+        update: dict[str, Any]
         ambiguity = state.ambiguity
         target_phase = phase or ambiguity.target_step
         if not target_phase:
@@ -64,10 +65,10 @@ def make_node_ambiguity_clarification_external(
                     AIMessage(content="Unable to determine clarification target.")
                 ]
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
-                goto=END,
+                goto=cast(AmbiguityClarificationExternalRoute, END),
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)
@@ -76,15 +77,11 @@ def make_node_ambiguity_clarification_external(
             update = {
                 "messages": [AIMessage(content="Clarification complete.")]
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
-                goto=END,
+                goto=cast(AmbiguityClarificationExternalRoute, END),
             )
-
-        if ambiguity.resolved and not is_latest_message_human(state.messages):
-            logger.info("ambiguity_clarification_external.awaiting_user", phase=target_phase)
-            return Command(goto=END)
 
         question = get_current_clarifying_question(ambiguity)
         message = (
@@ -92,10 +89,15 @@ def make_node_ambiguity_clarification_external(
             if question
             else "Clarification needed to proceed."
         )
+        if not is_latest_message_human(state.messages):
+            logger.info("ambiguity_clarification_external.awaiting_user", phase=target_phase)
+            update = {"messages": [AIMessage(content=message)]}
+            validate_state_update(update, owner="ambiguity_clarification_external")
+            return Command(update=update, goto=cast(AmbiguityClarificationExternalRoute, END))
 
         clarification = ClarificationResponse(
             clarified_input=get_latest_user_input(state.messages),
-            clarified_keys=[],
+            clarified_keys=list(pending_keys),
             clarification_output=message,
         )
         updated_context = ambiguity.model_copy(
@@ -112,10 +114,10 @@ def make_node_ambiguity_clarification_external(
             "ambiguity": updated_context,
             "messages": [AIMessage(content=message)],
         }
-        validate_state_update(update)
+        validate_state_update(update, owner="ambiguity_clarification_external")
         return Command(
             update=update,
-            goto=END,
+            goto=cast(AmbiguityClarificationExternalRoute, END),
         )
 
     return node_ambiguity_clarification_external

@@ -3,23 +3,22 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
-from app.agents.ambiguity_clarification.agent import build_agent
 from app.agents.ambiguity_clarification.schema import (
     ClarificationResponse,
     OutputSchema,
 )
+from app.platform.contract.state import validate_state_update
 from app.platform.contract.structured_output import (
     extract_structured_response,
     validate_structured_response,
 )
-from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (
     format_ambiguity_key,
@@ -68,17 +67,24 @@ def make_node_ambiguity_clarification(
     Returns:
         A Command routing to `goto` or END when max rounds exceeded.
     """
-    agent = node_agent or build_agent()
+    agent = node_agent
+    if agent is None:
+        from app.agents.ambiguity_clarification.agent import build_agent
+
+        agent = build_agent()
 
     def node_ambiguity_clarification(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[AmbiguityClarificationRoute]:
+        update: dict[str, Any]
         user_input = get_latest_user_input(state.messages)
         if not user_input:
             logger.warning("ambiguity_clarification.empty_user_input", phase=phase)
-            update = {"messages": [AIMessage(content="Waiting for more details.")]}
-            validate_state_update(update)
+            update = {
+                "messages": [AIMessage(content="Waiting for more details.")]
+            }
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
                 goto=goto,
@@ -91,7 +97,7 @@ def make_node_ambiguity_clarification(
             update = {
                 "messages": [AIMessage(content="Unable to determine clarification target.")]
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
                 goto=goto,
@@ -117,7 +123,7 @@ def make_node_ambiguity_clarification(
                 "ambiguity": updated_context,
                 "messages": [AIMessage(content="Clarification complete. Continuing.")],
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(update=update, goto=goto)
 
         detected_items = ambiguity_context.detected
@@ -158,7 +164,7 @@ def make_node_ambiguity_clarification(
                 "ambiguity": exhausted_context,
                 "messages": [AIMessage(content="Unable to clarify the request.")],
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(update=update, goto=goto)
 
         selected_keys = [label for label, _ in labeled_items]
@@ -198,13 +204,13 @@ def make_node_ambiguity_clarification(
                 "messages": [AIMessage(content="Clarification failed. Please try again.")],
                 "ambiguity": ambiguity_context.model_copy(update={"eligible": False}),
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
                 goto=goto,
             )
 
-        structured = validate_structured_response(structured, OutputSchema)
+        structured = cast(OutputSchema, validate_structured_response(structured, OutputSchema))
 
         responses = structured.responses
         if not responses:
@@ -216,7 +222,7 @@ def make_node_ambiguity_clarification(
                 "messages": [AIMessage(content="Clarification failed. Please try again.")],
                 "ambiguity": ambiguity_context.model_copy(update={"eligible": False}),
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
                 goto=goto,
@@ -297,7 +303,7 @@ def make_node_ambiguity_clarification(
                 "ambiguity": updated_context,
                 "messages": _clarification_messages(),
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
                 goto=goto,
@@ -308,7 +314,7 @@ def make_node_ambiguity_clarification(
             "ambiguity": updated_context,
             "messages": [AIMessage(content="Clarification complete. Continuing.")],
         }
-        validate_state_update(update)
+        validate_state_update(update, owner="ambiguity_clarification")
         return Command(update=update, goto=goto)
 
     return node_ambiguity_clarification

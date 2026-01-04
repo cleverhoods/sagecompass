@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.structural
+
 
 def test_platform_domain_contracts() -> None:
     platform_root = Path("app/platform")

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from app.platform.contract import ArtifactEnvelope, ArtifactProvenance, EvidencePointer
+
+pytestmark = pytest.mark.compliance
 
 
 def _provenance() -> ArtifactProvenance:
@@ -18,7 +20,7 @@ def _provenance() -> ArtifactProvenance:
 def test_artifact_envelope_accepts_utc_timestamp() -> None:
     envelope = ArtifactEnvelope(
         schema_version="1",
-        timestamp_utc=datetime.now(timezone.utc),
+        timestamp_utc=datetime.now(UTC),
         provenance=_provenance(),
         payload={"result": "ok"},
     )
@@ -30,7 +32,7 @@ def test_artifact_envelope_rejects_naive_timestamp() -> None:
     with pytest.raises(ValueError):
         ArtifactEnvelope(
             schema_version="1",
-            timestamp_utc=datetime.utcnow(),
+            timestamp_utc=datetime.now(),
             provenance=_provenance(),
             payload={"result": "ok"},
         )

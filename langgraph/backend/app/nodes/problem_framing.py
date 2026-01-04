@@ -3,24 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
-from langchain_core.messages import SystemMessage
 from langchain_core.runnables import Runnable
-from langgraph.config import get_store
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.problem_framing.schema import ProblemFrame
+from app.platform.contract.state import validate_state_update
 from app.platform.contract.structured_output import (
     extract_structured_response,
     validate_structured_response,
 )
-from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
+from app.platform.runtime import collect_phase_evidence
 from app.platform.runtime.state_helpers import get_latest_user_input
 from app.runtime import SageRuntimeContext
-from app.state import PhaseEntry, SageState
+from app.state import EvidenceItem, PhaseEntry, SageState
 
 logger = get_logger("nodes.problem_framing")
 
@@ -61,56 +60,27 @@ def make_node_problem_framing(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[ProblemFramingRoute]:
+        update: dict[str, Any]
         user_input = get_latest_user_input(state.messages) or ""
 
         # Step 1: hydrate evidence
-        phase_entry = state.phases.get(phase) or PhaseEntry()
-        evidence = list(phase_entry.evidence or [])
-
-        context_docs: list[dict[str, Any]] = []
-        if evidence:
-            store = get_store()
-            for e in evidence[:max_context_items]:
-                ns = e.namespace
-                key = e.key
-                if not ns or not key:
-                    continue
-                item = store.get(tuple(ns), key)
-                if not item or not getattr(item, "value", None):
-                    continue
-                value = item.value or {}
-                context_docs.append({
-                    "text": value.get("text", ""),
-                    "metadata": {
-                        "title": value.get("title", ""),
-                        "tags": value.get("tags", []),
-                        "agents": value.get("agents", []),
-                        "changed": value.get("changed", 0),
-                        "store_namespace": ns,
-                        "store_key": key,
-                        "score": e.score,
-                    },
-                })
-
-        # Step 2: format context block
-        if context_docs:
-            context_block = "\n\n".join(
-                f"TITLE: {d['metadata'].get('title','')}\nTEXT: {d['text']}".strip()
-                for d in context_docs if d.get("text")
+        evidence_bundle = collect_phase_evidence(
+            state,
+            phase=phase,
+            max_items=max_context_items,
+        )
+        phase_entry = evidence_bundle.phase_entry
+        evidence = evidence_bundle.evidence
+        context_docs = evidence_bundle.context_docs
+        include_errors = False
+        if evidence_bundle.missing_store:
+            include_errors = True
+            state.errors.append(
+                f"{phase}: runtime store unavailable for evidence hydration"
             )
-            messages_for_agent = [
-                SystemMessage(
-                    content=(
-                        "Retrieved context (use as supporting input):\n\n"
-                        + context_block
-                    )
-                ),
-                *state.messages,
-            ]
-        else:
-            messages_for_agent = state.messages
+        messages_for_agent = state.messages
 
-        # Step 3: invoke agent
+        # Step 2: invoke agent
         agent_input: dict[str, Any] = {
             "task_input": user_input,
             "messages": messages_for_agent,
@@ -130,21 +100,27 @@ def make_node_problem_framing(
             state.phases[phase] = phase_entry
             state.errors.append(f"{phase}: missing structured_response")
             update = {"phases": state.phases, "errors": state.errors}
-            validate_state_update(update)
+            validate_state_update(update, owner="problem_framing")
             return Command(update=update, goto=goto)
 
-        pf = validate_structured_response(pf, ProblemFrame)
+        pf = cast(ProblemFrame, validate_structured_response(pf, ProblemFrame))
 
         logger.info("problem_framing.success", phase=phase)
 
+        normalized_evidence = [
+            item if isinstance(item, EvidenceItem) else EvidenceItem.model_validate(item)
+            for item in evidence
+        ]
         state.phases[phase] = PhaseEntry(
             data=pf.model_dump(),
             status="complete",
-            evidence=evidence,
+            evidence=normalized_evidence,
         )
 
         update = {"phases": state.phases}
-        validate_state_update(update)
+        if include_errors:
+            update["errors"] = state.errors
+        validate_state_update(update, owner="problem_framing")
         return Command(update=update, goto=goto)
 
     return node_problem_framing

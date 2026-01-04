@@ -13,9 +13,12 @@ from langchain_core.tools import BaseTool
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.middlewares.guardrails import make_guardrails_middleware
 from app.platform.contract.agents import validate_agent_schema
-from app.platform.contract.tools import validate_allowlist_contains_schema
+from app.platform.contract.tools import (
+    build_allowlist_contract,
+    validate_allowlist_contains_schema,
+)
 from app.platform.observability.logger import get_logger
-from app.platform.utils.agent_utils import build_tool_allowlist, compose_agent_prompt
+from app.platform.utils.agent_utils import compose_agent_prompt
 from app.platform.utils.model_factory import get_model_for_agent
 
 from .schema import OutputSchema
@@ -78,7 +81,7 @@ def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runn
         include_format_instructions=False,
     )
 
-    allowed_tools = build_tool_allowlist(tools, OutputSchema)
+    allowed_tools = build_allowlist_contract(tools, OutputSchema)
     validate_allowlist_contains_schema(allowed_tools, OutputSchema)
 
     middlewares: list[AgentMiddleware[AgentState, Any]] = [

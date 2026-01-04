@@ -22,7 +22,6 @@ from app.schemas.ambiguities import AmbiguityItem
 from app.state import AmbiguityContext, SageState
 from app.state.gating import GatingContext
 
-
 SCOPE_KEY = format_ambiguity_key(["scope", "channels", "coverage"])
 METRIC_KEY = format_ambiguity_key(["metric", "kpi", "success_measure"])
 TIMEFRAME_KEY = format_ambiguity_key(["timeframe", "timeline", "horizon"])

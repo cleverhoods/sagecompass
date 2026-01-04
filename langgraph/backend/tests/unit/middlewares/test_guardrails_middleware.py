@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from langchain.agents.middleware.types import ModelRequest
 from langchain_core.language_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -9,6 +10,8 @@ from langgraph.prebuilt.tool_node import ToolCallRequest, ToolRuntime
 
 from app.middlewares.guardrails import GuardrailsMiddleware
 from app.platform.policy.guardrails import build_guardrails_config
+
+pytestmark = pytest.mark.compliance
 
 
 def _fake_model() -> GenericFakeChatModel:

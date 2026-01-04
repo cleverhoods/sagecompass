@@ -1,11 +1,12 @@
 """Public contract surface for backend invariants."""
 
+from app.platform.contract.agents import validate_agent_schema
 from app.platform.contract.artifacts import (
     ArtifactEnvelope,
     ArtifactProvenance,
     EvidencePointer,
 )
-from app.platform.contract.agents import validate_agent_schema
+from app.platform.contract.guardrails import evaluate_guardrails_contract
 from app.platform.contract.namespaces import NamespaceParts, build_namespace
 from app.platform.contract.phases import validate_phase_registry
 from app.platform.contract.prompts import (
@@ -28,7 +29,6 @@ from app.platform.contract.tools import (
     build_allowlist_contract,
     validate_allowlist_contains_schema,
 )
-from app.platform.contract.guardrails import evaluate_guardrails_contract
 
 __all__ = [
     "ArtifactEnvelope",

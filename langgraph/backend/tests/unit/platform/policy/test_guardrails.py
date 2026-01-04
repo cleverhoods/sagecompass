@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
+
+pytestmark = pytest.mark.compliance
 
 
 def test_evaluate_guardrails_allows_in_scope() -> None:

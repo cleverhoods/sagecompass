@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
@@ -57,6 +57,7 @@ def make_node_retrieve_context(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[RetrieveContextRoute]:
+        update: dict[str, Any]
         query = get_latest_user_input(state.messages) or ""
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
@@ -66,7 +67,7 @@ def make_node_retrieve_context(
                     AIMessage(content="Unable to determine retrieval target.")
                 ]
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="retrieve_context")
             return Command(
                 update=update,
                 goto=goto,
@@ -111,7 +112,7 @@ def make_node_retrieve_context(
             "phases": phases,
             "messages": [AIMessage(content=message)],
         }
-        validate_state_update(update)
+        validate_state_update(update, owner="retrieve_context")
         return Command(
             update=update,
             goto=goto,

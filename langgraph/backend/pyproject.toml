@@ -39,6 +39,8 @@ pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "--strict-markers"
 markers = [
+  "compliance: flavoritism",
+  "structural: more flavoritism",
   "integration: tests that hit live/external services (opt-in)",
   "real_deps: tests that run against real dependencies without network calls"
 ]

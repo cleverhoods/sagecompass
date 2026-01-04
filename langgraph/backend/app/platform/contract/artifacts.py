@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
@@ -67,6 +67,6 @@ class ArtifactEnvelope(BaseModel):
     def _validate_timestamp_utc(cls, value: datetime) -> datetime:
         if value.tzinfo is None:
             raise ValueError("timestamp_utc must be timezone-aware")
-        if value.tzinfo.utcoffset(value) != timezone.utc.utcoffset(value):
+        if value.tzinfo.utcoffset(value) != UTC.utcoffset(value):
             raise ValueError("timestamp_utc must be in UTC")
         return value

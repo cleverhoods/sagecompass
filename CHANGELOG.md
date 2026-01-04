@@ -5,6 +5,15 @@
 - [langgraph/backend] Add a bounded OpenAI integration test for Problem Framing with explicit API key checks.
 - [langgraph/backend] Add platform contract models for artifacts, namespaces, and prompt validation.
 - [langgraph/backend] Add contract helpers for state ownership, phases, agents, guardrails, tool allowlists, and structured outputs.
+- [langgraph/backend] Add a runtime helper to hydrate phase evidence into LangChain documents.
+- [langgraph/backend] Expose hydrated context docs via a dedicated tool + middleware to avoid prompt injection.
+- [langgraph/backend] Add deterministic context docs middleware unit coverage plus integration tests for ambiguity preflight and main graph flows.
+- [docs] Map platform contracts to official LangChain/LangGraph reference docs.
+- [docs] Reference the platform contract Docs map from RULES so every developer sees the same references.
+- [docs] Add compliance checks to keep the contract Docs map and audit linkage in RULES current.
+- [langgraph/backend] Add an OpenAI-backed ambiguity scan integration test that loads credentials from `.env`.
+### Fixed
+- [langgraph/backend] Ensure OpenAI integration tests override guardrails to allow churn prompts.
 - [langgraph/backend] Add an `ambiguity_supervisor` node to centralize ambiguity preflight routing.
 - [langgraph/backend] Introduce `ClarificationContext` plus runtime helpers to reset global clarification state for the preflight routing flow.
 - [langgraph/backend] Add an integration test that exercises guardrails -> ambiguity scan -> retrieval -> clarification -> phase supervisor routing.
@@ -42,6 +51,14 @@
 - [langgraph/backend] Validate SageState updates in ambiguity supervisor, retrieval, phase supervisor, and external clarification nodes.
 - [langgraph/backend] Remove legacy `graphs/phases` and tests directories after the subgraph layout move.
 - [docs] Document OpenAI integration test requirements in backend tests guidance and reference it from RULES.
+- [langgraph/backend] Enforce state ownership, phase status, agent schema field types, and prompt placeholder variables via contracts.
+- [langgraph/backend] Centralize evidence hydration in runtime helpers and stop injecting retrieved context into system prompts.
+- [langgraph/backend] Reuse phase evidence hydration for ambiguity scan and problem framing while routing context through deterministic tool messages.
+- [langgraph/backend] Remove the nothingizer tool from agent toolsets now that context docs tooling is available.
+- [docs] Lock the deterministic tool-calling rule in backend RULES.
+- [langgraph/backend] Drive deterministic context docs tool calls via wrap_model_call and wrap_tool_call middleware.
+- [langgraph/backend] Build store namespaces for context lookup and vector writing via platform namespace contracts.
+- [docs] Expand backend RULES with shared prompt asset guidance, testability expectations, and evidence hydration policy.
 - [docs] Compress backend RULES into a policy index that points to contract implementations.
 - [langgraph/backend] Move phase and non-phase subgraphs under `app/graphs/subgraphs/` and update imports/docs.
 - [langgraph/backend] Represent ambiguity keys as three-category lists and update clarification flow to track the new labels.
@@ -125,6 +142,13 @@
 
 
 ### Fixed
+- [langgraph/backend] Restore phase registry imports for supervisors and fix missing evidence reference in problem framing.
+- [langgraph/backend] Enforce state ownership groups and include external clarification ownership.
+- [langgraph/backend] Allow supervisor ambiguity updates and guard evidence hydration when runtime store is unavailable.
+- [langgraph/backend] Move ambiguity node agent construction into factories to remove import-time side effects.
+- [langgraph/backend] Resolve typing issues from deterministic context docs middleware and node update annotations to keep mypy passing.
+- [langgraph/backend] Avoid empty clarified keys in external clarification and surface missing evidence stores in node errors.
+- [docs] Remove deprecated UTC timestamp usage in artifact contract tests.
 - [langgraph/backend] Default autonomous ambiguity clarifications to resolve pending keys when the agent updates clarified_input without listing keys.
 - [langgraph/backend] Format `keys_to_clarify` as a list when injecting ambiguity clarification prompts.
 - [langgraph/backend] Stop the supervisor from looping when ambiguity clarification is exhausted.

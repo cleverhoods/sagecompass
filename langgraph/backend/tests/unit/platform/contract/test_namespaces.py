@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import pytest
+
 from app.platform.contract import NamespaceParts, build_namespace
+
+pytestmark = pytest.mark.compliance
 
 
 def test_build_namespace_omits_empty_tenant() -> None:

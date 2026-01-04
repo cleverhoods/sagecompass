@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from app.graphs.subgraphs.ambiguity_preflight.subgraph import (
     build_ambiguity_preflight_subgraph,
 )
+
+pytestmark = pytest.mark.structural
 
 
 def test_ambiguity_preflight_subgraph_wires_nodes() -> None:

@@ -31,6 +31,16 @@ def validate_prompt_placeholders(prompt_text: str, placeholders: Sequence[str]) 
         raise ValueError(f"Missing prompt placeholders: {missing}")
 
 
+def validate_prompt_variables(
+    variables: Sequence[str],
+    placeholders: Sequence[str],
+) -> None:
+    """Validate that required placeholders are declared as template variables."""
+    missing = [placeholder for placeholder in placeholders if placeholder not in variables]
+    if missing:
+        raise ValueError(f"Missing prompt variables: {missing}")
+
+
 def validate_prompt_suffix_order(
     suffixes: Sequence[str],
     required_order: Sequence[str],

@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from app.platform.config import CONFIG_DIR, FileLoader, load_project_env
+
+pytestmark = pytest.mark.structural
 
 
 def test_config_paths_resolve() -> None:

@@ -18,6 +18,8 @@ RULES.md is a policy index of enforceable invariants. Canonical contracts live i
 - MUST treat `uv.lock` as the source of truth for installed versions.
 - MUST use APIs that exist in pinned versions.
 - MUST link official docs for non-trivial framework guidance.
+- MUST use `app/platform/contract/README.md` as the knowledge base for every audit/review; audits MUST cite the Docs map when validating LangChain/LangGraph/LangSmith alignment.
+- MUST update the Docs map when adding or changing contracts so its links remain authoritative.
 - MUST NOT add new dependencies without explicit proposal + `uv.lock` updates.
 
 ### State + contracts
@@ -32,6 +34,7 @@ RULES.md is a policy index of enforceable invariants. Canonical contracts live i
 ### Prompts
 - MUST validate prompt placeholders/suffix order with `PromptContract` helpers (`app/platform/contract/prompts.py`).
 - MUST keep prompt files under agent folders (`system.prompt` required).
+- `global_system.prompt` MAY live under `app/agents/` as a shared prompt asset.
 - MUST NOT inject retrieved context into prompts.
 
 ### Graphs + phases
@@ -47,9 +50,14 @@ RULES.md is a policy index of enforceable invariants. Canonical contracts live i
 - MUST keep nodes orchestration-only (no domain reasoning).
 - MUST log entry, routing decisions, errors, and output summaries (no raw sensitive data).
 - MUST validate structured outputs with `validate_structured_response` (`app/platform/contract/structured_output.py`).
-- MUST keep node control flow shallow (no nested if/else beyond one level).
-- MUST use guard clauses with early returns for invalid inputs.
 - MUST isolate complex branching into pure helper functions with unit tests.
+
+### Testability (component design)
+- MUST prefer small, pure functions for branching/decision logic; keep them separate from I/O.
+- MUST keep control flow shallow (no nested if/else beyond one level).
+- MUST use guard clauses with early returns for invalid inputs or no-op paths.
+- MUST avoid hidden state; pass dependencies explicitly (DI-first).
+- MUST make side effects observable or injectable so unit tests can assert behavior.
 
 ### Agents
 - MUST be stateless and created via `build_agent()`.
@@ -60,7 +68,12 @@ RULES.md is a policy index of enforceable invariants. Canonical contracts live i
 ### Tools
 - MUST be typed, stateless, and DI-injected.
 - MUST enforce tool allowlists/restrictions in code (middleware/tool wrappers).
-- MUST build allowlists with `build_allowlist_contract` (`app/platform/contract/tools.py`).
+- MUST build allowlists with `build_allowlist_contract` (`app/platform/contract/tools.py`) when tools are bound or injected.
+- Agents MAY be constructed with empty tool sets; tools can be attached dynamically to avoid prompt bloat.
+- Tool calling MUST be deterministic in SageCompass; middleware or nodes must inject tool outputs explicitly rather than relying on model-initiated calls.
+
+### Evidence + retrieval
+- MUST centralize evidence hydration in `app/platform/runtime` helpers; nodes MUST NOT read from the Store directly.
 
 ### Guardrails
 - MUST centralize guardrail logic in `app/platform/policy/*`.
@@ -80,6 +93,7 @@ RULES.md is a policy index of enforceable invariants. Canonical contracts live i
 - MUST register pytest markers under `[tool.pytest.ini_options]` (strict markers).
 - MUST test against real pinned frameworks; MUST NOT shadow framework packages via `sys.path` stubs.
 - MUST maintain at least one bounded real-provider integration test (see `tests/README.md`).
+- MUST keep compliance checks in both tooling (lint/format/type) and tests; use compliance tests for architectural/contracts that linters cannot enforce.
 
 ### Change policy
 - MUST update PhaseContract conventions, persistence docs, and integration coverage when adding new phases or artifact types.

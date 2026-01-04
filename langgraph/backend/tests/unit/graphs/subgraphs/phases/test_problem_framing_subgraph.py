@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from app.graphs.subgraphs.phases.problem_framing.subgraph import (
     build_problem_framing_subgraph,
 )
+
+pytestmark = pytest.mark.structural
 
 
 def test_problem_framing_subgraph_routes_via_phase_supervisor() -> None:

@@ -6,12 +6,12 @@ from langchain_core.messages import HumanMessage
 
 from app.agents.ambiguity_clarification.schema import ClarificationResponse
 from app.platform.runtime import (
+    format_ambiguity_key,
     get_clarified_keys,
     get_current_clarifying_question,
     get_latest_user_input,
     get_pending_ambiguity_keys,
     get_pending_ambiguity_questions,
-    format_ambiguity_key,
     get_phase_names,
     phase_to_node,
     reset_clarification_context,

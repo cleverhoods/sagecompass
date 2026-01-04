@@ -9,13 +9,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from langchain_core.tools import BaseTool
 from pydantic import BaseModel
 
 from app.platform.utils.agent_utils import build_tool_allowlist
 
 
 def build_allowlist_contract(
-    tools: Sequence[object],
+    tools: Sequence[BaseTool],
     response_schema: type[BaseModel] | None = None,
 ) -> list[str]:
     """Build the canonical allowlist for tools and structured output."""

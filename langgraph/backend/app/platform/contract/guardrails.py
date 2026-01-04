@@ -12,7 +12,6 @@ from collections.abc import Mapping
 from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
 from app.state.gating import GuardrailResult
 
-
 GUARDRAILS_ENTRYPOINT = "app.platform.policy.guardrails.evaluate_guardrails"
 
 

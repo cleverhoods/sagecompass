@@ -15,7 +15,10 @@ from langchain_core.prompts import (
 )
 from pydantic import BaseModel
 
-from app.platform.contract.prompts import validate_prompt_placeholders
+from app.platform.contract.prompts import (
+    validate_prompt_placeholders,
+    validate_prompt_variables,
+)
 
 PromptLike = str | ChatPromptTemplate | SystemMessagePromptTemplate | BasePromptTemplate
 PromptSource = PromptLike | Callable[[ModelRequest], PromptLike]
@@ -90,6 +93,7 @@ def make_dynamic_prompt_middleware(
             return SystemMessage(content=text)
 
         if isinstance(prompt_obj, ChatPromptTemplate):
+            validate_prompt_variables(prompt_obj.input_variables, placeholders)
             messages: list[BaseMessage] = prompt_obj.format_messages(**values)
             system_contents = [
                 str(m.content) for m in messages if isinstance(m, SystemMessage)
@@ -98,11 +102,13 @@ def make_dynamic_prompt_middleware(
             return SystemMessage(content=text)
 
         if isinstance(prompt_obj, SystemMessagePromptTemplate):
+            validate_prompt_variables(prompt_obj.input_variables, placeholders)
             msg = prompt_obj.format(**values)
             assert isinstance(msg, SystemMessage)
             return msg
 
         if isinstance(prompt_obj, BasePromptTemplate):
+            validate_prompt_variables(prompt_obj.input_variables, placeholders)
             text = prompt_obj.format(**values)
             return SystemMessage(content=text)
 

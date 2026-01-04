@@ -10,9 +10,9 @@ from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.config.file_loader import FileLoader
+from app.platform.contract.guardrails import evaluate_guardrails_contract
 from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
-from app.platform.contract.guardrails import evaluate_guardrails_contract
 from app.platform.runtime.state_helpers import get_latest_user_input
 from app.runtime import SageRuntimeContext
 from app.state import SageState
@@ -69,7 +69,7 @@ def make_node_guardrails_check(
                 update={"guardrail": guardrail, "original_input": original_input}
             )
         }
-        validate_state_update(update)
+        validate_state_update(update, owner="gating_guardrails")
 
         # Stop only if unsafe
         if not (guardrail.is_safe and guardrail.is_in_scope):

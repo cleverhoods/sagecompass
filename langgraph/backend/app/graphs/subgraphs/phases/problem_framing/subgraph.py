@@ -10,11 +10,8 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
-from app.agents.problem_framing.agent import build_agent as build_problem_framing_agent
-from app.nodes import (
-    make_node_phase_supervisor,
-    make_node_problem_framing,
-)
+from app.nodes.phase_supervisor import make_node_phase_supervisor
+from app.nodes.problem_framing import make_node_problem_framing
 from app.runtime import SageRuntimeContext
 from app.state import SageState
 
@@ -41,9 +38,13 @@ def build_problem_framing_subgraph(
         return cast(Callable[[SageState, Runtime[SageRuntimeContext]], Any], node)
 
     # Inject all nodes
-    resolved_problem_framing_agent = (
-        problem_framing_agent or build_problem_framing_agent()
-    )
+    resolved_problem_framing_agent = problem_framing_agent
+    if resolved_problem_framing_agent is None:
+        from app.agents.problem_framing.agent import (
+            build_agent as build_problem_framing_agent,
+        )
+
+        resolved_problem_framing_agent = build_problem_framing_agent()
 
     problem_framing_node = make_node_problem_framing(
         agent=resolved_problem_framing_agent,

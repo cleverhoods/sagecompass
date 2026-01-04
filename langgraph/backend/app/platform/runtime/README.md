@@ -7,6 +7,8 @@ Public entrypoints:
 - `phase_to_node`
 - `reset_clarification_context`
 - `get_phase_names`
+- `hydrate_evidence_docs`
+- `collect_phase_evidence`
 
 Non-goals:
 - graph wiring or node factories

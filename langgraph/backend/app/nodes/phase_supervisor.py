@@ -81,7 +81,7 @@ def make_node_phase_supervisor(
                     AIMessage(content=f"Running {phase} analysis.")
                 ]
             }
-            validate_state_update(update)
+            validate_state_update(update, owner="phase_supervisor")
             return Command(
                 update=update,
                 goto=cast(PhaseSupervisorRoute, phase_to_node(phase)),
@@ -90,7 +90,7 @@ def make_node_phase_supervisor(
         # Phase complete
         logger.info("supervisor.complete", phase=phase)
         update = {"messages": [AIMessage(content=f"{phase} phase complete.")]}
-        validate_state_update(update)
+        validate_state_update(update, owner="phase_supervisor")
         return Command(
             update=update,
             goto=cast(PhaseSupervisorRoute, END),
