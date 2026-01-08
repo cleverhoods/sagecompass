@@ -22,11 +22,7 @@ class PromptContract(BaseModel):
 
 def validate_prompt_placeholders(prompt_text: str, placeholders: Sequence[str]) -> None:
     """Validate that required placeholders are present in the prompt."""
-    missing = [
-        placeholder
-        for placeholder in placeholders
-        if "{" + placeholder + "}" not in prompt_text
-    ]
+    missing = [placeholder for placeholder in placeholders if "{" + placeholder + "}" not in prompt_text]
     if missing:
         raise ValueError(f"Missing prompt placeholders: {missing}")
 
@@ -50,5 +46,5 @@ def validate_prompt_suffix_order(
         return
     if len(suffixes) < len(required_order):
         raise ValueError("Prompt suffixes shorter than required order.")
-    if list(suffixes[-len(required_order):]) != list(required_order):
+    if list(suffixes[-len(required_order) :]) != list(required_order):
         raise ValueError("Prompt suffix order does not match required order.")

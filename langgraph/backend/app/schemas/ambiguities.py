@@ -15,16 +15,14 @@ class AmbiguityItem(BaseModel):
         key contains exactly three category labels.
         importance and confidence are decimals between 0.01 and 0.99.
     """
+
     key: list[str] = Field(
         ...,
         min_length=3,
         max_length=3,
         description="Three most fitting categories for the ambiguity.",
     )
-    description: str = Field(
-        ...,
-        description="Human-readable description of the ambiguity."
-    )
+    description: str = Field(..., description="Human-readable description of the ambiguity.")
     clarifying_question: str = Field(
         ...,
         description="A concise question that directly targets this ambiguity.",
@@ -43,26 +41,32 @@ class AmbiguityItem(BaseModel):
         le=1.0,
         description="Normalized impact strength for the assumption (0–1).",
     )
-    importance: Annotated[Decimal, Field(
-        ...,
-        ge=0.01,
-        le=0.99,
-        decimal_places=2,
-        description=(
-            "How critical this ambiguity is for framing the problem. "
-            "Higher values (close to 0.99) are routed first."
-        )
-    )]
-    confidence: Annotated[Decimal, Field(
-        ...,
-        ge=0.01,
-        le=0.99,
-        decimal_places=2,
-        description=(
-            "How confident the agent is that the ambiguity is valid. "
-            "Combine with importance to sort clarifications."
-        )
-    )]
+    importance: Annotated[
+        Decimal,
+        Field(
+            ...,
+            ge=0.01,
+            le=0.99,
+            decimal_places=2,
+            description=(
+                "How critical this ambiguity is for framing the problem. "
+                "Higher values (close to 0.99) are routed first."
+            ),
+        ),
+    ]
+    confidence: Annotated[
+        Decimal,
+        Field(
+            ...,
+            ge=0.01,
+            le=0.99,
+            decimal_places=2,
+            description=(
+                "How confident the agent is that the ambiguity is valid. "
+                "Combine with importance to sort clarifications."
+            ),
+        ),
+    ]
 
     @field_validator("key")
     @classmethod

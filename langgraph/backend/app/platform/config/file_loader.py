@@ -15,6 +15,7 @@ from app.platform.observability.logger import get_logger
 
 class FileLoader:
     """Load prompts, configs, and schemas from the filesystem."""
+
     DEV_MODE = os.getenv("SAGECOMPASS_ENV", "prod").lower() == "dev"
 
     @staticmethod
@@ -86,13 +87,9 @@ class FileLoader:
         - few-shots require `few-shots.prompt` + `examples.json` in the agent prompts folder.
         """
         if agent_name is None:
-            file_path = os.path.join(
-                AGENTS_DIR, f"{prompt_name}.prompt"
-            )
+            file_path = os.path.join(AGENTS_DIR, f"{prompt_name}.prompt")
         else:
-            file_path = os.path.join(
-                AGENTS_DIR, agent_name, "prompts", f"{prompt_name}.prompt"
-            )
+            file_path = os.path.join(AGENTS_DIR, agent_name, "prompts", f"{prompt_name}.prompt")
         return cls._read_file(file_path, category="prompt")
 
     @classmethod
@@ -115,9 +112,7 @@ class FileLoader:
     @cache
     def load_schema(cls, agent_name: str, schema_name: str):
         """Load a JSON schema file for an agent."""
-        file_path = os.path.join(
-            APP_ROOT, "agents", agent_name, f"{schema_name}.json"
-        )
+        file_path = os.path.join(APP_ROOT, "agents", agent_name, f"{schema_name}.json")
         return cls._read_file(file_path, loader=json.load, category="schema")
 
     # --- Specialized shortcuts -------------------------------------------
@@ -146,9 +141,7 @@ class FileLoader:
         category = "provider"
         provider_dir = CONFIG_DIR / category
         file_path = provider_dir / f"{provider}.yaml"
-        return cls._read_file(
-            str(file_path), loader=yaml.safe_load, category=category
-        )
+        return cls._read_file(str(file_path), loader=yaml.safe_load, category=category)
 
     @classmethod
     @cache
@@ -159,6 +152,4 @@ class FileLoader:
             Parsed YAML data or False if missing/invalid.
         """
         file_path = CONFIG_DIR / "guardrails.yaml"
-        return cls._read_file(
-            str(file_path), loader=yaml.safe_load, category="config"
-        )
+        return cls._read_file(str(file_path), loader=yaml.safe_load, category="config")

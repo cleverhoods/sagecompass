@@ -15,6 +15,7 @@ class OutputSchema(BaseModel):
         `ambiguities` contains zero or more AmbiguityItem entries.
         Each ambiguity includes three category labels in `key`.
     """
+
     ambiguities: list[AmbiguityItem] = Field(
         default_factory=list,
         description="List of ambiguity payloads.",

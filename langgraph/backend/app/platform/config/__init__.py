@@ -24,8 +24,6 @@ from app.platform.config.paths import (
 )
 
 __all__ = [
-    "load_project_env",
-    "FileLoader",
     "AGENTS_DIR",
     "APP_ROOT",
     "BACKEND_ROOT",
@@ -42,4 +40,6 @@ __all__ = [
     "TOOLS_DIR",
     "UNSTRUCTURED_ROOT",
     "VECTOR_DIR",
+    "FileLoader",
+    "load_project_env",
 ]

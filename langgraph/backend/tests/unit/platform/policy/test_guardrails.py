@@ -8,10 +8,12 @@ pytestmark = pytest.mark.compliance
 
 
 def test_evaluate_guardrails_allows_in_scope() -> None:
-    config = build_guardrails_config({
-        "allowed_topics": ["automation"],
-        "blocked_keywords": ["hack"],
-    })
+    config = build_guardrails_config(
+        {
+            "allowed_topics": ["automation"],
+            "blocked_keywords": ["hack"],
+        }
+    )
 
     result = evaluate_guardrails("automation planning", config)
 
@@ -20,10 +22,12 @@ def test_evaluate_guardrails_allows_in_scope() -> None:
 
 
 def test_evaluate_guardrails_denies_unsafe_or_out_of_scope() -> None:
-    config = build_guardrails_config({
-        "allowed_topics": ["automation"],
-        "blocked_keywords": ["hack"],
-    })
+    config = build_guardrails_config(
+        {
+            "allowed_topics": ["automation"],
+            "blocked_keywords": ["hack"],
+        }
+    )
 
     result = evaluate_guardrails("hack the system", config)
 

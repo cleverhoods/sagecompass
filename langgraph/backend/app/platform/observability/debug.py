@@ -15,4 +15,5 @@ def maybe_attach_pycharm() -> None:
         return
 
     import pydevd_pycharm  # type: ignore[import-untyped]
+
     pydevd_pycharm.settrace(host, port=int(port), suspend=False)

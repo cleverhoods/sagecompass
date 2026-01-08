@@ -33,13 +33,10 @@ def validate_agent_schema(agent_name: str) -> type[BaseModel]:
     """Validate and return the agent OutputSchema for the given agent name."""
     schema_cls = load_agent_schema(agent_name)
     if not issubclass(schema_cls, BaseModel):
-        raise TypeError(
-            f"OutputSchema for agent {agent_name!r} must be a BaseModel subclass."
-        )
+        raise TypeError(f"OutputSchema for agent {agent_name!r} must be a BaseModel subclass.")
     for field_name, field in schema_cls.model_fields.items():
         if _contains_forbidden_types(field.annotation):
             raise TypeError(
-                f"OutputSchema field {field_name!r} on {agent_name!r} uses "
-                "dict/Mapping/Any which is not allowed."
+                f"OutputSchema field {field_name!r} on {agent_name!r} uses dict/Mapping/Any which is not allowed."
             )
     return schema_cls

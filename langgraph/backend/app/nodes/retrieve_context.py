@@ -62,11 +62,7 @@ def make_node_retrieve_context(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("retrieve_context.missing_target_step")
-            update = {
-                "messages": [
-                    AIMessage(content="Unable to determine retrieval target.")
-                ]
-            }
+            update = {"messages": [AIMessage(content="Unable to determine retrieval target.")]}
             validate_state_update(update, owner="retrieve_context")
             return Command(
                 update=update,
@@ -76,12 +72,15 @@ def make_node_retrieve_context(
 
         logger.info("retrieve_context.start", phase=target_phase, query=query)
 
-        results = tool.invoke(
-            {
-                "query": query,
-                "collection": collection_name,
-            }
-        ) or []
+        results = (
+            tool.invoke(
+                {
+                    "query": query,
+                    "collection": collection_name,
+                }
+            )
+            or []
+        )
 
         evidence: list[EvidenceItem] = []
         for d in results:

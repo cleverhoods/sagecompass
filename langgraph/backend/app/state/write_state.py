@@ -7,6 +7,7 @@ from typing import TypedDict
 
 class VectorWriteItem(TypedDict):
     """Single vector write item payload."""
+
     uuid: str
     title: str
     text: str
@@ -14,6 +15,8 @@ class VectorWriteItem(TypedDict):
     agents: list[str]
     changed: int
 
+
 class VectorWriteState(TypedDict, total=False):
     """State container for vector write batches."""
+
     items: list[VectorWriteItem]

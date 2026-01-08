@@ -12,10 +12,7 @@ ambiguity_preflight_contract = PhaseContract(
     name="ambiguity_preflight",
     build_graph=build_ambiguity_preflight_subgraph,
     output_schema=AmbiguityContext,
-    description=(
-        "Runs ambiguity scan, optional retrieval + rescan, and clarification loop "
-        "for a target phase."
-    ),
+    description=("Runs ambiguity scan, optional retrieval + rescan, and clarification loop for a target phase."),
     requires_evidence=False,
     retrieval_enabled=False,
     clarification_enabled=True,

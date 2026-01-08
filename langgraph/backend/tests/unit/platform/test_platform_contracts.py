@@ -12,11 +12,7 @@ def test_platform_domain_contracts() -> None:
     if not platform_root.exists():
         return
 
-    domain_dirs = [
-        path
-        for path in platform_root.iterdir()
-        if path.is_dir() and not path.name.startswith("__")
-    ]
+    domain_dirs = [path for path in platform_root.iterdir() if path.is_dir() and not path.name.startswith("__")]
 
     for domain in domain_dirs:
         readme = domain / "README.md"

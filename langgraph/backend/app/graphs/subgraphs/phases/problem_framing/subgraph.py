@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal, TypeVar
 
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -33,9 +33,13 @@ def build_problem_framing_subgraph(
     """
     graph = StateGraph(SageState, context_schema=SageRuntimeContext)
     phase = "problem_framing"
+    T = TypeVar("T")
 
-    def _as_runtime_node(node):
-        return cast(Callable[[SageState, Runtime[SageRuntimeContext]], Any], node)
+    def _as_runtime_node(node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T]) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
+        def runtime_node(state: SageState, runtime: Runtime[SageRuntimeContext]) -> T:
+            return node(state, runtime)
+
+        return runtime_node
 
     # Inject all nodes
     resolved_problem_framing_agent = problem_framing_agent
@@ -57,7 +61,7 @@ def build_problem_framing_subgraph(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[Literal["phase_supervisor"]]:
-        return cast(Command[Literal["phase_supervisor"]], problem_framing_node(state, runtime))
+        return problem_framing_node(state, runtime)
 
     def _phase_supervisor(
         state: SageState,
@@ -65,8 +69,8 @@ def build_problem_framing_subgraph(
     ) -> Command[Literal["problem_framing", "__end__"]]:
         cmd = phase_supervisor_node(state, runtime)
         if cmd.goto == "problem_framing":
-            return cast(Command[Literal["problem_framing", "__end__"]], cmd)
-        return cast(Command[Literal["problem_framing", "__end__"]], Command(update=cmd.update, goto="__end__"))
+            return cmd
+        return Command(update=cmd.update, goto="__end__")
 
     graph.add_node("problem_framing", _as_runtime_node(_problem_framing))
 
@@ -76,7 +80,5 @@ def build_problem_framing_subgraph(
     # Control flow (loop + termination)
     graph.set_entry_point("phase_supervisor")
 
-    return cast(
-        CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState],
-        graph.compile(),
-    )
+    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile()
+    return compiled_graph

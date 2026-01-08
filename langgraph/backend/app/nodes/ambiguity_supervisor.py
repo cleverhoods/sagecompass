@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -41,9 +41,7 @@ def make_node_ambiguity_supervisor(
     scan_node: Literal["ambiguity_scan"] = "ambiguity_scan",
     retrieve_node: Literal["retrieve_context"] = "retrieve_context",
     clarification_node: Literal["ambiguity_clarification"] = "ambiguity_clarification",
-    external_clarification_node: Literal[
-        "ambiguity_clarification_external"
-    ] = "ambiguity_clarification_external",
+    external_clarification_node: Literal["ambiguity_clarification_external"] = "ambiguity_clarification_external",
     max_context_retrieval_rounds: int = 1,
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
@@ -78,11 +76,7 @@ def make_node_ambiguity_supervisor(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_supervisor.missing_target_step")
-            update = {
-                "messages": [
-                    AIMessage(content="Unable to determine ambiguity target.")
-                ]
-            }
+            update = {"messages": [AIMessage(content="Unable to determine ambiguity target.")]}
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
@@ -94,11 +88,7 @@ def make_node_ambiguity_supervisor(
         phase_contract = PHASES.get(target_phase)
         if phase_contract is None:
             logger.warning("ambiguity_supervisor.unknown_phase", phase=target_phase)
-            update = {
-                "messages": [
-                    AIMessage(content="Unable to determine phase contract.")
-                ]
-            }
+            update = {"messages": [AIMessage(content="Unable to determine phase contract.")]}
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
@@ -107,9 +97,7 @@ def make_node_ambiguity_supervisor(
 
         ambiguity = state.ambiguity
         if not ambiguity.checked:
-            update = {
-                "messages": [AIMessage(content="Checking for ambiguities.")]
-            }
+            update = {"messages": [AIMessage(content="Checking for ambiguities.")]}
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
@@ -119,25 +107,14 @@ def make_node_ambiguity_supervisor(
         phase_entry = state.phases.get(target_phase) or PhaseEntry()
         evidence = list(phase_entry.evidence or [])
 
-        retrieval_allowed = (
-            phase_contract.retrieval_enabled
-            and phase_contract.requires_evidence
-        )
+        retrieval_allowed = phase_contract.retrieval_enabled and phase_contract.requires_evidence
         retrieval_round = ambiguity.context_retrieval_round
 
-        if (
-            retrieval_allowed
-            and not evidence
-            and retrieval_round < max_context_retrieval_rounds
-        ):
-            updated_ambiguity = ambiguity.model_copy(
-                update={"context_retrieval_round": retrieval_round + 1}
-            )
+        if retrieval_allowed and not evidence and retrieval_round < max_context_retrieval_rounds:
+            updated_ambiguity = ambiguity.model_copy(update={"context_retrieval_round": retrieval_round + 1})
             update = {
                 "ambiguity": updated_ambiguity,
-                "messages": [
-                    AIMessage(content="Retrieving context for this step.")
-                ],
+                "messages": [AIMessage(content="Retrieving context for this step.")],
             }
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
@@ -145,16 +122,8 @@ def make_node_ambiguity_supervisor(
                 goto=retrieve_node,
             )
 
-        if (
-            retrieval_allowed
-            and evidence
-            and ambiguity.last_scan_retrieval_round < ambiguity.context_retrieval_round
-        ):
-            update = {
-                "messages": [
-                    AIMessage(content="Rescanning ambiguities with retrieved context.")
-                ]
-            }
+        if retrieval_allowed and evidence and ambiguity.last_scan_retrieval_round < ambiguity.context_retrieval_round:
+            update = {"messages": [AIMessage(content="Rescanning ambiguities with retrieved context.")]}
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
@@ -163,22 +132,16 @@ def make_node_ambiguity_supervisor(
 
         if ambiguity.exhausted:
             logger.info("ambiguity_supervisor.exhausted", phase=target_phase)
-            update = {
-                "messages": [
-                    AIMessage(content="Unable to clarify the request.")
-                ]
-            }
+            update = {"messages": [AIMessage(content="Unable to clarify the request.")]}
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
-                goto=cast(AmbiguitySupervisorRoute, END),
+                goto=END,
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)
         if ambiguity.eligible and not pending_keys:
-            update = {
-                "messages": [AIMessage(content="Ambiguity checks complete.")]
-            }
+            update = {"messages": [AIMessage(content="Ambiguity checks complete.")]}
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
@@ -186,11 +149,7 @@ def make_node_ambiguity_supervisor(
             )
 
         question = get_current_clarifying_question(ambiguity)
-        status = (
-            f"Clarification pending: {question}"
-            if question
-            else "Clarification pending for unresolved ambiguity."
-        )
+        status = f"Clarification pending: {question}" if question else "Clarification pending for unresolved ambiguity."
         update = {"messages": [AIMessage(content=status)]}
         validate_state_update(update, owner="ambiguity_supervisor")
         return Command(

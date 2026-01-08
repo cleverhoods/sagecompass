@@ -8,11 +8,11 @@ from .state import EvidenceItem, PhaseEntry, PhaseStatus, SageState
 from .write_state import VectorWriteState
 
 __all__ = [
-    "SageState",
     "AmbiguityContext",
     "EvidenceItem",
+    "GatingContext",
     "PhaseEntry",
     "PhaseStatus",
+    "SageState",
     "VectorWriteState",
-    "GatingContext",
 ]

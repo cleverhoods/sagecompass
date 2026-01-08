@@ -12,10 +12,7 @@ problem_framing_contract = PhaseContract(
     name="problem_framing",
     build_graph=build_problem_framing_subgraph,
     output_schema=ProblemFrame,
-    description=(
-        "Frames the problem before committing to AI. "
-        "Ensures scope, ambiguity, and relevance are addressed."
-    ),
+    description=("Frames the problem before committing to AI. Ensures scope, ambiguity, and relevance are addressed."),
     requires_evidence=True,
     retrieval_enabled=True,
     clarification_enabled=True,

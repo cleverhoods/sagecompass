@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal, cast
+from typing import Literal, TypeVar
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -39,24 +39,21 @@ def build_write_graph(
     graph = StateGraph(VectorWriteState, context_schema=SageRuntimeContext)
 
     resolved_write_node: WriteNodeFn = write_node or make_node_write_vector()
+    T = TypeVar("T")
 
-    graph.add_node(
-        "vector_writer",
-        cast(
-            Callable[[VectorWriteState, Runtime[SageRuntimeContext]], Command[Literal["__end__"]]],
-            resolved_write_node,
-        ),
-    )  # type: ignore[call-overload]
+    def _as_runtime_node(
+        node: Callable[[VectorWriteState, Runtime[SageRuntimeContext] | None], Command[Literal["__end__"]]],
+    ) -> Callable[[VectorWriteState, Runtime[SageRuntimeContext]], Command[Literal["__end__"]]]:
+        def runtime_node(state: VectorWriteState, runtime: Runtime[SageRuntimeContext]) -> Command[Literal["__end__"]]:
+            return node(state, runtime)
+
+        return runtime_node
+
+    graph.add_node("vector_writer", _as_runtime_node(resolved_write_node))
     graph.set_entry_point("vector_writer")
     graph.add_edge("vector_writer", END)
     graph.add_edge(START, "vector_writer")
 
-    return cast(
-        CompiledStateGraph[
-            VectorWriteState,
-            SageRuntimeContext,
-            VectorWriteState,
-            VectorWriteState,
-        ],
-        graph.compile(),
-    )
+    compiled_graph: CompiledStateGraph[VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState] = graph.compile()
+
+    return compiled_graph

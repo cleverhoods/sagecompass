@@ -11,6 +11,7 @@ from app.state.gating import GuardrailResult
 @dataclass(frozen=True)
 class GuardrailsConfig:
     """Normalized guardrails configuration used by policy checks."""
+
     allowed_topics: tuple[str, ...]
     blocked_keywords: tuple[str, ...]
 
@@ -33,14 +34,10 @@ def build_guardrails_config(raw: Mapping[str, object] | None) -> GuardrailsConfi
     allowed_raw = data.get("allowed_topics")
     blocked_raw = data.get("blocked_keywords")
     allowed_values = (
-        allowed_raw
-        if isinstance(allowed_raw, Iterable) and not isinstance(allowed_raw, (str, bytes))
-        else None
+        allowed_raw if isinstance(allowed_raw, Iterable) and not isinstance(allowed_raw, (str, bytes)) else None
     )
     blocked_values = (
-        blocked_raw
-        if isinstance(blocked_raw, Iterable) and not isinstance(blocked_raw, (str, bytes))
-        else None
+        blocked_raw if isinstance(blocked_raw, Iterable) and not isinstance(blocked_raw, (str, bytes)) else None
     )
     allowed = _normalize_terms(allowed_values)
     blocked = _normalize_terms(blocked_values)

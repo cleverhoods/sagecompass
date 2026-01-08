@@ -80,6 +80,7 @@ def set_phase_status_update(
 
 # ---------- READ HELPERS (pure) ----------
 
+
 def get_phase_data[T: BaseModel](
     state: SageState,
     key: str,
@@ -117,6 +118,7 @@ def get_phase_status(
     """
     entry = state.phases.get(key)
     return entry.status if entry else "pending"
+
 
 def get_phase_names(phases: Mapping[str, object]) -> list[str]:
     """Return ordered phase names from the provided phase registry.

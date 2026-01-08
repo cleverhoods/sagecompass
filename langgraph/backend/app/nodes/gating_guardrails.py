@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal, cast
+from typing import Literal
 
 from langgraph.graph import END
 from langgraph.runtime import Runtime
@@ -47,10 +47,7 @@ def make_node_guardrails_check(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[GuardrailsRoute]:
-
-        original_input = state.gating.original_input or (
-            get_latest_user_input(state.messages) or ""
-        )
+        original_input = state.gating.original_input or (get_latest_user_input(state.messages) or "")
         guardrail = evaluate_guardrails_contract(
             original_input,
             FileLoader.load_guardrails_config(),
@@ -64,17 +61,13 @@ def make_node_guardrails_check(
         )
 
         # Always update gating state
-        update = {
-            "gating": state.gating.model_copy(
-                update={"guardrail": guardrail, "original_input": original_input}
-            )
-        }
+        update = {"gating": state.gating.model_copy(update={"guardrail": guardrail, "original_input": original_input})}
         validate_state_update(update, owner="gating_guardrails")
 
         # Stop only if unsafe
         if not (guardrail.is_safe and guardrail.is_in_scope):
             logger.warning("guardrails.blocked")
-            return Command(update=update, goto=cast(GuardrailsRoute, END))
+            return Command(update=update, goto=END)
 
         return Command(update=update, goto=goto_if_safe)
 

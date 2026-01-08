@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -60,40 +60,30 @@ def make_node_ambiguity_clarification_external(
         target_phase = phase or ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_clarification_external.missing_target_step")
-            update = {
-                "messages": [
-                    AIMessage(content="Unable to determine clarification target.")
-                ]
-            }
+            update = {"messages": [AIMessage(content="Unable to determine clarification target.")]}
             validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
-                goto=cast(AmbiguityClarificationExternalRoute, END),
+                goto=END,
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)
         if not pending_keys:
             logger.info("ambiguity_clarification_external.no_pending", phase=target_phase)
-            update = {
-                "messages": [AIMessage(content="Clarification complete.")]
-            }
+            update = {"messages": [AIMessage(content="Clarification complete.")]}
             validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
-                goto=cast(AmbiguityClarificationExternalRoute, END),
+                goto=END,
             )
 
         question = get_current_clarifying_question(ambiguity)
-        message = (
-            f"Clarification needed: {question}"
-            if question
-            else "Clarification needed to proceed."
-        )
+        message = f"Clarification needed: {question}" if question else "Clarification needed to proceed."
         if not is_latest_message_human(state.messages):
             logger.info("ambiguity_clarification_external.awaiting_user", phase=target_phase)
             update = {"messages": [AIMessage(content=message)]}
             validate_state_update(update, owner="ambiguity_clarification_external")
-            return Command(update=update, goto=cast(AmbiguityClarificationExternalRoute, END))
+            return Command(update=update, goto=END)
 
         clarification = ClarificationResponse(
             clarified_input=get_latest_user_input(state.messages),
@@ -117,7 +107,7 @@ def make_node_ambiguity_clarification_external(
         validate_state_update(update, owner="ambiguity_clarification_external")
         return Command(
             update=update,
-            goto=cast(AmbiguityClarificationExternalRoute, END),
+            goto=END,
         )
 
     return node_ambiguity_clarification_external

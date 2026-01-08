@@ -12,10 +12,10 @@ from app.platform.utils.model_factory import get_model_for_agent
 from app.platform.utils.provider_config import ProviderFactory
 
 __all__ = [
+    "ProviderFactory",
     "build_tool_allowlist",
     "compose_agent_prompt",
+    "get_model_for_agent",
     "load_agent_builder",
     "load_agent_schema",
-    "get_model_for_agent",
-    "ProviderFactory",
 ]

@@ -19,10 +19,6 @@ def validate_phase_registry(phases: Mapping[str, PhaseContract]) -> None:
     """Validate that the phase registry keys match contract names and schemas."""
     for key, contract in phases.items():
         if key != contract.name:
-            raise ValueError(
-                f"Phase registry key {key!r} does not match contract name {contract.name!r}."
-            )
+            raise ValueError(f"Phase registry key {key!r} does not match contract name {contract.name!r}.")
         if not issubclass(contract.output_schema, BaseModel):
-            raise TypeError(
-                f"Phase contract {contract.name!r} output_schema must be a BaseModel."
-            )
+            raise TypeError(f"Phase contract {contract.name!r} output_schema must be a BaseModel.")

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal, cast
+from typing import Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -76,15 +76,11 @@ def make_node_phase_supervisor(
 
         # Phase still in progress
         if status != "complete" or not has_data:
-            update = {
-                "messages": [
-                    AIMessage(content=f"Running {phase} analysis.")
-                ]
-            }
+            update = {"messages": [AIMessage(content=f"Running {phase} analysis.")]}
             validate_state_update(update, owner="phase_supervisor")
             return Command(
                 update=update,
-                goto=cast(PhaseSupervisorRoute, phase_to_node(phase)),
+                goto=phase_to_node(phase),
             )
 
         # Phase complete
@@ -93,7 +89,7 @@ def make_node_phase_supervisor(
         validate_state_update(update, owner="phase_supervisor")
         return Command(
             update=update,
-            goto=cast(PhaseSupervisorRoute, END),
+            goto=END,
         )
 
     return node_phase_supervisor

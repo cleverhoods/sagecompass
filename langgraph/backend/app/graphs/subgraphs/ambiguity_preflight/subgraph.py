@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal, TypeVar
 
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -42,8 +42,15 @@ def build_ambiguity_preflight_subgraph(
     """
     graph = StateGraph(SageState, context_schema=SageRuntimeContext)
 
-    def _as_runtime_node(node: Any):
-        return cast(Callable[[SageState, Runtime[SageRuntimeContext]], Any], node)
+    T = TypeVar("T")
+
+    def _as_runtime_node(
+        node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T],
+    ) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
+        def runtime_node(state: SageState, runtime: Runtime[SageRuntimeContext]) -> T:
+            return node(state, runtime)
+
+        return runtime_node
 
     scan_node = make_node_ambiguity_scan(
         node_agent=ambiguity_scan_agent,
@@ -73,25 +80,25 @@ def build_ambiguity_preflight_subgraph(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[Literal["ambiguity_supervisor"]]:
-        return cast(Command[Literal["ambiguity_supervisor"]], scan_node(state, runtime))
+        return scan_node(state, runtime)
 
     def _retrieve(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[Literal["ambiguity_supervisor"]]:
-        return cast(Command[Literal["ambiguity_supervisor"]], retrieve_node(state, runtime))
+        return retrieve_node(state, runtime)
 
     def _clarify(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[Literal["ambiguity_supervisor"]]:
-        return cast(Command[Literal["ambiguity_supervisor"]], clarify_node(state, runtime))
+        return clarify_node(state, runtime)
 
     def _clarify_external(
         state: SageState,
         runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[Literal["__end__"]]:
-        return cast(Command[Literal["__end__"]], clarify_external_node(state, runtime))
+        return clarify_external_node(state, runtime)
 
     def _supervisor(
         state: SageState,
@@ -105,19 +112,7 @@ def build_ambiguity_preflight_subgraph(
             "retrieve_context",
         ]
     ]:
-        cmd = supervisor_node(state, runtime)
-        return cast(
-            Command[
-                Literal[
-                    "__end__",
-                    "ambiguity_clarification",
-                    "ambiguity_clarification_external",
-                    "ambiguity_scan",
-                    "retrieve_context",
-                ]
-            ],
-            cmd,
-        )
+        return supervisor_node(state, runtime)
 
     graph.add_node("ambiguity_scan", _as_runtime_node(_scan))
     graph.add_node("retrieve_context", _as_runtime_node(_retrieve))
@@ -130,7 +125,5 @@ def build_ambiguity_preflight_subgraph(
 
     graph.set_entry_point("ambiguity_supervisor")
 
-    return cast(
-        CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState],
-        graph.compile(),
-    )
+    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile()
+    return compiled_graph

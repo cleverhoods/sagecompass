@@ -1,0 +1,88 @@
+rules:
+  # 1) Fully typed: ban all runtime cast usage (typing.cast or cast imported)
+  - id: sage.no-cast
+    message: "Do not use cast(). We are fully typed; fix typing via contracts/state_schema instead."
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - app/
+    pattern-either:
+      - pattern: cast(...)
+      - pattern: typing.cast(...)
+
+  # 2) Nodes must not access Store directly
+  - id: sage.nodes.no-store-access
+    message: "Nodes MUST NOT access Store directly. Use platform/runtime evidence helpers."
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - app/nodes/
+    pattern-either:
+      - pattern: get_store(...)
+      - pattern: $STORE.search(...)
+    metavariable-regex:
+      metavariable: $STORE
+      regex: '(?i).*store.*'
+
+  # 3) DI purity: no agent construction at import-time in DI-pure zones
+  - id: sage.di.no-create-agent-at-import
+    message: "Do not construct agents at import time. Wrap in build_* factories; compose in app/main.py."
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - app/agents/
+        - app/nodes/
+        - app/middlewares/
+        - app/graphs/
+      exclude:
+        - app/main.py
+        - app/platform/config/
+    patterns:
+      - pattern: create_agent(...)
+      - pattern-not-inside: |
+          def $F(...):
+            ...
+      - pattern-not-inside: |
+          class $C(...):
+            ...
+
+  # 4) DI purity: no graph compile at import-time in DI-pure zones
+  - id: sage.di.no-compile-at-import
+    message: "Do not compile graphs at import time. Wrap in build_* factories; compose in app/main.py."
+    languages: [python]
+    severity: ERROR
+    paths:
+      include:
+        - app/agents/
+        - app/nodes/
+        - app/middlewares/
+        - app/graphs/
+      exclude:
+        - app/main.py
+        - app/platform/config/
+    patterns:
+      - pattern: $G.compile(...)
+      - pattern-not-inside: |
+          def $F(...):
+            ...
+      - pattern-not-inside: |
+          class $C(...):
+            ...
+
+  # 5) Prompt hygiene: forbid direct injection of Document.page_content into prompts
+  - id: sage.prompts.no-page-content-injection
+    message: "Do not inject Document.page_content directly into prompts/system strings. Pass via structured/tool inputs."
+    languages: [ python ]
+    severity: ERROR
+    paths:
+      include:
+        - app/agents/
+        - app/middlewares/
+        - app/nodes/
+    pattern-either:
+      - pattern: $S + $DOC.page_content
+      - pattern: $DOC.page_content + $S
+      - pattern: '"{}".format($DOC.page_content)'

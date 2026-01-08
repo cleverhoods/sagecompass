@@ -11,6 +11,7 @@ class ClarificationResponse(BaseModel):
     Invariants:
         clarified_keys are reported when the user addresses fields in this round.
     """
+
     clarified_input: str | None = Field(
         default=None,
         description="Clarified version of the user's input, if updated.",
@@ -19,14 +20,13 @@ class ClarificationResponse(BaseModel):
         default_factory=list,
         description=(
             "Clarified topic keys (non-empty). Allowed values are restricted to the prompt-provided "
-    "list shown under 'Topics to clarify: {keys_to_clarify}'. Each item MUST exactly match an entry from the provided "
+            "list shown under 'Topics to clarify: {keys_to_clarify}'. Each item MUST exactly match an entry from the provided "
             "`keys_to_clarify` list (subset only; no additional keys). Return the set of keys that are "
             "now clarified, preferring the largest valid subset you can justify.\n\n"
             "Example: keys_to_clarify=['budget | timeline | scope']; "
             "clarified_keys=['budget | timeline | scope'] is valid; "
             "clarified_keys=['scope'] is invalid; clarified_keys=[] is invalid."
-        )
-
+        ),
     )
     clarification_output: str | None = Field(
         default=None,

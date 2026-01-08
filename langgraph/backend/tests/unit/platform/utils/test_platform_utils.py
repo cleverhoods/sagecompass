@@ -17,7 +17,7 @@ class DummyTool:
 
 
 def test_build_tool_allowlist_includes_schema() -> None:
-    dummy = cast(BaseTool, DummyTool())
+    dummy = cast("BaseTool", DummyTool())
     allowlist = build_tool_allowlist([dummy], DummySchema)
     assert allowlist == ["dummy_tool", "DummySchema"]
 

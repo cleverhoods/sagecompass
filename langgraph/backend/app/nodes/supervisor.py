@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
@@ -24,8 +24,7 @@ SupervisorRoute = Literal[
 ]
 
 
-def make_node_supervisor(
-) -> Callable[[SageState, Runtime[SageRuntimeContext] | None], Command[SupervisorRoute]]:
+def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] | None], Command[SupervisorRoute]]:
     """Node: supervisor (global).
 
     Purpose:
@@ -51,6 +50,7 @@ def make_node_supervisor(
         logger.info("supervisor.entry", state_keys=SageState.model_fields.keys())
         from app.graphs.subgraphs.phases.registry import PHASES
         from app.platform.runtime.phases import get_phase_names
+
         update: dict[str, Any]
         # 1. Run guardrails if not done yet (returns to supervisor)
         if state.gating.guardrail is None:
@@ -76,30 +76,18 @@ def make_node_supervisor(
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
-                goto=cast(SupervisorRoute, END),
+                goto=END,
             )
 
         logger.info("supervisor.routing.phase_start", phase=next_phase)
         ambiguity = state.ambiguity
 
-        if (
-            ambiguity.target_step == next_phase
-            and ambiguity.checked
-            and ambiguity.eligible
-        ):
-            update = {
-                "messages": [
-                    AIMessage(
-                        content=(
-                            f"Starting {next_phase} flow via the phase supervisor."
-                        )
-                    )
-                ]
-            }
+        if ambiguity.target_step == next_phase and ambiguity.checked and ambiguity.eligible:
+            update = {"messages": [AIMessage(content=(f"Starting {next_phase} flow via the phase supervisor."))]}
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
-                goto=cast(SupervisorRoute, f"{next_phase}_supervisor"),
+                goto=f"{next_phase}_supervisor",
             )
 
         if ambiguity.target_step == next_phase and ambiguity.exhausted:
@@ -109,14 +97,12 @@ def make_node_supervisor(
                 and isinstance(state.messages[-1], AIMessage)
                 and state.messages[-1].content == "Unable to clarify the request."
             ):
-                return Command(goto=cast(SupervisorRoute, END))
-            update = {
-                "messages": [AIMessage(content="Unable to clarify the request.")]
-            }
+            return Command(goto=END)
+            update = {"messages": [AIMessage(content="Unable to clarify the request.")]}
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
-                goto=cast(SupervisorRoute, END),
+                goto=END,
             )
 
         if ambiguity.target_step != next_phase:
@@ -131,14 +117,11 @@ def make_node_supervisor(
                 goto="ambiguity_preflight",
             )
 
-        update = {
-            "messages": [AIMessage(content="Running ambiguity preflight.")]
-        }
+        update = {"messages": [AIMessage(content="Running ambiguity preflight.")]}
         validate_state_update(update, owner="supervisor")
         return Command(
             update=update,
             goto="ambiguity_preflight",
         )
-
 
     return node_supervisor

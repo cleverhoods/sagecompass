@@ -38,6 +38,7 @@ class ProblemFramingAgentConfig(BaseModel):
     Assumptions:
         If model is not provided, ProviderFactory supplies a default instance.
     """
+
     model: BaseChatModel | None = None
 
     _extra_middleware: list[AgentMiddleware] = PrivateAttr(default_factory=list)
@@ -91,7 +92,7 @@ def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
             agent_prompt,
             placeholders=["task_input"],
             output_schema=ProblemFrame,
-        )
+        ),
     ]
 
     if config.get_extra_middleware():

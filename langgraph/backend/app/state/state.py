@@ -19,6 +19,7 @@ class EvidenceItem(BaseModel):
     - `key`: identifier within the namespace
     - `score`: relevance or match score (e.g., vector search or heuristic)
     """
+
     namespace: list[str]
     key: str
     score: float
@@ -41,6 +42,7 @@ class PhaseEntry(BaseModel):
     - `status`: Lifecycle status of the phase result
     - `evidence`: Inputs or support retrieved from memory/vector store
     """
+
     data: dict[str, object] = Field(default_factory=dict)
     error: dict[str, object] = Field(default_factory=dict)
     status: PhaseStatus = "pending"
@@ -57,25 +59,21 @@ class SageState(BaseModel):
     - `phases`: Structured outputs of each processing phase (e.g., problem_framing)
     - `errors`: Global error log
     """
+
     gating: GatingContext = Field(
         default_factory=lambda: GatingContext(original_input=""),
-        description="All gating-related validation and scope information."
+        description="All gating-related validation and scope information.",
     )
     ambiguity: AmbiguityContext = Field(
         default_factory=AmbiguityContext,
         description="Ambiguity detection and resolution state.",
     )
     messages: Annotated[list[AnyMessage], add_messages] = Field(
-        default_factory=list,
-        description="Conversation history including user inputs and agent replies."
+        default_factory=list, description="Conversation history including user inputs and agent replies."
     )
 
     phases: dict[str, PhaseEntry] = Field(
-        default_factory=dict,
-        description="Per-phase results keyed by agent name (e.g. problem_framing)."
+        default_factory=dict, description="Per-phase results keyed by agent name (e.g. problem_framing)."
     )
 
-    errors: list[str] = Field(
-        default_factory=list,
-        description="List of global or phase-level error summaries."
-    )
+    errors: list[str] = Field(default_factory=list, description="List of global or phase-level error summaries.")

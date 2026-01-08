@@ -11,6 +11,7 @@ class SageRuntimeContext(TypedDict, total=False):
     This data MUST NOT be persisted into SageState. It is supplied via
     `context=` when invoking a compiled graph or running nodes directly.
     """
+
     pass
 
 

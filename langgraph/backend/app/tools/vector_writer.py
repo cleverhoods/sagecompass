@@ -10,11 +10,7 @@ from langgraph.config import get_store
 from app.platform.contract.namespaces import NamespaceParts, build_namespace
 
 
-def write_to_vectorstore(
-    content: str,
-    collection: str,
-    metadata: dict | None = None
-) -> str:
+def write_to_vectorstore(content: str, collection: str, metadata: dict | None = None) -> str:
     """Core logic for writing content to the LangGraph Deployment Store.
 
     - `collection` is treated as a namespace segment (e.g. agent machine name).
@@ -62,6 +58,7 @@ def write_to_vectorstore(
     )
 
     return f"Document written to Store namespace={ns}, key='{uuid}'."
+
 
 @tool
 def vector_write(content: str, collection: str, metadata: dict | None = None) -> str:

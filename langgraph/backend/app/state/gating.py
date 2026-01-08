@@ -11,15 +11,18 @@ from pydantic import BaseModel, Field
 # Reducers
 # -----------------------------
 
+
 def keep_first_non_empty(current: str, update: str) -> str:
     """Keep the first non-empty value for a string field."""
     if current:
         return current
     return update or current
 
+
 # -----------------------------
 # Guardrail evaluation result
 # -----------------------------
+
 
 class GuardrailResult(BaseModel):
     """Result of guardrail evaluation with safety/scope and reasons.
@@ -27,17 +30,11 @@ class GuardrailResult(BaseModel):
     Invariants:
         Reasons list is non-empty (either failure reasons or a pass message).
     """
-    is_safe: bool = Field(
-        ...,
-        description="Whether the input is safe to process."
-    )
-    is_in_scope: bool = Field(
-        ...,
-        description="Whether the input is within SageCompass domain and capabilities."
-    )
+
+    is_safe: bool = Field(..., description="Whether the input is safe to process.")
+    is_in_scope: bool = Field(..., description="Whether the input is within SageCompass domain and capabilities.")
     reasons: list[str] = Field(
-        default_factory=list,
-        description="Human-readable reasons explaining the guardrail outcome."
+        default_factory=list, description="Human-readable reasons explaining the guardrail outcome."
     )
 
 
@@ -46,16 +43,17 @@ class GuardrailResult(BaseModel):
 # -----------------------------
 
 GatingDecision = Literal[
-    "go",            # Proceed to next phase
-    "no-go",         # Stop processing
-    "needs-input",   # Clarification required from user
-    "needs-human"    # Escalation / review required
+    "go",  # Proceed to next phase
+    "no-go",  # Stop processing
+    "needs-input",  # Clarification required from user
+    "needs-human",  # Escalation / review required
 ]
 
 
 # -----------------------------
 # Gating context (state)
 # -----------------------------
+
 
 class GatingContext(BaseModel):
     """Holds global gating information for preflight checks.
@@ -66,15 +64,11 @@ class GatingContext(BaseModel):
 
     # --- Raw input ---
     original_input: Annotated[str, keep_first_non_empty] = Field(
-        ...,
-        description="The original, unmodified user input."
+        ..., description="The original, unmodified user input."
     )
 
     # --- Guardrails ---
-    guardrail: GuardrailResult | None = Field(
-        default=None,
-        description="Result of deterministic guardrail checks."
-    )
+    guardrail: GuardrailResult | None = Field(default=None, description="Result of deterministic guardrail checks.")
 
     # --- Confidence & rationale ---
     confidence: Decimal | None = Field(
@@ -82,16 +76,10 @@ class GatingContext(BaseModel):
         ge=0.01,
         le=0.99,
         decimal_places=2,
-        description="Overall confidence that the input is sufficiently understood."
+        description="Overall confidence that the input is sufficiently understood.",
     )
 
-    rationale: list[str] = Field(
-        default_factory=list,
-        description="Short internal notes explaining gating decisions."
-    )
+    rationale: list[str] = Field(default_factory=list, description="Short internal notes explaining gating decisions.")
 
     # --- Final decision ---
-    decision: GatingDecision | None = Field(
-        default=None,
-        description="Final gating outcome."
-    )
+    decision: GatingDecision | None = Field(default=None, description="Final gating outcome.")

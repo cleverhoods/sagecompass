@@ -126,9 +126,7 @@ def validate_state_update(update: Mapping[str, Any], *, owner: str | None = None
             if rule is None:
                 raise ValueError(f"No ownership rule for SageState field: {field}")
             if not _owner_allowed(owner, rule):
-                raise ValueError(
-                    f"Owner {owner!r} is not allowed to update SageState.{field}"
-                )
+                raise ValueError(f"Owner {owner!r} is not allowed to update SageState.{field}")
 
     phases = update.get("phases")
     if phases is not None:

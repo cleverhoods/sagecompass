@@ -54,17 +54,11 @@ def make_dynamic_prompt_middleware(
     if isinstance(placeholders, str):
         placeholders = [placeholders]
 
-    parser = (
-        PydanticOutputParser(pydantic_object=output_schema)
-        if output_schema is not None
-        else None
-    )
+    parser = PydanticOutputParser(pydantic_object=output_schema) if output_schema is not None else None
 
     def _values_from_request(request: ModelRequest) -> Mapping[str, Any]:
         state = _as_mapping(getattr(request, "state", None) or {})
-        inputs = _as_mapping(
-            getattr(request, "inputs", None) or getattr(request, "input", None) or {}
-        )
+        inputs = _as_mapping(getattr(request, "inputs", None) or getattr(request, "input", None) or {})
         nested_input = _as_mapping(inputs.get("input", {})) if inputs else {}
         values: dict[str, Any] = {}
 
@@ -95,9 +89,7 @@ def make_dynamic_prompt_middleware(
         if isinstance(prompt_obj, ChatPromptTemplate):
             validate_prompt_variables(prompt_obj.input_variables, placeholders)
             messages: list[BaseMessage] = prompt_obj.format_messages(**values)
-            system_contents = [
-                str(m.content) for m in messages if isinstance(m, SystemMessage)
-            ]
+            system_contents = [str(m.content) for m in messages if isinstance(m, SystemMessage)]
             text = "\n\n".join(system_contents)
             return SystemMessage(content=text)
 

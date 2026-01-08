@@ -48,6 +48,7 @@ addopts = "--strict-markers"
 markers = [
   "compliance: flavoritism",
   "structural: more flavoritism",
+  "external-connection: tests that need external connection",
   "integration: tests that hit live/external services (opt-in)",
   "real_deps: tests that run against real dependencies without network calls"
 ]
@@ -156,7 +157,7 @@ type = { cmd = "mypy .", help = "Run mypy typecheck" }
 type_stats = { cmd = "mypy . --error-summary --show-error-codes", help = "Mypy summary (for agent decisions)" }
 
 # ---- semgrep checks ----
-semgrep_fast = { cmd = "semgrep --config .semgrep/fast.yml", help = "Semgrep fast-lane architecture checks" }
+semgrep_fast = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export SEMGREP_LOG_FILE=\"$PWD/.cache/uv/semgrep.log\"; export SEMGREP_VERSION_CACHE_PATH=\"$PWD/.cache/uv/semgrep_version\"; semgrep --config .semgrep/fast.yml'", help = "Semgrep fast-lane architecture checks" }
 
 [tool.poe.tasks.type_scoped]
 cmd = "mypy app/${path} --follow-imports=skip --error-summary --show-error-codes"
@@ -167,4 +168,3 @@ help = "Typecheck a given component path"
   positional = true
   required = true
   help = "Path to typecheck, e.g. graphs"
-

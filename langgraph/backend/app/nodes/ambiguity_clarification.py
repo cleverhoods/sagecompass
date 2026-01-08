@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
@@ -81,9 +81,7 @@ def make_node_ambiguity_clarification(
         user_input = get_latest_user_input(state.messages)
         if not user_input:
             logger.warning("ambiguity_clarification.empty_user_input", phase=phase)
-            update = {
-                "messages": [AIMessage(content="Waiting for more details.")]
-            }
+            update = {"messages": [AIMessage(content="Waiting for more details.")]}
             validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
@@ -94,9 +92,7 @@ def make_node_ambiguity_clarification(
         target_phase = phase or ambiguity_context.target_step
         if not target_phase:
             logger.warning("ambiguity_clarification.missing_target_step")
-            update = {
-                "messages": [AIMessage(content="Unable to determine clarification target.")]
-            }
+            update = {"messages": [AIMessage(content="Unable to determine clarification target.")]}
             validate_state_update(update, owner="ambiguity_clarification")
             return Command(
                 update=update,
@@ -127,24 +123,11 @@ def make_node_ambiguity_clarification(
             return Command(update=update, goto=goto)
 
         detected_items = ambiguity_context.detected
-        labeled_items = [
-            (format_ambiguity_key(item.key), item)
-            for item in detected_items
-        ]
-        question_map = {
-            label: (
-                item.clarifying_question
-                or item.description
-                or label
-            )
-            for label, item in labeled_items
-        }
-        pending_items = [
-            item for label, item in labeled_items if label in pending_keys
-        ]
+        labeled_items = [(format_ambiguity_key(item.key), item) for item in detected_items]
+        question_map = {label: (item.clarifying_question or item.description or label) for label, item in labeled_items}
+        pending_items = [item for label, item in labeled_items if label in pending_keys]
         pending_questions = [
-            question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key))
-            for item in pending_items
+            question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key)) for item in pending_items
         ]
         if not pending_questions:
             pending_questions = list(pending_keys)
@@ -210,7 +193,9 @@ def make_node_ambiguity_clarification(
                 goto=goto,
             )
 
-        structured = cast(OutputSchema, validate_structured_response(structured, OutputSchema))
+        validated_structured = validate_structured_response(structured, OutputSchema)
+        assert isinstance(validated_structured, OutputSchema)
+        structured = validated_structured
 
         responses = structured.responses
         if not responses:
@@ -234,9 +219,7 @@ def make_node_ambiguity_clarification(
         for response in responses:
             raw_clarified_input = response.clarified_input
             clarified_input = raw_clarified_input or user_input
-            cleaned_keys = [
-                key.strip() for key in response.clarified_keys if isinstance(key, str)
-            ]
+            cleaned_keys = [key.strip() for key in response.clarified_keys if isinstance(key, str)]
             filtered_keys = [key for key in cleaned_keys if key in valid_keys]
             unique_keys = list(dict.fromkeys(filtered_keys))
             if not unique_keys and raw_clarified_input is not None and fallback_keys:
@@ -255,15 +238,9 @@ def make_node_ambiguity_clarification(
             )
         latest_response = normalized_responses[-1]
         updated_resolved = [*ambiguity_context.resolved, *normalized_responses]
-        updated_resolved_keys = {
-            key for response in updated_resolved for key in response.clarified_keys
-        }
-        next_pending_keys = [
-            key for key in selected_keys if key not in updated_resolved_keys
-        ]
-        next_questions = [
-            question_map.get(key, key) for key in next_pending_keys
-        ]
+        updated_resolved_keys = {key for response in updated_resolved for key in response.clarified_keys}
+        next_pending_keys = [key for key in selected_keys if key not in updated_resolved_keys]
+        next_questions = [question_map.get(key, key) for key in next_pending_keys]
         clarification_output = latest_response.clarification_output or ""
 
         updated_context = ambiguity_context.model_copy(
@@ -283,9 +260,7 @@ def make_node_ambiguity_clarification(
             else AIMessage(content="Clarification needed to proceed.")
         )
         clarification_progress_message = (
-            AIMessage(content=f"Clarifying question: {current_question}")
-            if current_question
-            else None
+            AIMessage(content=f"Clarifying question: {current_question}") if current_question else None
         )
 
         def _clarification_messages() -> list[AIMessage]:

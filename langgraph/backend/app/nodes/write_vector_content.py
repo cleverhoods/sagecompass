@@ -14,8 +14,9 @@ from app.state import VectorWriteState
 from app.tools.vector_writer import write_to_vectorstore
 
 
-def make_node_write_vector(
-) -> Callable[[VectorWriteState, Runtime[SageRuntimeContext] | None], Command[Literal["__end__"]]]:
+def make_node_write_vector() -> Callable[
+    [VectorWriteState, Runtime[SageRuntimeContext] | None], Command[Literal["__end__"]]
+]:
     """Node: vector_writer.
 
     Purpose:

@@ -54,8 +54,9 @@ def get_app() -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, Sa
     return build_app()
 
 
-def build_vector_write_graph(
-) -> CompiledStateGraph[VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState]:
+def build_vector_write_graph() -> CompiledStateGraph[
+    VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState
+]:
     """Build vector writer LangGraph.
 
     Side effects/state writes:
@@ -68,8 +69,9 @@ def build_vector_write_graph(
     return build_write_graph()
 
 
-def get_vector_write_graph(
-) -> CompiledStateGraph[VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState]:
+def get_vector_write_graph() -> CompiledStateGraph[
+    VectorWriteState, SageRuntimeContext, VectorWriteState, VectorWriteState
+]:
     """External runner entrypoint for vector writing graph.
 
     Must always return a fresh compiled LangGraph instance.

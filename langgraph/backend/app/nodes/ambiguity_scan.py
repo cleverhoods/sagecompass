@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import Runnable
@@ -82,9 +82,7 @@ def make_node_ambiguity_scan(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_scan.missing_target_step")
-            update = {
-                "messages": [AIMessage(content="Unable to determine ambiguity scan target.")]
-            }
+            update = {"messages": [AIMessage(content="Unable to determine ambiguity scan target.")]}
             validate_state_update(update, owner="ambiguity_scan")
             return Command(update=update, goto=goto)
         importance_limit = Decimal(str(importance_threshold))
@@ -101,9 +99,7 @@ def make_node_ambiguity_scan(
         include_errors = False
         if evidence_bundle.missing_store:
             include_errors = True
-            state.errors.append(
-                f"{target_phase}: runtime store unavailable for evidence hydration"
-            )
+            state.errors.append(f"{target_phase}: runtime store unavailable for evidence hydration")
         messages_for_agent = state.messages
 
         # Step 2: call agent
@@ -133,14 +129,13 @@ def make_node_ambiguity_scan(
             )
 
         # Enforce schema
-        structured = cast(OutputSchema, validate_structured_response(structured, OutputSchema))
+        structured_response = validate_structured_response(structured, OutputSchema)
+        assert isinstance(structured_response, OutputSchema)
+        structured = structured_response
 
         ambiguities = structured.ambiguities
         high_priority = [
-            item
-            for item in ambiguities
-            if item.importance >= importance_limit
-            and item.confidence >= confidence_limit
+            item for item in ambiguities if item.importance >= importance_limit and item.confidence >= confidence_limit
         ]
         high_priority.sort(
             key=lambda priority_item: (priority_item.importance, priority_item.confidence),
@@ -191,11 +186,7 @@ def make_node_ambiguity_scan(
             }
         )
 
-        summary = (
-            "No ambiguities detected."
-            if not ambiguities
-            else f"Ambiguities detected: {len(ambiguities)}."
-        )
+        summary = "No ambiguities detected." if not ambiguities else f"Ambiguities detected: {len(ambiguities)}."
 
         update = {
             "ambiguity": updated_context,

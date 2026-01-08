@@ -13,6 +13,7 @@ from app.state import EvidenceItem, PhaseEntry, SageState
 
 logger = get_logger("runtime.evidence")
 
+
 @dataclass(frozen=True)
 class EvidenceBundle:
     """Evidence items and hydrated docs for a phase."""

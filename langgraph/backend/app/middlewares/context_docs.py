@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Sequence
-from typing import NotRequired, cast
+from typing import NotRequired
 
 from langchain.agents import AgentState
 from langchain.agents.middleware import ModelResponse, wrap_model_call, wrap_tool_call
@@ -53,10 +53,7 @@ def _context_docs_tool_call_id(docs: list[Document]) -> str:
 
 
 def _has_context_tool_message(messages: Sequence[object]) -> bool:
-    return any(
-        isinstance(message, ToolMessage) and message.name == TOOL_NAME
-        for message in reversed(messages)
-    )
+    return any(isinstance(message, ToolMessage) and message.name == TOOL_NAME for message in reversed(messages))
 
 
 @wrap_model_call(state_schema=ContextDocsState, name="ContextDocsModelMiddleware")
@@ -64,8 +61,7 @@ def _context_docs_model_call(
     request: ModelRequest,
     handler,
 ) -> ModelResponse | AIMessage:
-    state = cast(ContextDocsState, request.state)
-    docs = list(state.get("context_docs") or [])
+    docs = list(request.state.get("context_docs") or [])
     if not docs:
         return handler(request)
     if _has_context_tool_message(request.messages):
@@ -88,8 +84,7 @@ def _context_docs_tool_call(
 ) -> ToolMessage:
     if not request.tool_call or request.tool_call.get("name") != TOOL_NAME:
         return handler(request)
-    state = cast(ContextDocsState, request.state)
-    docs = list(state.get("context_docs") or [])
+    docs = list(request.state.get("context_docs") or [])
     payload = _serialize_context_docs(docs)
     content = json.dumps(payload, ensure_ascii=True)
     tool_call_id = request.tool_call.get("id", "")

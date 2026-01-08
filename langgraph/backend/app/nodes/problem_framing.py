@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from langchain_core.runnables import Runnable
 from langgraph.runtime import Runtime
@@ -75,9 +75,7 @@ def make_node_problem_framing(
         include_errors = False
         if evidence_bundle.missing_store:
             include_errors = True
-            state.errors.append(
-                f"{phase}: runtime store unavailable for evidence hydration"
-            )
+            state.errors.append(f"{phase}: runtime store unavailable for evidence hydration")
         messages_for_agent = state.messages
 
         # Step 2: invoke agent
@@ -103,13 +101,14 @@ def make_node_problem_framing(
             validate_state_update(update, owner="problem_framing")
             return Command(update=update, goto=goto)
 
-        pf = cast(ProblemFrame, validate_structured_response(pf, ProblemFrame))
+        validated_pf = validate_structured_response(pf, ProblemFrame)
+        assert isinstance(validated_pf, ProblemFrame)
+        pf = validated_pf
 
         logger.info("problem_framing.success", phase=phase)
 
         normalized_evidence = [
-            item if isinstance(item, EvidenceItem) else EvidenceItem.model_validate(item)
-            for item in evidence
+            item if isinstance(item, EvidenceItem) else EvidenceItem.model_validate(item) for item in evidence
         ]
         state.phases[phase] = PhaseEntry(
             data=pf.model_dump(),

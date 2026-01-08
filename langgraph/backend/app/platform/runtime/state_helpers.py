@@ -44,20 +44,12 @@ def format_ambiguity_key(categories: Sequence[str]) -> str:
 
 def _get_ambiguity_question(item: AmbiguityItem) -> str:
     """Return the most specific question text for an ambiguity."""
-    return (
-        item.clarifying_question
-        or item.description
-        or format_ambiguity_key(item.key)
-    )
+    return item.clarifying_question or item.description or format_ambiguity_key(item.key)
 
 
 def get_clarified_keys(context: AmbiguityContext) -> set[str]:
     """Return the set of keys that have already been clarified."""
-    return {
-        key
-        for response in context.resolved
-        for key in response.clarified_keys
-    }
+    return {key for response in context.resolved for key in response.clarified_keys}
 
 
 def get_pending_ambiguity_keys(context: AmbiguityContext) -> list[str]:
@@ -72,15 +64,8 @@ def get_pending_ambiguity_keys(context: AmbiguityContext) -> list[str]:
 
 def get_pending_ambiguity_questions(context: AmbiguityContext) -> list[str]:
     """Return the clarifying questions for unresolved ambiguity keys."""
-    question_map = {
-        format_ambiguity_key(item.key): _get_ambiguity_question(item)
-        for item in context.detected
-    }
-    return [
-        question_map[key]
-        for key in get_pending_ambiguity_keys(context)
-        if key in question_map
-    ]
+    question_map = {format_ambiguity_key(item.key): _get_ambiguity_question(item) for item in context.detected}
+    return [question_map[key] for key in get_pending_ambiguity_keys(context) if key in question_map]
 
 
 def get_current_clarifying_question(context: AmbiguityContext) -> str | None:

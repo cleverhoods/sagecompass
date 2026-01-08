@@ -47,9 +47,7 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}"
     real_examples = examples[:-1]
 
     if stub.get("task_input") != user_placeholder:
-        raise ValueError(
-            f"Trailing stub must use placeholder {user_placeholder!r} for agent '{agent_name}'"
-        )
+        raise ValueError(f"Trailing stub must use placeholder {user_placeholder!r} for agent '{agent_name}'")
     if not _is_empty(stub.get("output", "")):
         raise ValueError(f"Trailing stub output must be empty for agent '{agent_name}'")
 
@@ -59,9 +57,7 @@ def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}"
         if not str(ex["task_input"]).strip():
             raise ValueError(f"Example {idx} for agent '{agent_name}' must include a task_input")
         if _is_empty(ex["output"]):
-            raise ValueError(
-                f"Example {idx} for agent '{agent_name}' must include a non-empty output"
-            )
+            raise ValueError(f"Example {idx} for agent '{agent_name}' must include a non-empty output")
 
     def _render_example(task_input: str, output: Any) -> str:
         rendered_output = output if isinstance(output, str) else json.dumps(output, indent=2)
@@ -95,7 +91,7 @@ def compose_agent_prompt(
     parts: list[str] = []
 
     # Treat "few-shots" as a directive, not a prompt file.
-    want_few_shots = ("few-shots" in prompt_names)
+    want_few_shots = "few-shots" in prompt_names
     normal_prompt_names = [n for n in prompt_names if n != "few-shots"]
 
     if include_global:
@@ -137,14 +133,10 @@ def load_agent_schema(agent_name: str) -> type[BaseModel]:
     try:
         schema_cls = module.OutputSchema
     except AttributeError as exc:
-        raise RuntimeError(
-            f"Schema module for agent {agent_name!r} does not define OutputSchema"
-        ) from exc
+        raise RuntimeError(f"Schema module for agent {agent_name!r} does not define OutputSchema") from exc
 
     if not issubclass(schema_cls, BaseModel):
-        raise TypeError(
-            f"OutputSchema for agent {agent_name!r} must be a Pydantic BaseModel subclass"
-        )
+        raise TypeError(f"OutputSchema for agent {agent_name!r} must be a Pydantic BaseModel subclass")
     return schema_cls
 
 
@@ -163,9 +155,7 @@ def load_agent_builder(agent_name: str) -> Callable[..., Any]:
     try:
         builder = module.build_agent
     except AttributeError as exc:
-        raise RuntimeError(
-            f"Agent module for {agent_name!r} does not define build_agent(...)"
-        ) from exc
+        raise RuntimeError(f"Agent module for {agent_name!r} does not define build_agent(...)") from exc
 
     if not callable(builder):
         raise TypeError(f"build_agent for agent {agent_name!r} must be callable")
