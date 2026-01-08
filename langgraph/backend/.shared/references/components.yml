@@ -1,0 +1,85 @@
+scope: langgraph/backend/app/**
+component_types:
+  agents:
+    path: app/agents/
+    domain: Agent
+    purpose: Stateless, recreatable reasoning components. Own domain reasoning logic.
+    contracts:
+    - app/platform/contract/agents.py
+    local_instructions: app/agents/AGENTS.md
+  graphs:
+    path: app/graphs/
+    domain: Langgraph
+    purpose: Composition-only wiring (nodes + control flow). No business logic.
+    contracts:
+    - app/graphs/subgraphs/phases/contract.py
+    - app/platform/contract/phases.py
+    local_instructions: app/graphs/AGENTS.md
+  nodes:
+    path: app/nodes/
+    domain: Langgraph
+    purpose: Orchestration units; call DI-injected deps, validate outputs, update state keys,
+      route explicitly.
+    contracts:
+    - app/platform/contract/structured_output.py
+    - app/platform/contract/state.py
+    local_instructions: app/nodes/AGENTS.md
+  middlewares:
+    path: app/middlewares/
+    domain: Langgraph
+    purpose: 'Policy boundary: admissibility, redaction/normalization, tool-call validation, output
+      shaping.'
+    contracts:
+    - app/platform/contract/guardrails.py
+    - app/platform/contract/tools.py
+    local_instructions: app/middlewares/AGENTS.md
+  schemas:
+    path: app/schemas/
+    domain: Langgraph
+    purpose: Shared semantic data definitions not bound to a single node/agent.
+    local_instructions: null
+  state:
+    path: app/state/
+    domain: Langgraph
+    purpose: Canonical state model(s) used by graphs/nodes; authority for routing & bounded loops.
+    contracts:
+    - app/state/state.py
+    - app/platform/contract/state.py
+    local_instructions: null
+  tools:
+    path: app/tools/
+    domain: Langchain
+    purpose: Callable capabilities exposed to agents or used by nodes; typed and DI-injected.
+    contracts:
+    - app/platform/contract/tools.py
+    local_instructions: null
+  platform.config:
+    path: app/platform/config/
+    domain: Utils
+    purpose: Env loading, file access helpers, path conventions.
+  platform.contract:
+    path: app/platform/contract/
+    domain: Utils
+    purpose: Typed contracts + validators for backend invariants (enforcement targets for RULES.md).
+  platform.observability:
+    path: app/platform/observability/
+    domain: Utils
+    purpose: Structured logging and opt-in debugging hooks.
+  platform.policy:
+    path: app/platform/policy/
+    domain: Utils
+    purpose: Pure deterministic policy evaluation used by guardrails/middleware.
+  platform.runtime:
+    path: app/platform/runtime/
+    domain: Utils
+    purpose: Phase routing and message/state introspection helpers.
+  platform.utils:
+    path: app/platform/utils/
+    domain: Utils
+    purpose: Shared helpers (prompts/providers/model factory).
+  platform:
+    path: app/platform/
+    domain: Utils
+    purpose: 'Backend platform layer: contracts, config, observability, policy, runtime, and shared
+      utils.'
+    local_instructions: app/platform/AGENTS.md

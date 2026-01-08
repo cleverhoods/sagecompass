@@ -32,8 +32,15 @@ dev = [
     "poethepoet>=0.39.0",
     "ruff>=0.14.10",
     "mypy>=1.19.1",
+    "pylint>=4.0.4",
+    "semgrep>=1.146.0",
 ]
 
+[tool.uv]
+environments = ["platform_python_implementation == 'CPython'"]
+
+
+# ---- Test config ----
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
@@ -45,15 +52,58 @@ markers = [
   "real_deps: tests that run against real dependencies without network calls"
 ]
 
+# ---- Pylint config ----
+[tool.pylint.main]
+
+[tool.pylint.messages_control]
+disable = ["all"]
+enable = [
+  "duplicate-code",
+  "too-many-lines",
+  "too-many-statements",
+  "too-many-branches",
+]
+
+# per function/method
+[tool.pylint.design]
+max-branches = 12
+max-statements = 50
+
+# per file
+[tool.pylint.format]
+max-module-lines = 300
+
+[tool.pylint.similarities]
+min-similarity-lines = 4
+ignore-imports = true
+ignore-signatures = true
+
 [tool.ruff]
 target-version = "py312"
 line-length = 120
+extend-exclude = [".shared/vendor"]
 
 [tool.ruff.lint]
 # Baseline quality + imports + modernize + bugbear + simplifications + docstrings
-select = ["E", "F", "I", "UP", "B", "SIM", "D"]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "D",
+    "RUF",
+    "PERF",
+    "C90",
+    "ARG",
+    "TC"
+]
 # Keep this list short; only ignore rules you truly disagree with.
 ignore = []
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -62,11 +112,30 @@ convention = "google"
 # Tests don't need full docstring coverage.
 "tests/**" = ["D"]
 
+# ---- MYPY ----
+[tool.mypy]
+python_version = "3.12"
+no_implicit_optional = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+
+
 [tool.poe]
 # Optional: load env files automatically for tasks
 # envfile = [".env", ".env.local"]
 
 [tool.poe.tasks]
+
+# ---- Consolidated QA lanes (agent-friendly) ----
+qa_fast = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export UV_CACHE_DIR=\"$PWD/.cache/uv\"; uv run poe fmt; uv run poe lint_fix; uv run poe lint; uv run poe pylint_struct; uv run poe semgrep_fast'", help = "Fast lane (self-correcting): fmt + ruff safe fixes, lint, pylint_struct, semgrep_fast" }
+qa = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export UV_CACHE_DIR=\"$PWD/.cache/uv\"; uv run poe qa_fast; uv run poe type_stats; uv run poe test_unit'", help = "Full lane: qa_fast + mypy summary + unit tests" }
+
 # ---- Test lanes ----
 test = { ref = "test_unit", help = "Default: run offline unit test lane" }
 test_unit = { cmd = "pytest tests/unit -v -m \"not real_deps and not integration\"", help = "Unit lane (fast, offline)" }
@@ -74,6 +143,28 @@ test_real = { cmd = "pytest -v -m real_deps", help = "Real-deps lane (offline)" 
 test_integration = { cmd = "pytest tests/integration -v -m integration", help = "Integration lane (may require credentials)" }
 
 # ---- Linting / Formatting / Typing ----
+pylint_struct = { cmd = "pylint app", help = "Pylint structural checks (dup + modularity)" }
 lint = { cmd = "ruff check .", help = "Run Ruff linter" }
-fmt  = { cmd = "ruff format .", help = "Run Ruff formatter" }
-type = { cmd = "mypy .", help = "Run mypy type checks" }
+lint_fix = { cmd = "ruff check . --fix", help = "Run Ruff linter with safe fixes" }
+lint_fix_unsafe = { cmd = "ruff check . --fix --unsafe-fixes --output-format concise", help = "Run Ruff linter with unsafe fixes" }
+lint_stats = { cmd = "ruff check . --statistics", help = "Ruff lint statistics (for agent decisions)" }
+
+fmt = { cmd = "ruff format .", help = "Formats code" }
+fmt_check = { cmd = "ruff format --check .", help = "Checks formatting" }
+
+type = { cmd = "mypy .", help = "Run mypy typecheck" }
+type_stats = { cmd = "mypy . --error-summary --show-error-codes", help = "Mypy summary (for agent decisions)" }
+
+# ---- semgrep checks ----
+semgrep_fast = { cmd = "semgrep --config .semgrep/fast.yml", help = "Semgrep fast-lane architecture checks" }
+
+[tool.poe.tasks.type_scoped]
+cmd = "mypy app/${path} --follow-imports=skip --error-summary --show-error-codes"
+help = "Typecheck a given component path"
+
+  [[tool.poe.tasks.type_scoped.args]]
+  name = "path"
+  positional = true
+  required = true
+  help = "Path to typecheck, e.g. graphs"
+

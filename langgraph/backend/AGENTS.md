@@ -1,49 +1,41 @@
-# AGENTS — LangGraph Backend
+# Backend operating contract
 
-> Scope: `langgraph/backend/**`
+Scope: `langgraph/backend/**`. Working dir: `langgraph/backend`.
 
-**Canonical rules live in `RULES.md`. If anything conflicts, `RULES.md` wins.**
+## Primary maps (avoid repo-wide scans)
+- System map: `.shared/references/sys.yml`
+- Component map: `.shared/references/components.yml`
+- Prefer these maps before touching `rg`/`find`; only widen scope when a map lacks the target path.
 
-This file is intentionally short:
-- it points contributors/agents to `RULES.md`
-- it lists a few backend-layer MUSTs that are commonly violated
-- it documents how to run required quality gates and test lanes
+## Instruction loading policy
+- Treat folder-level `AGENTS.md` as the primary local instruction surface.
+- Do **not** treat `app/RULES.md` as an always-on instruction file; consult it only when explicitly referenced.
+- Instruction precedence: backend `AGENTS.md` → folder-level `AGENTS.md` → `.shared/references/rules/*` → `app/RULES.md` (explicit consult only).
+- When extra rules are required, follow the snippet references in `.shared/references/rules/*`.
 
----
+## Operating loop
+1. **Plan**: confirm the relevant component via the maps and document the minimal changes.
+2. **Implement**: make the smallest correct change, keeping DI/import purity in mind.
+3. **Fast QA loop**: `mkdir -p ./.cache/uv && UV_CACHE_DIR="$PWD/.cache/uv" uv run poe qa_fast`.
+4. **Full QA loop (conditional)**: run `mkdir -p ./.cache/uv && UV_CACHE_DIR="$PWD/.cache/uv" uv run poe qa` when touching high-risk areas listed in `.shared/references/sys.yml`.
+5. **Done gate**: update `CHANGELOG.md` under `## [Unreleased]`, verify doc references, and double-check the instruction surface before wrapping up.
 
-## Non‑negotiable backend contracts
+## QA lanes
+- `qa_fast`: quick architecture-level compliance via `uv run poe qa_fast` (cached).
+- `qa`: full suite for sensitive changes; run only when the domain map or `app/platform/contract` tests flag the area as high risk.
+- Always create `./.cache/uv` before running these lanes so the cached environment is isolated to the component.
 
-- **Version-locked + docs-first:** treat `uv.lock` as the source of truth; use APIs that exist in pinned versions; link official docs for non-trivial guidance.
-- **No import-time side effects:** never create models/agents/tools/stores/checkpointers/graphs at import time.
-- **DI-first:** dependencies are passed via factories/builders; nodes/graphs are wiring + orchestration.
-- **Bounded execution:** loops are bounded (state max rounds and/or recursion limits); routing is explicit.
-- **Security + privacy:** never log/store secrets or raw PII; prefer redaction + structured summaries.
+## Cross-cutting non-negotiables
+- `.shared/references/rules/di-import-purity.md` — DI-first + no import-time construction.
+- `.shared/references/rules/platform.md` — platform governance, version alignment, and contract enforcement.
+- `.shared/references/rules/graphs.md` — graph composition and routing expectations.
+- `.shared/references/rules/quality-gates.md` — tooling, lint/type/test requirements before submitting changes.
 
----
+## Skills and repair procedures
+- Use `.codex/skills/qa-fast/SKILL.md` for lane-specific QA orchestration and `.codex/skills/add-or-modify-graph/SKILL.md` when graph wiring is involved, but these tools are optional aids and not required for compliance.
+- When a skill is unavailable, rely on documentation in `app/platform/contract/README.md` and `tests/README.md` for repair/playbook guidance.
 
-## Required checks (run before proposing changes)
-
-See `RULES.md` → “Tooling and quality gates” for what each check enforces.
-
-- Lint/format: `uv run poe lint`
-- Type-check: `uv run poe type`
-- Unit tests (default/offline): `uv run pytest`
-
----
-
-## Test lanes
-
-- **Offline lane (default):**  
-  `UV_NO_SYNC=1 uv run pytest`
-- **Real-deps lane (explicit):**  
-  `uv run pytest -m real_deps`
-- **Integration lane (opt-in):**  
-  `uv run pytest -m integration` (requires API keys)
-
----
-
-## uv troubleshooting (local)
-
-- Prefer no-sync: `UV_NO_SYNC=1 uv run pytest`
-- If dependency fetches are required, set explicit indexes:  
-  `UV_INDEX_URL=https://pypi.org/simple UV_EXTRA_INDEX_URL=https://download.pydantic.dev/simple uv run pytest`
+## References
+- `.shared/references/sys.yml`
+- `.shared/references/components.yml`
+- `.shared/references/rules/INDEX.md`

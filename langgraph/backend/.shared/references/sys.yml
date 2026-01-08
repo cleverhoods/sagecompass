@@ -1,0 +1,23 @@
+working_dir: langgraph/backend
+layers:
+  backend: langgraph/backend
+  ui: langgraph/ui
+  drupal: langgraph/drupal
+backend_tree:
+- app/agents/
+- app/graphs/
+- app/graphs/subgraphs/
+- app/middlewares/
+- app/nodes/
+- app/schemas/
+- app/state/
+- app/tools/
+- app/platform/config/
+- app/platform/contract/
+- app/platform/observability/
+- app/platform/policy/
+- app/platform/runtime/
+- app/platform/utils/
+- .shared/references/
+notes:
+- Folder-level AGENTS.md provided for app/tools, app/state, app/schemas, and app/platform.
