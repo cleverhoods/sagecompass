@@ -116,7 +116,7 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
                 state,
                 target_step=next_phase,
             )
-            update = {"ambiguity": updated_ambiguity}
+            update = {"ambiguity": updated_ambiguity, "messages": [AIMessage(content="Checking for ambiguities.")]}
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,

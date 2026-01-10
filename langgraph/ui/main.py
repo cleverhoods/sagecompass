@@ -1,94 +1,169 @@
-# langgraph/backend/app/ui/ui.py
 from __future__ import annotations
 
 from typing import Any
 
 import gradio as gr
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from streamer import (
+    DEFAULT_ASSISTANT,
+    DEFAULT_API_URL,
+    DEFAULT_HOST,
+    DEFAULT_INBROWSER,
+    DEFAULT_PORT,
+    SageCompassStreamer,
+)
 
 EXAMPLE_MESSAGES = [
     "At Auping can we use support logs, product reviews, and return reasons to identify early signals of quality degradation in certain mattress models before defect rates rise?",
     "Am I cool?",
-    "Could we build a single, agency-wide model in our digital marketing - web development agency that forecasts required developer capacity per client per sprint based on project history, tech stack, and ticket complexity, to optimize planning?"
+    "Could we build a single, agency-wide model in our digital marketing - web development agency that forecasts required developer capacity per client per sprint based on project history, tech stack, and ticket complexity, to optimize planning?",
 ]
+
+CSS = """
+#progress_md {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  line-height: 1.35rem;
+}
+#progress_md ul { margin: 6px 0 0 18px; }
+#progress_md strong { display: inline-block; margin-bottom: 4px; }
+"""
 
 
 class SageCompassUI:
-    """
-    Minimal Gradio UI for SageCompass that treats SageState as canonical.
+    """Gradio chat surface that drives a LangGraph API backend."""
 
-    - internal state stores langchain messages
-    - handler appends HumanMessage and calls self.app.invoke(payload)
-    - Gradio renders chat history; UI tracks langchain messages separately
-    """
-
-    def __init__(self, app: Any, host: str = "0.0.0.0", port: int = 1111, inbrowser: bool = True):
-        self.app = app
+    def __init__(
+        self,
+        api_url: str = DEFAULT_API_URL,
+        assistant_id: str = DEFAULT_ASSISTANT,
+        host: str = DEFAULT_HOST,
+        port: int = DEFAULT_PORT,
+        inbrowser: bool = DEFAULT_INBROWSER,
+    ):
+        self.streamer = SageCompassStreamer(api_url=api_url, assistant_id=assistant_id)
         self.host = host
         self.port = port
         self.inbrowser = inbrowser
 
-    # ---------- Core handler ----------
-    def _handle_user_message(self, message: str, _history: list[dict[str, str]], messages: list[BaseMessage]):
-        """
-        Minimal, direct handler.
+    def _submit(
+        self,
+        user_message: str,
+        history: list[dict[str, str]] | None,
+        state: dict[str, Any] | None,
+    ):
+        # streamer.stream(...) must yield 5 outputs:
+        # (chatbot_value, history_holder, state_holder, message_box_value, progress_md)
+        yield from self.streamer.stream(user_message, state)
 
-        - Expects messages to be a list of langchain messages
-        - Returns: (assistant_reply, updated_messages)
-        """
-        user_message = (message or "").strip()
-        if not user_message:
-            # nothing to send; render current messages
-            return "", messages
+    def _stream_response(
+        self,
+        user_message: str,
+        history: list[dict[str, str]] | None,
+        state: dict[str, Any] | None,
+    ):
+        yield from self._submit(user_message, history, state)
 
-        if messages is None:
-            messages = []
-        messages = list(messages)
-        messages.append(HumanMessage(content=user_message))
+    def launch(self) -> None:
+        """Build and launch the Gradio chat interface."""
+        with gr.Blocks(title="SageCompass") as demo:
+            gr.Markdown("## SageCompass")
 
-        # Call graph / app synchronously
-        try:
-            if hasattr(self.app, "invoke"):
-                result = self.app.invoke({"messages": messages, "user_query": user_message}, config={})
-            else:
-                result = self.app({"messages": messages, "user_query": user_message})
-        except Exception:
-            import traceback
-            print(traceback.format_exc())
-            # Make the error visible in UI
-            messages = messages + [AIMessage(content="Internal error while running agent. See server logs.")]
-            return "", messages
+            # ✅ Gradio 6.3.0 Chatbot already expects messages (list of dicts),
+            # so DO NOT pass type="messages".
+            chatbot = gr.Chatbot(
+                render_markdown=True,
+                line_breaks=True,
+                layout="panel",
+                height=420,
+            )
 
-        if isinstance(result, dict):
-            messages = [msg for msg in result.get("messages", []) if isinstance(msg, BaseMessage)]
+            message_box = gr.Textbox(
+                placeholder="Describe your project or request...",
+                label="Send a message",
+                lines=1,
+                max_lines=4,
+            )
+            send_button = gr.Button("Send")
+            clear_button = gr.Button("Reset conversation")
+            history_holder = gr.State([])
+            state_holder = gr.State({})
 
-        # Return assistant reply and updated messages
-        assistant_reply = ""
-        if messages:
-            last = messages[-1]
-            if isinstance(last, AIMessage):
-                assistant_reply = last.content if isinstance(last.content, str) else str(last.content)
-        return assistant_reply, messages
+            # ✅ Progress panel: Accordion + Markdown (bold headers + bullets)
+            with gr.Accordion("Progress", open=True):
+                chain_of_thought_log = gr.Markdown(value="", elem_id="progress_md")
 
-    # ---------- UI / Launch ----------
-    def launch(self):
-        """Build and launch a minimal Gradio Blocks UI."""
-        messages = gr.State([])
-        demo = gr.ChatInterface(
-            fn=self._handle_user_message,
-            title="SageCompass",
-            examples=[[example, []] for example in EXAMPLE_MESSAGES],
-            additional_inputs=[messages],
-            additional_outputs=[messages],
-        )
+            send_action = self._stream_response
 
+            message_box.submit(
+                send_action,
+                inputs=[message_box, history_holder, state_holder],
+                outputs=[
+                    chatbot,
+                    history_holder,
+                    state_holder,
+                    message_box,
+                    chain_of_thought_log,
+                ],
+                queue=True,
+            )
+            send_button.click(
+                send_action,
+                inputs=[message_box, history_holder, state_holder],
+                outputs=[
+                    chatbot,
+                    history_holder,
+                    state_holder,
+                    message_box,
+                    chain_of_thought_log,
+                ],
+                queue=True,
+            )
+            clear_button.click(
+                lambda: ([], [], {}, "", ""),
+                inputs=[],
+                outputs=[
+                    chatbot,
+                    history_holder,
+                    state_holder,
+                    message_box,
+                    chain_of_thought_log,
+                ],
+            )
+
+        # ✅ Gradio 6 moved css= here
         demo.launch(
             server_name=self.host,
             server_port=self.port,
             share=False,
             inbrowser=self.inbrowser,
+            css=CSS,
         )
+
+
+def build_sagecompass_ui(
+    *,
+    api_url: str | None = None,
+    assistant_id: str = DEFAULT_ASSISTANT,
+    host: str = DEFAULT_HOST,
+    port: int = DEFAULT_PORT,
+    inbrowser: bool = DEFAULT_INBROWSER,
+) -> SageCompassUI:
+    return SageCompassUI(
+        api_url=api_url or DEFAULT_API_URL,
+        assistant_id=assistant_id,
+        host=host,
+        port=port,
+        inbrowser=inbrowser,
+    )
+
+
+def main() -> None:
+    build_sagecompass_ui().launch()
+
 
 if __name__ == "__main__":
     main()
