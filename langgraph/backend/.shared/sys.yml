@@ -18,6 +18,6 @@ backend_tree:
 - app/platform/policy/
 - app/platform/runtime/
 - app/platform/utils/
-- .shared/references/
+- .shared/
 notes:
-- Folder-level AGENTS.md provided for app/tools, app/state, app/schemas, and app/platform.
+- Folder-level AGENTS.md provided for app/agents, app/graphs, app/nodes, app/tools, app/middlewares, app/state, app/schemas, and app/platform.

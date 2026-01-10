@@ -3,9 +3,9 @@
 This folder contains the LangGraph backend application code: state, graphs, nodes, agents, tools, middleware, and runtime utilities.
 
 ## Canonical reference
-- **`../RULES.md` is the canonical engineering rulebook** (MUST/SHOULDs, patterns, testing approach, persistence).
+- The backend operating contract lives in `../AGENTS.md`.
+- Use the `.shared/sys.yml`, `.shared/components.yml`, and `.shared/platform.yml` maps to locate contracts and rule snippets for each component.
 - This README documents **what lives where** and the stable *contracts* for this folder.
-- If anything conflicts: **`../RULES.md` wins**.
 
 ---
 

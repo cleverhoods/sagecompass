@@ -1,17 +1,15 @@
-# Rules index (`langgraph/backend/.shared/references/rules`)
+# Rules index (`langgraph/backend/.shared/rules`)
 
 ## Purpose
 This folder contains **canonical, shared** rule snippets (MUST / MUST NOT) for the backend.
 They are intended to be:
-- referenced from `AGENTS.md` files (backend-wide and component-level),
+- referenced from `AGENTS.md` files via the `.shared/components.yml` and `.shared/platform.yml` maps,
 - used for audits and compliance checks,
 - kept short and stable.
 
 ## Instruction loading policy
 - Treat **folder-level `AGENTS.md`** as the primary local instruction surface.
-- Use these rule snippets when the local `AGENTS.md` references them.
-- Do **not** treat `app/RULES.md` as always-on instructions; consult it explicitly only when needed.
-
+- Use the map references to locate the rule snippets or contract files that apply to a component.
 
 ## Rule files
 - `agents.md` — agent statelessness + schema validation
@@ -26,8 +24,7 @@ They are intended to be:
 - `tools.md` — tool typing + allowlists + determinism
 - `middlewares.md` — middleware policy, allowlists, and determinism
 - `schemas.md` — schema typing + orchestration boundaries
-- `misc.md` — captures any uncategorized or future rules that lack a home
 
 ## Updating rules
 - Prefer small edits that improve clarity and reduce duplication.
-- If a rule is component-specific, put it in that component’s rule file and link from the component `AGENTS.md`.
+- If a rule is component-specific, put it in that component’s rule file and link through the maps.

@@ -34,11 +34,3 @@ def test_docs_map_contains_required_links() -> None:
     assert "knowledge base" in content
     assert "audits" in content
 
-
-def test_rules_reference_docs_map_for_audits() -> None:
-    root = pathlib.Path(__file__).resolve().parents[4]
-    rules = root / "app" / "RULES.md"
-    content = _read(rules)
-
-    assert "Docs map" in content
-    assert "audit" in content.lower()
