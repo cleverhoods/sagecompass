@@ -19,7 +19,7 @@ from app.platform.contract.tools import (
     build_allowlist_contract,
     validate_allowlist_contains_schema,
 )
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.platform.utils.agent_utils import compose_agent_prompt
 from app.platform.utils.model_factory import get_model_for_agent
 

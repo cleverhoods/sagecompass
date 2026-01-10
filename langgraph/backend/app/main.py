@@ -12,7 +12,7 @@ from app.graphs.write_graph import build_write_graph
 from app.nodes.gating_guardrails import make_node_guardrails_check
 from app.nodes.supervisor import make_node_supervisor
 from app.platform.config.env import load_project_env
-from app.platform.observability.logger import configure_logging
+from app.platform.contract.logging import configure_logging
 from app.runtime import SageRuntimeContext
 from app.state import SageState, VectorWriteState
 

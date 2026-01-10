@@ -10,8 +10,6 @@ from pathlib import Path
 import yaml  # type: ignore[import-untyped]
 
 from app.platform.config.paths import AGENTS_DIR, APP_ROOT, CONFIG_DIR
-from app.platform.observability.logger import get_logger
-
 
 class FileLoader:
     """Load prompts, configs, and schemas from the filesystem."""
@@ -20,6 +18,8 @@ class FileLoader:
 
     @staticmethod
     def _logger():
+        from app.platform.contract.logging import get_logger
+
         return get_logger("utils.file_loader")
 
     @classmethod

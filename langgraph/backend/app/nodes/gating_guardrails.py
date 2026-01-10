@@ -10,7 +10,7 @@ from langgraph.types import Command
 from app.platform.config.file_loader import FileLoader
 from app.platform.contract.guardrails import evaluate_guardrails_contract
 from app.platform.contract.state import validate_state_update
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
 
 if TYPE_CHECKING:

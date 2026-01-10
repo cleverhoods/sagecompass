@@ -7,8 +7,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from app.platform.config.paths import BACKEND_ROOT
-from app.platform.observability.logger import get_logger
-
 _ENV_LOADED = False
 
 
@@ -26,8 +24,9 @@ def load_project_env() -> None:
 
     env_path: Path = BACKEND_ROOT / ".env"
 
-    logger = get_logger("utils.env")
+    from app.platform.contract.logging import get_logger
 
+    logger = get_logger("utils.env")
     try:
         if not env_path.exists():
             logger.warning("env.load.missing", path=str(env_path))

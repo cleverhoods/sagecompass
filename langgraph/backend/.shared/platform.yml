@@ -1,4 +1,8 @@
 scope: langgraph/backend/app/platform/**
+platform:
+  path: app/platform/
+  purpose: "Backend platform layer: contracts, config, observability, policy, runtime, and shared utils."
+  local_instructions: app/platform/AGENTS.md
 platform_layers:
   config:
     path: app/platform/config/
@@ -42,7 +46,3 @@ platform_layers:
     - agents
     - nodes
     - tools
-platform:
-  path: app/platform/
-  purpose: "Backend platform layer: contracts, config, observability, policy, runtime, and shared utils."
-  local_instructions: app/platform/AGENTS.md

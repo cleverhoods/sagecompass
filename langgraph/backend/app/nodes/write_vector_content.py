@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from langgraph.types import Command
 
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.tools.vector_writer import write_to_vectorstore
 
 if TYPE_CHECKING:

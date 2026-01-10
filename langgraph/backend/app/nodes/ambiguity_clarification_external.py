@@ -10,7 +10,7 @@ from langgraph.types import Command
 
 from app.schemas.clarification import ClarificationResponse
 from app.platform.contract.state import validate_state_update
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.platform.runtime.state_helpers import (
     get_current_clarifying_question,
     get_latest_user_input,

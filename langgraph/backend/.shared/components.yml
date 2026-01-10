@@ -1,20 +1,20 @@
 scope: langgraph/backend/app/**
-platform_reference: .shared/platform.yml
+contracts: .shared/contracts.yml
 component_types:
   agents:
     path: app/agents/
     domain: Agent
     purpose: Stateless, recreatable reasoning components. Own domain reasoning logic.
     contracts:
-    - app/platform/contract/agents.py
+    - contract.agents
+    - contract.logging
     local_instructions: app/agents/AGENTS.md
   graphs:
     path: app/graphs/
     domain: Langgraph
     purpose: Composition-only wiring (nodes + control flow). No business logic.
     contracts:
-    - app/graphs/subgraphs/phases/contract.py
-    - app/platform/contract/phases.py
+    - contract.phases
     local_instructions: app/graphs/AGENTS.md
   nodes:
     path: app/nodes/
@@ -22,16 +22,19 @@ component_types:
     purpose: Orchestration units; call DI-injected deps, validate outputs, update state keys,
       route explicitly.
     contracts:
-    - app/platform/contract/structured_output.py
-    - app/platform/contract/state.py
+    - contract.structured_output
+    - contract.state
+    - contract.evidence
+    - contract.logging
     local_instructions: app/nodes/AGENTS.md
   middlewares:
     path: app/middlewares/
     domain: Langgraph
-    purpose: Policy boundary: admissibility, redaction/normalization, tool-call validation, output shaping.
+    purpose: "Policy boundary: admissibility, redaction/normalization, tool-call validation, output shaping."
     contracts:
-    - app/platform/contract/guardrails.py
-    - app/platform/contract/tools.py
+    - contract.guardrails
+    - contract.tools
+    - contract.logging
     local_instructions: app/middlewares/AGENTS.md
   schemas:
     path: app/schemas/
@@ -44,12 +47,13 @@ component_types:
     purpose: Canonical state model(s) used by graphs/nodes; authority for routing & bounded loops.
     contracts:
     - app/state/state.py
-    - app/platform/contract/state.py
+    - contract.state
     local_instructions: app/state/AGENTS.md
   tools:
     path: app/tools/
     domain: Langchain
     purpose: Callable capabilities exposed to agents or used by nodes; typed and DI-injected.
     contracts:
-    - app/platform/contract/tools.py
+    - contract.tools
+    - contract.logging
     local_instructions: app/tools/AGENTS.md

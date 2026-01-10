@@ -14,7 +14,7 @@ from app.platform.contract.structured_output import (
     extract_structured_response,
     validate_structured_response,
 )
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.platform.runtime.state_helpers import (
     format_ambiguity_key,
     get_latest_user_input,

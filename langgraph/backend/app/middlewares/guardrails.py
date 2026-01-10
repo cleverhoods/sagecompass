@@ -10,7 +10,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from app.platform.config.file_loader import FileLoader
 from app.platform.contract.guardrails import evaluate_guardrails_contract
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.platform.policy.guardrails import GuardrailsConfig, build_guardrails_config
 
 logger = get_logger("middlewares.guardrails")

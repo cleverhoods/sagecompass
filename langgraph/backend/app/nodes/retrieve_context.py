@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.platform.contract.state import validate_state_update
-from app.platform.observability.logger import get_logger
+from app.platform.contract.logging import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
 from app.state import EvidenceItem, PhaseEntry
 from app.tools.context_lookup import context_lookup
