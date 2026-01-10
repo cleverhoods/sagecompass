@@ -1,0 +1,31 @@
+scope: langgraph/backend/app/platform/**
+platform_layers:
+  config:
+    path: app/platform/config/
+    domain: Utils
+    purpose: Env loading, file access helpers, path conventions.
+  contract:
+    path: app/platform/contract/
+    domain: Utils
+    purpose: Typed contracts + validators for backend invariants.
+  observability:
+    path: app/platform/observability/
+    domain: Utils
+    purpose: Structured logging and opt-in debugging hooks.
+  policy:
+    path: app/platform/policy/
+    domain: Utils
+    purpose: Pure deterministic policy evaluation used by guardrails/middleware.
+  runtime:
+    path: app/platform/runtime/
+    domain: Utils
+    purpose: Phase routing and message/state introspection helpers.
+  utils:
+    path: app/platform/utils/
+    domain: Utils
+    purpose: Shared helpers (prompts/providers/model factory).
+platform:
+  path: app/platform/
+  domain: Utils
+  purpose: Backend platform layer: contracts, config, observability, policy, runtime, and shared utils.
+  local_instructions: app/platform/AGENTS.md

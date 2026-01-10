@@ -7,7 +7,7 @@ Nodes are orchestration units that:
 - decide routing (conditional edges or Command)
 
 ## Canonical rules
-- See `../RULES.md` for DI, purity, bounded loops, and logging requirements.
+- Use `../.shared/components.yml` → `component_types.nodes.contracts` for DI, purity, bounded loops, and logging requirements.
 
 ## Key docs
 - LangGraph Graph API (routing patterns, Command): https://docs.langchain.com/oss/python/langgraph/use-graph-api

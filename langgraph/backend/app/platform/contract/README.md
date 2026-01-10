@@ -2,7 +2,7 @@
 
 Purpose:
 - Provide typed contracts + validators for backend invariants.
-- Serve as canonical enforcement targets for RULES.md.
+- Serve as canonical enforcement targets referenced by `.shared/components.yml` and `.shared/platform.yml`.
 
 Public entrypoints:
 - `ArtifactEnvelope`, `ArtifactProvenance`, `EvidencePointer`

@@ -6,10 +6,11 @@ This folder hosts **shared, long-lived references** for the backend, used by:
 
 ## Conventions
 - Keep files small, stable, and easy to link to from `AGENTS.md`.
-- Prefer `.shared/references/**` for maps and rule snippets.
-- Avoid duplicating full rule sets in multiple places—link instead.
+- Use `sys.yml` and `components.yml` as the primary navigation maps for contracts and rules.
+- Avoid duplicating full rule sets in multiple places—link through the maps instead.
 
 ## Contents
-- `references/sys.yml` — canonical backend folder map and “high-risk” areas
-- `references/components.yml` — canonical component map for `app/**`
-- `references/rules/*` — component/platform MUST/MUST NOT snippets (extracted from long-form docs)
+- `sys.yml` — canonical backend folder map and “high-risk” areas
+- `components.yml` — canonical component map for `app/**`
+- `platform.yml` — platform layer map referenced by `components.yml`
+- `rules/*` — component/platform MUST/MUST NOT snippets (extracted from long-form docs)

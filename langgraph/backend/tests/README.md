@@ -22,7 +22,7 @@ OpenAI-backed integration tests require:
 They use LangChain's OpenAI integration (`langchain_openai.ChatOpenAI`).
 Docs: https://python.langchain.com/docs/integrations/chat/openai/
 
-Testing approach follows `../RULES.md` §12 (LangChain “Test”):
+Testing approach follows the backend operating contract (`../AGENTS.md`) and the platform contract docs:
 - deterministic unit tests by default
 - bounded, opt-in integration tests
 - record/replay (VCR) where needed to stabilize external calls

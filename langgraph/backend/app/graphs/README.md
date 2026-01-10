@@ -3,7 +3,7 @@
 Graphs are **composition-only**: they wire nodes and control flow. No business logic.
 
 ## Canonical rules
-- See `../RULES.md` for routing rules, bounded loops, persistence, and testing.
+- Use `../.shared/components.yml` → `component_types.graphs.contracts` for routing, bounded loops, persistence, and testing expectations.
 
 ## What goes here
 - `graph.py`: main SageCompass graph

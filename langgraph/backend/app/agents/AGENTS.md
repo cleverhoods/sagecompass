@@ -3,11 +3,11 @@
 This file is the **primary** instruction surface when editing `app/agents/**`.
 
 ## Scope
-- Agents are stateless factories wired through `build_agent()` and rely on shared prompt assets stored nearby; see the shared snippets for the enforceable invariants.
+- Agents are stateless factories wired through `build_agent()` and rely on shared prompt assets stored nearby.
+- Use `component_types.agents.contracts` in `../../.shared/components.yml` to find enforceable contracts and rule snippets.
 
 ## References
 - Backend AGENTS: `../../AGENTS.md`
-- Component map: `../../.shared/references/components.yml`
-- System map: `../../.shared/references/sys.yml`
-- Rules index: `../../.shared/references/rules/INDEX.md`
-- Component rules: `../../.shared/references/rules/agents.md`
+- Component map: `../../.shared/components.yml`
+- System map: `../../.shared/sys.yml`
+- Platform map: `../../.shared/platform.yml`

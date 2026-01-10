@@ -3,11 +3,11 @@
 This file is the **primary** instruction surface when editing `app/tools/**`.
 
 ## Scope
-- Tools stay typed, stateless, allowlist-driven, and deterministic; consult the shared tools snippet for the concrete rules.
+- Tools stay typed, stateless, allowlist-driven, and deterministic.
+- Use `component_types.tools.contracts` in `../../.shared/components.yml` to find enforceable contracts and rule snippets.
 
 ## References
 - Backend AGENTS: `../../AGENTS.md`
-- Component map: `../../.shared/references/components.yml`
-- System map: `../../.shared/references/sys.yml`
-- Rules index: `../../.shared/references/rules/INDEX.md`
-- Component rules: `../../.shared/references/rules/tools.md`
+- Component map: `../../.shared/components.yml`
+- System map: `../../.shared/sys.yml`
+- Platform map: `../../.shared/platform.yml`

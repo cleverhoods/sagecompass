@@ -6,7 +6,7 @@ Agents are **stateless, recreatable** reasoning components. They own:
 - **Pydantic OutputSchema** (structured outputs)
 
 ## Canonical rules
-- See `../RULES.md` (repo-level) for MUST/SHOULD rules.
+- Use `../.shared/components.yml` → `component_types.agents.contracts` for the enforceable contracts and rule snippets.
 - This README exists to map the folder to the LangChain/LangGraph mental model + key docs.
 
 ## What goes here

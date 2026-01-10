@@ -38,8 +38,8 @@ SageCompass is a monorepo with multiple layers of responsibility:
 1. **Nearest `AGENTS.md` wins** for any file you edit (closest in the directory tree).
 2. If multiple rulebooks apply, prefer **more specific** guidance over global guidance.
 3. For the backend layer, **component rulebooks beat this file**:
-   - `langgraph/backend/RULES.md` (canonical engineering rules for backend)
-   - `langgraph/backend/AGENTS.md` (backend operational conventions + test lanes)
+   - `langgraph/backend/AGENTS.md` (backend operating contract)
+   - `langgraph/backend/.shared/sys.yml` + `langgraph/backend/.shared/components.yml` (canonical navigation maps)
 
 > Principle: global docs define *boundaries*; component docs define *behavior*.
 
@@ -48,8 +48,8 @@ SageCompass is a monorepo with multiple layers of responsibility:
 ## 3) Canonical rulebooks (what to read)
 
 ### Backend (LangGraph runtime)
-- Canonical engineering rules: `langgraph/backend/RULES.md`
-- Backend operational contracts: `langgraph/backend/AGENTS.md`
+- Backend operating contract: `langgraph/backend/AGENTS.md`
+- Backend navigation maps: `langgraph/backend/.shared/sys.yml`, `langgraph/backend/.shared/components.yml`
 - Backend app architecture map: `langgraph/backend/app/README.md`
 
 ### Workspace (LangGraph configs/UI boundary)
@@ -97,5 +97,5 @@ All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
 - [langgraph/backend] Prevent import-time agent construction by moving `build_agent()` into node factories. (PR #123)
 
 ### Changed
-- [docs] Centralize backend rules in `langgraph/backend/RULES.md` and slim AGENTS/READMEs.
+- [docs] Centralize backend maps in `.shared/sys.yml` and `.shared/components.yml` to slim AGENTS/READMEs.
 ```
