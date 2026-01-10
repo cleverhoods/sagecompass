@@ -32,13 +32,6 @@ if TYPE_CHECKING:
 
     from app.runtime import SageRuntimeContext
     from app.state import AmbiguityContext, SageState
-else:
-    Callable = Any  # type: ignore[assignment]
-    Runnable = Any  # type: ignore[assignment]
-    Runtime = Any  # type: ignore[assignment]
-    SageRuntimeContext = Any  # type: ignore[assignment]
-    SageState = Any  # type: ignore[assignment]
-    AmbiguityContext = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.ambiguity_clarification")
 

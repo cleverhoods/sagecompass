@@ -16,11 +16,6 @@ if TYPE_CHECKING:
 
     from app.runtime import SageRuntimeContext
     from app.state import VectorWriteState
-else:
-    Callable = Any  # type: ignore[assignment]
-    Runtime = Any  # type: ignore[assignment]
-    SageRuntimeContext = Any  # type: ignore[assignment]
-    VectorWriteState = Any  # type: ignore[assignment]
 
 
 def make_node_write_vector() -> Callable[
