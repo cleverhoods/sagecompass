@@ -48,6 +48,8 @@
 
 ### Changed
 - [langgraph/backend] Replace backend RULES references with map-driven contracts and split platform guidance into `.shared/platform.yml`.
+- [langgraph/backend] Expand platform map metadata with component consumers.
+- [docs] Align langgraph AGENTS guidance to rely on local component contracts instead of backend-specific references.
 - [langgraph/backend] Disable HILP routing in ambiguity preflight so clarification always uses the internal agent loop.
 - [langgraph/backend] Validate SageState updates in ambiguity supervisor, retrieval, phase supervisor, and external clarification nodes.
 - [langgraph/backend] Remove legacy `graphs/phases` and tests directories after the subgraph layout move.
