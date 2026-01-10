@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- [docs] Document backend architectural reasoning, including DI, contracts, and type-only imports.
 - [langgraph/backend] Add a bounded OpenAI integration test for Problem Framing with explicit API key checks.
 - [langgraph/backend] Add platform contract models for artifacts, namespaces, and prompt validation.
 - [langgraph/backend] Add contract helpers for state ownership, phases, agents, guardrails, tool allowlists, and structured outputs.

@@ -19,11 +19,6 @@ if TYPE_CHECKING:
 
     from app.runtime import SageRuntimeContext
     from app.state import SageState
-else:
-    Callable = Any  # type: ignore[assignment]
-    Runtime = Any  # type: ignore[assignment]
-    SageRuntimeContext = Any  # type: ignore[assignment]
-    SageState = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.phase_supervisor")
 
