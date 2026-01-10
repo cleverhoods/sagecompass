@@ -2,13 +2,13 @@ scope: langgraph/backend/app/platform/**
 platform_layers:
   config:
     path: app/platform/config/
-    purpose: Env loading, file access helpers, path conventions.
+    purpose: "Env loading, file access helpers, path conventions."
     consumers:
     - nodes
     - tools
   contract:
     path: app/platform/contract/
-    purpose: Typed contracts + validators for backend invariants.
+    purpose: "Typed contracts + validators for backend invariants."
     consumers:
     - agents
     - graphs
@@ -18,31 +18,31 @@ platform_layers:
     - tools
   observability:
     path: app/platform/observability/
-    purpose: Structured logging and opt-in debugging hooks.
+    purpose: "Structured logging and opt-in debugging hooks."
     consumers:
     - nodes
     - tools
   policy:
     path: app/platform/policy/
-    purpose: Pure deterministic policy evaluation used by guardrails/middleware.
+    purpose: "Pure deterministic policy evaluation used by guardrails/middleware."
     consumers:
     - middlewares
     - nodes
   runtime:
     path: app/platform/runtime/
-    purpose: Phase routing and message/state introspection helpers.
+    purpose: "Phase routing and message/state introspection helpers."
     consumers:
     - graphs
     - nodes
     - state
   utils:
     path: app/platform/utils/
-    purpose: Shared helpers (prompts/providers/model factory).
+    purpose: "Shared helpers (prompts/providers/model factory)."
     consumers:
     - agents
     - nodes
     - tools
 platform:
   path: app/platform/
-  purpose: Backend platform layer: contracts, config, observability, policy, runtime, and shared utils.
+  purpose: "Backend platform layer: contracts, config, observability, policy, runtime, and shared utils."
   local_instructions: app/platform/AGENTS.md

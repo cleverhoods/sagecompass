@@ -7,10 +7,8 @@ from typing import TYPE_CHECKING, Any, Literal
 from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
-from app.agents.ambiguity_clarification.schema import (
-    ClarificationResponse,
-    OutputSchema,
-)
+from app.agents.ambiguity_clarification.schema import OutputSchema
+from app.schemas.clarification import ClarificationResponse
 from app.platform.contract.state import validate_state_update
 from app.platform.contract.structured_output import (
     extract_structured_response,

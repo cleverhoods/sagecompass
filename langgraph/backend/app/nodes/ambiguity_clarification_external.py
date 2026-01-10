@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.graph import END
 from langgraph.types import Command
 
-from app.agents.ambiguity_clarification.schema import ClarificationResponse
+from app.schemas.clarification import ClarificationResponse
 from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import (

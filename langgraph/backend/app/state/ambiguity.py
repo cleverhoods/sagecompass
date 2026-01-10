@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from app.agents.ambiguity_clarification.schema import ClarificationResponse
+from app.schemas.clarification import ClarificationResponse
 from app.schemas.ambiguities import AmbiguityItem
 
 

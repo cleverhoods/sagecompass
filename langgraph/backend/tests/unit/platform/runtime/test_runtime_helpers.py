@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from langchain_core.messages import HumanMessage
 
-from app.agents.ambiguity_clarification.schema import ClarificationResponse
+from app.schemas.clarification import ClarificationResponse
 from app.platform.runtime import (
     format_ambiguity_key,
     get_clarified_keys,
