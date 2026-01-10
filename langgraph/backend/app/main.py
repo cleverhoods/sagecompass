@@ -5,7 +5,7 @@ from __future__ import annotations
 from langgraph.graph.state import CompiledStateGraph
 
 from app.graphs.graph import build_main_app
-from app.graphs.subgraphs.ambiguity_preflight.subgraph import (
+from app.graphs.subgraphs.ambiguity_check.subgraph import (
     build_ambiguity_preflight_subgraph,
 )
 from app.graphs.write_graph import build_write_graph

@@ -29,7 +29,7 @@ def build_ambiguity_preflight_subgraph(
     phase: str | None = None,
     max_context_retrieval_rounds: int = 1,
 ) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
-    """Phase Subgraph: ambiguity_preflight.
+    """Phase Subgraph: ambiguity_check.
 
     Purpose:
         Run ambiguity scan, optional retrieval + rescan, and clarification loop.

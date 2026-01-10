@@ -54,18 +54,13 @@ def build_main_app(
 
     # Add control nodes
     graph.add_node("supervisor", _as_runtime_node(supervisor_node))
-    graph.add_node("ambiguity_preflight", ambiguity_preflight_graph)
+    graph.add_node("ambiguity_check", ambiguity_preflight_graph)
     graph.add_node("guardrails_check", _as_runtime_node(guardrails_node))
-    graph.add_edge("supervisor", "guardrails_check")
-    graph.add_edge("guardrails_check", "supervisor")
-    graph.add_edge("supervisor", "ambiguity_preflight")
-    graph.add_edge("ambiguity_preflight", "supervisor")
 
     # Add phase subgraphs from the phase registry
     for phase in PHASES.values():
         phase_node = f"{phase.name}_supervisor"
         graph.add_node(phase_node, phase.build_graph())
-        graph.add_edge(phase_node, "supervisor")
 
     graph.add_edge(START, "supervisor")
 

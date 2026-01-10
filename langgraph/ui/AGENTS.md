@@ -1,4 +1,4 @@
-> Scope: Applies to all files under `langgraph/backend/app/ui/`.
+> Scope: Applies to all files under `langgraph/ui/`.
 
 # Gradio UI Contracts (Python)
 

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 SupervisorRoute = Literal[
     "__end__",
-    "ambiguity_preflight",
+    "ambiguity_check",
     "guardrails_check",
     "phase_supervisor",
     "problem_framing_supervisor",
@@ -38,8 +38,8 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
 
     Flow:
         supervisor -> guardrails_check -> supervisor
-        -> ambiguity_preflight -> (scan/retrieve/clarification) -> supervisor
-        -> phase_supervisor -> phase node -> supervisor
+        -> ambiguity_check -> (scan/retrieve/clarification) -> supervisor
+        -> phase_supervisor -> phase nodes -> supervisor
 
     Side effects/state writes:
         None (routing only).
@@ -120,14 +120,14 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
-                goto="ambiguity_preflight",
+                goto="ambiguity_check",
             )
 
         update = {"messages": [AIMessage(content="Running ambiguity preflight.")]}
         validate_state_update(update, owner="supervisor")
         return Command(
             update=update,
-            goto="ambiguity_preflight",
+            goto="ambiguity_check",
         )
 
     return node_supervisor
