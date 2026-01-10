@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
-from langchain_core.runnables import Runnable
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import (
@@ -26,20 +23,259 @@ from app.platform.runtime.state_helpers import (
     get_pending_ambiguity_keys,
     reset_clarification_context,
 )
-from app.runtime import SageRuntimeContext
-from app.state import SageState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langchain_core.runnables import Runnable
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import AmbiguityContext, SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runnable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
+    AmbiguityContext = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.ambiguity_clarification")
 
 
 AmbiguityClarificationRoute = Literal["ambiguity_supervisor"]
 
+_NODE_OWNER = "ambiguity_clarification"
+
+
+def _missing_user_input_command(
+    goto: AmbiguityClarificationRoute,
+    phase: str | None,
+) -> Command[AmbiguityClarificationRoute]:
+    logger.warning("ambiguity_clarification.empty_user_input", phase=phase)
+    update = {"messages": [AIMessage(content="Waiting for more details.")]}
+    validate_state_update(update, owner=_NODE_OWNER)
+    return Command(update=update, goto=goto)
+
+
+def _resolve_target_phase(
+    state: SageState,
+    ambiguity_context: AmbiguityContext,
+    phase: str | None,
+    goto: AmbiguityClarificationRoute,
+) -> tuple[str | None, AmbiguityContext, Command[AmbiguityClarificationRoute] | None]:
+    target_phase = phase or ambiguity_context.target_step
+    if not target_phase:
+        logger.warning("ambiguity_clarification.missing_target_step")
+        update = {"messages": [AIMessage(content="Unable to determine clarification target.")]}
+        validate_state_update(update, owner=_NODE_OWNER)
+        return None, ambiguity_context, Command(update=update, goto=goto)
+
+    if ambiguity_context.target_step != target_phase:
+        ambiguity_context = reset_clarification_context(
+            state,
+            target_step=target_phase,
+        )
+    return target_phase, ambiguity_context, None
+
+
+def _complete_if_no_pending_keys(
+    ambiguity_context: AmbiguityContext,
+    pending_keys: list[str],
+    target_phase: str,
+    goto: AmbiguityClarificationRoute,
+) -> Command[AmbiguityClarificationRoute] | None:
+    if not pending_keys:
+        updated_context = ambiguity_context.model_copy(
+            update={
+                "target_step": target_phase,
+                "checked": True,
+                "eligible": True,
+                "exhausted": False,
+            }
+        )
+        update = {
+            "ambiguity": updated_context,
+            "messages": [AIMessage(content="Clarification complete. Continuing.")],
+        }
+        validate_state_update(update, owner=_NODE_OWNER)
+        return Command(update=update, goto=goto)
+    return None
+
+
+def _handle_round_limit(
+    ambiguity_context: AmbiguityContext,
+    target_phase: str,
+    max_rounds: int,
+    goto: AmbiguityClarificationRoute,
+    phase: str | None,
+) -> Command[AmbiguityClarificationRoute] | None:
+    rounds_attempted = len(ambiguity_context.resolved)
+    if rounds_attempted >= max_rounds:
+        exhausted_context = ambiguity_context.model_copy(
+            update={
+                "target_step": target_phase,
+                "eligible": False,
+                "exhausted": True,
+            }
+        )
+        logger.warning("ambiguity_clarification.max_rounds_exceeded", phase=phase)
+        update = {
+            "ambiguity": exhausted_context,
+            "messages": [AIMessage(content="Unable to clarify the request.")],
+        }
+        validate_state_update(update, owner=_NODE_OWNER)
+        return Command(update=update, goto=goto)
+    return None
+
+
+def _prepare_clarification_details(
+    ambiguity_context: AmbiguityContext,
+    pending_keys: list[str],
+) -> tuple[dict[str, str], str | None, list[str], str]:
+    detected_items = ambiguity_context.detected
+    labeled_items = [(format_ambiguity_key(item.key), item) for item in detected_items]
+    question_map = {label: (item.clarifying_question or item.description or label) for label, item in labeled_items}
+    pending_items = [item for label, item in labeled_items if label in pending_keys]
+    pending_questions = [
+        question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key)) for item in pending_items
+    ]
+    if not pending_questions:
+        pending_questions = list(pending_keys)
+    current_question = pending_questions[0] if pending_questions else None
+    selected_keys = [label for label, _ in labeled_items]
+    ambiguous_items_text = (
+        "\n".join(
+            (
+                f"- {format_ambiguity_key(item.key)}: "
+                f"{question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key))}"
+                f" (assumption: {item.resolution_assumption})"
+            )
+            for item in pending_items
+        )
+        if pending_items
+        else "None."
+    )
+    return question_map, current_question, selected_keys, ambiguous_items_text
+
+
+def _extract_validated_structured_response(
+    result: object | None,
+    ambiguity_context: AmbiguityContext,
+    target_phase: str,
+    goto: AmbiguityClarificationRoute,
+) -> tuple[OutputSchema | None, Command[AmbiguityClarificationRoute] | None]:
+    structured = extract_structured_response(result)
+    if structured is None and isinstance(result, OutputSchema):
+        structured = result
+
+    if structured is None:
+        logger.warning(
+            "ambiguity_clarification.missing_structured_response",
+            phase=target_phase,
+        )
+        update = {
+            "messages": [AIMessage(content="Clarification failed. Please try again.")],
+            "ambiguity": ambiguity_context.model_copy(update={"eligible": False}),
+        }
+        validate_state_update(update, owner=_NODE_OWNER)
+        return None, Command(update=update, goto=goto)
+
+    validated = validate_structured_response(structured, OutputSchema)
+    assert isinstance(validated, OutputSchema)
+    return validated, None
+
+
+def _handle_empty_responses(
+    responses: list[ClarificationResponse],
+    target_phase: str,
+    ambiguity_context: AmbiguityContext,
+    goto: AmbiguityClarificationRoute,
+) -> Command[AmbiguityClarificationRoute] | None:
+    if not responses:
+        logger.warning(
+            "ambiguity_clarification.empty_response",
+            phase=target_phase,
+        )
+        update = {
+            "messages": [AIMessage(content="Clarification failed. Please try again.")],
+            "ambiguity": ambiguity_context.model_copy(update={"eligible": False}),
+        }
+        validate_state_update(update, owner=_NODE_OWNER)
+        return Command(update=update, goto=goto)
+    return None
+
+
+def _normalize_clarification_responses(
+    responses: list[ClarificationResponse],
+    ambiguity_context: AmbiguityContext,
+    user_input: str,
+    pending_keys: list[str],
+    selected_keys: list[str],
+    question_map: dict[str, str],
+    target_phase: str,
+) -> tuple[
+    AmbiguityContext,
+    list[str],
+    list[str],
+    str,
+]:
+    fallback_keys = list(dict.fromkeys(pending_keys))
+    valid_keys = {format_ambiguity_key(item.key) for item in ambiguity_context.detected}
+    normalized_responses: list[ClarificationResponse] = []
+
+    for response in responses:
+        raw_clarified_input = response.clarified_input
+        clarified_input = raw_clarified_input or user_input
+        cleaned_keys = [key.strip() for key in response.clarified_keys if isinstance(key, str)]
+        filtered_keys = [key for key in cleaned_keys if key in valid_keys]
+        unique_keys = list(dict.fromkeys(filtered_keys))
+
+        if not unique_keys and raw_clarified_input is not None and fallback_keys:
+            logger.warning(
+                "ambiguity_clarification.empty_clarified_keys",
+                phase=target_phase,
+            )
+            unique_keys = fallback_keys
+
+        normalized_responses.append(
+            response.model_copy(
+                update={
+                    "clarified_input": clarified_input,
+                    "clarified_keys": unique_keys,
+                }
+            )
+        )
+
+    latest_response = normalized_responses[-1]
+    updated_resolved = [*ambiguity_context.resolved, *normalized_responses]
+    updated_resolved_keys = {key for response in updated_resolved for key in response.clarified_keys}
+    next_pending_keys = [key for key in selected_keys if key not in updated_resolved_keys]
+    next_questions = [question_map.get(key, key) for key in next_pending_keys]
+    clarification_output = latest_response.clarification_output or ""
+    updated_context = ambiguity_context.model_copy(
+        update={
+            "target_step": target_phase,
+            "checked": True,
+            "eligible": not next_pending_keys,
+            "detected": ambiguity_context.detected,
+            "resolved": updated_resolved,
+            "exhausted": False,
+        }
+    )
+
+    return (
+        updated_context,
+        next_pending_keys,
+        next_questions,
+        clarification_output,
+    )
+
 
 def make_node_ambiguity_clarification(
     node_agent: Runnable | None = None,
     *,
     phase: str | None = None,
-    max_context_items: int = 3,
     max_rounds: int = 3,
     goto: AmbiguityClarificationRoute = "ambiguity_supervisor",
 ) -> Callable[
@@ -55,8 +291,6 @@ def make_node_ambiguity_clarification(
     Args:
         node_agent: Optional injected clarification agent runnable.
         phase: Optional phase key for clarification tracking.
-        max_context_items: Max evidence items to hydrate into context.
-            (Clarification prompts do not consume context documents.)
         max_rounds: Max clarification rounds before ending.
         goto: Node name to route to after clarification updates.
 
@@ -75,93 +309,34 @@ def make_node_ambiguity_clarification(
 
     def node_ambiguity_clarification(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[AmbiguityClarificationRoute]:
-        update: dict[str, Any]
         user_input = get_latest_user_input(state.messages)
         if not user_input:
-            logger.warning("ambiguity_clarification.empty_user_input", phase=phase)
-            update = {"messages": [AIMessage(content="Waiting for more details.")]}
-            validate_state_update(update, owner="ambiguity_clarification")
-            return Command(
-                update=update,
-                goto=goto,
-            )
+            return _missing_user_input_command(goto, phase)
 
         ambiguity_context = state.ambiguity
-        target_phase = phase or ambiguity_context.target_step
-        if not target_phase:
-            logger.warning("ambiguity_clarification.missing_target_step")
-            update = {"messages": [AIMessage(content="Unable to determine clarification target.")]}
-            validate_state_update(update, owner="ambiguity_clarification")
-            return Command(
-                update=update,
-                goto=goto,
-            )
-
-        if ambiguity_context.target_step != target_phase:
-            ambiguity_context = reset_clarification_context(
-                state,
-                target_step=target_phase,
-            )
+        target_phase, ambiguity_context, command = _resolve_target_phase(
+            state,
+            ambiguity_context,
+            phase,
+            goto,
+        )
+        if command:
+            return command
 
         pending_keys = get_pending_ambiguity_keys(ambiguity_context)
-        if not pending_keys:
-            updated_context = ambiguity_context.model_copy(
-                update={
-                    "target_step": target_phase,
-                    "checked": True,
-                    "eligible": True,
-                    "exhausted": False,
-                }
-            )
-            update = {
-                "ambiguity": updated_context,
-                "messages": [AIMessage(content="Clarification complete. Continuing.")],
-            }
-            validate_state_update(update, owner="ambiguity_clarification")
-            return Command(update=update, goto=goto)
+        command = _complete_if_no_pending_keys(ambiguity_context, pending_keys, target_phase, goto)
+        if command:
+            return command
 
-        detected_items = ambiguity_context.detected
-        labeled_items = [(format_ambiguity_key(item.key), item) for item in detected_items]
-        question_map = {label: (item.clarifying_question or item.description or label) for label, item in labeled_items}
-        pending_items = [item for label, item in labeled_items if label in pending_keys]
-        pending_questions = [
-            question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key)) for item in pending_items
-        ]
-        if not pending_questions:
-            pending_questions = list(pending_keys)
-        current_question = pending_questions[0] if pending_questions else None
+        command = _handle_round_limit(ambiguity_context, target_phase, max_rounds, goto, phase)
+        if command:
+            return command
 
-        rounds_attempted = len(ambiguity_context.resolved)
-        if rounds_attempted >= max_rounds:
-            exhausted_context = ambiguity_context.model_copy(
-                update={
-                    "target_step": target_phase,
-                    "eligible": False,
-                    "exhausted": True,
-                }
-            )
-            logger.warning("ambiguity_clarification.max_rounds_exceeded", phase=phase)
-            update = {
-                "ambiguity": exhausted_context,
-                "messages": [AIMessage(content="Unable to clarify the request.")],
-            }
-            validate_state_update(update, owner="ambiguity_clarification")
-            return Command(update=update, goto=goto)
-
-        selected_keys = [label for label, _ in labeled_items]
-        ambiguous_items_text = (
-            "\n".join(
-                (
-                    f"- {format_ambiguity_key(item.key)}: "
-                    f"{question_map.get(format_ambiguity_key(item.key), format_ambiguity_key(item.key))}"
-                    f" (assumption: {item.resolution_assumption})"
-                )
-                for item in pending_items
-            )
-            if pending_items
-            else "None."
+        question_map, current_question, selected_keys, ambiguous_items_text = _prepare_clarification_details(
+            ambiguity_context,
+            pending_keys,
         )
         keys_to_clarify = list(pending_keys)
 
@@ -174,84 +349,33 @@ def make_node_ambiguity_clarification(
                 "messages": state.messages,
             }
         )
-        structured = extract_structured_response(result)
-        if structured is None and isinstance(result, OutputSchema):
-            structured = result
-
-        if structured is None:
-            logger.warning(
-                "ambiguity_clarification.missing_structured_response",
-                phase=target_phase,
-            )
-            update = {
-                "messages": [AIMessage(content="Clarification failed. Please try again.")],
-                "ambiguity": ambiguity_context.model_copy(update={"eligible": False}),
-            }
-            validate_state_update(update, owner="ambiguity_clarification")
-            return Command(
-                update=update,
-                goto=goto,
-            )
-
-        validated_structured = validate_structured_response(structured, OutputSchema)
-        assert isinstance(validated_structured, OutputSchema)
-        structured = validated_structured
+        structured, command = _extract_validated_structured_response(
+            result,
+            ambiguity_context,
+            target_phase,
+            goto,
+        )
+        if command:
+            return command
 
         responses = structured.responses
-        if not responses:
-            logger.warning(
-                "ambiguity_clarification.empty_response",
-                phase=target_phase,
-            )
-            update = {
-                "messages": [AIMessage(content="Clarification failed. Please try again.")],
-                "ambiguity": ambiguity_context.model_copy(update={"eligible": False}),
-            }
-            validate_state_update(update, owner="ambiguity_clarification")
-            return Command(
-                update=update,
-                goto=goto,
-            )
+        command = _handle_empty_responses(responses, target_phase, ambiguity_context, goto)
+        if command:
+            return command
 
-        valid_keys = {format_ambiguity_key(item.key) for item in ambiguity_context.detected}
-        fallback_keys = list(dict.fromkeys(pending_keys))
-        normalized_responses: list[ClarificationResponse] = []
-        for response in responses:
-            raw_clarified_input = response.clarified_input
-            clarified_input = raw_clarified_input or user_input
-            cleaned_keys = [key.strip() for key in response.clarified_keys if isinstance(key, str)]
-            filtered_keys = [key for key in cleaned_keys if key in valid_keys]
-            unique_keys = list(dict.fromkeys(filtered_keys))
-            if not unique_keys and raw_clarified_input is not None and fallback_keys:
-                logger.warning(
-                    "ambiguity_clarification.empty_clarified_keys",
-                    phase=target_phase,
-                )
-                unique_keys = fallback_keys
-            normalized_responses.append(
-                response.model_copy(
-                    update={
-                        "clarified_input": clarified_input,
-                        "clarified_keys": unique_keys,
-                    }
-                )
-            )
-        latest_response = normalized_responses[-1]
-        updated_resolved = [*ambiguity_context.resolved, *normalized_responses]
-        updated_resolved_keys = {key for response in updated_resolved for key in response.clarified_keys}
-        next_pending_keys = [key for key in selected_keys if key not in updated_resolved_keys]
-        next_questions = [question_map.get(key, key) for key in next_pending_keys]
-        clarification_output = latest_response.clarification_output or ""
-
-        updated_context = ambiguity_context.model_copy(
-            update={
-                "target_step": target_phase,
-                "checked": True,
-                "eligible": not next_pending_keys,
-                "detected": ambiguity_context.detected,
-                "resolved": updated_resolved,
-                "exhausted": False,
-            }
+        (
+            updated_context,
+            next_pending_keys,
+            next_questions,
+            clarification_output,
+        ) = _normalize_clarification_responses(
+            responses,
+            ambiguity_context,
+            user_input,
+            pending_keys,
+            selected_keys,
+            question_map,
+            target_phase,
         )
 
         clarification_ai_message = (
@@ -278,7 +402,7 @@ def make_node_ambiguity_clarification(
                 "ambiguity": updated_context,
                 "messages": _clarification_messages(),
             }
-            validate_state_update(update, owner="ambiguity_clarification")
+            validate_state_update(update, owner=_NODE_OWNER)
             return Command(
                 update=update,
                 goto=goto,
@@ -289,7 +413,7 @@ def make_node_ambiguity_clarification(
             "ambiguity": updated_context,
             "messages": [AIMessage(content="Clarification complete. Continuing.")],
         }
-        validate_state_update(update, owner="ambiguity_clarification")
+        validate_state_update(update, owner=_NODE_OWNER)
         return Command(update=update, goto=goto)
 
     return node_ambiguity_clarification

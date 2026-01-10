@@ -35,7 +35,9 @@ def build_problem_framing_subgraph(
     phase = "problem_framing"
     T = TypeVar("T")
 
-    def _as_runtime_node(node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T]) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
+    def _as_runtime_node(
+        node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T],
+    ) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
         def runtime_node(state: SageState, runtime: Runtime[SageRuntimeContext]) -> T:
             return node(state, runtime)
 

@@ -2,20 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
-from langchain_core.runnables import Runnable
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
-from app.runtime import SageRuntimeContext
-from app.state import EvidenceItem, PhaseEntry, SageState
+from app.state import EvidenceItem, PhaseEntry
 from app.tools.context_lookup import context_lookup
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langchain_core.runnables import Runnable
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runnable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.retrieve_context")
 
@@ -55,7 +66,7 @@ def make_node_retrieve_context(
 
     def node_retrieve_context(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[RetrieveContextRoute]:
         update: dict[str, Any]
         query = get_latest_user_input(state.messages) or ""

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langgraph.graph import END
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.config.file_loader import FileLoader
@@ -14,8 +12,19 @@ from app.platform.contract.guardrails import evaluate_guardrails_contract
 from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import get_latest_user_input
-from app.runtime import SageRuntimeContext
-from app.state import SageState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 GuardrailsRoute = Literal["__end__", "supervisor"]
 
@@ -45,7 +54,7 @@ def make_node_guardrails_check(
 
     def node_guardrails_check(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[GuardrailsRoute]:
         original_input = state.gating.original_input or (get_latest_user_input(state.messages) or "")
         guardrail = evaluate_guardrails_contract(

@@ -2,19 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import phase_to_node
-from app.runtime import SageRuntimeContext
-from app.state import SageState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.phase_supervisor")
 
@@ -54,7 +63,7 @@ def make_node_phase_supervisor(
 
     def node_phase_supervisor(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[PhaseSupervisorRoute]:
         # Enforce guardrails (once per graph, before any phase)
         if state.gating.guardrail is None:

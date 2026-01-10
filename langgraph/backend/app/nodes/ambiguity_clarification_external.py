@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import ClarificationResponse
@@ -19,8 +17,19 @@ from app.platform.runtime.state_helpers import (
     get_pending_ambiguity_keys,
     is_latest_message_human,
 )
-from app.runtime import SageRuntimeContext
-from app.state import SageState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.ambiguity_clarification_external")
 
@@ -53,7 +62,7 @@ def make_node_ambiguity_clarification_external(
 
     def node_ambiguity_clarification_external(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[AmbiguityClarificationExternalRoute]:
         update: dict[str, Any]
         ambiguity = state.ambiguity

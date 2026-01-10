@@ -56,6 +56,9 @@ def build_main_app(
     graph.add_node("supervisor", _as_runtime_node(supervisor_node))
     graph.add_node("ambiguity_preflight", ambiguity_preflight_graph)
     graph.add_node("guardrails_check", _as_runtime_node(guardrails_node))
+    graph.add_edge("supervisor", "guardrails_check")
+    graph.add_edge("guardrails_check", "supervisor")
+    graph.add_edge("supervisor", "ambiguity_preflight")
     graph.add_edge("ambiguity_preflight", "supervisor")
 
     # Add phase subgraphs from the phase registry

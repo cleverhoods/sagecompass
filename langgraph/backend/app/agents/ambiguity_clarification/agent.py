@@ -92,7 +92,6 @@ def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runn
                 "user_input",
                 "ambiguous_items",
                 "keys_to_clarify",
-                "phase",
             ],
             output_schema=OutputSchema,
         ),

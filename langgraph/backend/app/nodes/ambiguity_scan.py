@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
-from langchain_core.runnables import Runnable
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.agents.ambiguity_scan.schema import OutputSchema
@@ -20,8 +17,21 @@ from app.platform.contract.structured_output import (
 from app.platform.observability.logger import get_logger
 from app.platform.runtime import collect_phase_evidence
 from app.platform.runtime.state_helpers import get_latest_user_input, reset_clarification_context
-from app.runtime import SageRuntimeContext
-from app.state import SageState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langchain_core.runnables import Runnable
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runnable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.ambiguity_scan")
 
@@ -75,7 +85,7 @@ def make_node_ambiguity_scan(
 
     def node_ambiguity_scan(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[AmbiguityScanRoute]:
         update: dict[str, Any]
         user_input = get_latest_user_input(state.messages) or ""

@@ -2,25 +2,36 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.contract.state import validate_state_update
 from app.platform.observability.logger import get_logger
 from app.platform.runtime.state_helpers import reset_clarification_context
-from app.runtime import SageRuntimeContext
-from app.state import SageState
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 SupervisorRoute = Literal[
     "__end__",
     "ambiguity_preflight",
     "guardrails_check",
+    "phase_supervisor",
     "problem_framing_supervisor",
+    "supervisor",
 ]
 
 
@@ -45,9 +56,9 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
 
     def node_supervisor(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[SupervisorRoute]:
-        logger.info("supervisor.entry", state_keys=SageState.model_fields.keys())
+        logger.info("supervisor.entry", state_keys=list(state.model_fields.keys()))
         from app.graphs.subgraphs.phases.registry import PHASES
         from app.platform.runtime.phases import get_phase_names
 
@@ -97,7 +108,7 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
                 and isinstance(state.messages[-1], AIMessage)
                 and state.messages[-1].content == "Unable to clarify the request."
             ):
-            return Command(goto=END)
+                return Command(goto=END)
             update = {"messages": [AIMessage(content="Unable to clarify the request.")]}
             validate_state_update(update, owner="supervisor")
             return Command(

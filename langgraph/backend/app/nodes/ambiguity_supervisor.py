@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.graph import END
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.contract.state import validate_state_update
@@ -16,8 +14,20 @@ from app.platform.runtime.state_helpers import (
     get_current_clarifying_question,
     get_pending_ambiguity_keys,
 )
-from app.runtime import SageRuntimeContext
-from app.state import PhaseEntry, SageState
+from app.state import PhaseEntry
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    SageState = Any  # type: ignore[assignment]
 
 logger = get_logger("nodes.ambiguity_supervisor")
 
@@ -41,7 +51,6 @@ def make_node_ambiguity_supervisor(
     scan_node: Literal["ambiguity_scan"] = "ambiguity_scan",
     retrieve_node: Literal["retrieve_context"] = "retrieve_context",
     clarification_node: Literal["ambiguity_clarification"] = "ambiguity_clarification",
-    external_clarification_node: Literal["ambiguity_clarification_external"] = "ambiguity_clarification_external",
     max_context_retrieval_rounds: int = 1,
 ) -> Callable[
     [SageState, Runtime[SageRuntimeContext] | None],
@@ -58,7 +67,6 @@ def make_node_ambiguity_supervisor(
         scan_node: Node name for ambiguity scan.
         retrieve_node: Node name for retrieval.
         clarification_node: Node name for internal clarification.
-        external_clarification_node: Node name for external clarification.
         max_context_retrieval_rounds: Max retrieval attempts before skipping.
 
     Side effects/state writes:
@@ -70,7 +78,7 @@ def make_node_ambiguity_supervisor(
 
     def node_ambiguity_supervisor(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[AmbiguitySupervisorRoute]:
         update: dict[str, Any]
         target_phase = phase or state.ambiguity.target_step

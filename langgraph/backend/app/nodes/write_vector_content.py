@@ -2,16 +2,25 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from langgraph.runtime import Runtime
 from langgraph.types import Command
 
 from app.platform.observability.logger import get_logger
-from app.runtime import SageRuntimeContext
-from app.state import VectorWriteState
 from app.tools.vector_writer import write_to_vectorstore
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from langgraph.runtime import Runtime
+
+    from app.runtime import SageRuntimeContext
+    from app.state import VectorWriteState
+else:
+    Callable = Any  # type: ignore[assignment]
+    Runtime = Any  # type: ignore[assignment]
+    SageRuntimeContext = Any  # type: ignore[assignment]
+    VectorWriteState = Any  # type: ignore[assignment]
 
 
 def make_node_write_vector() -> Callable[
@@ -32,7 +41,7 @@ def make_node_write_vector() -> Callable[
 
     def node_write_vector(
         state: VectorWriteState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        _runtime: Runtime[SageRuntimeContext] | None = None,
     ) -> Command[Literal["__end__"]]:
         items = state.get("items") or []
         logger.info("vector_writer.batch.start", count=len(items))
