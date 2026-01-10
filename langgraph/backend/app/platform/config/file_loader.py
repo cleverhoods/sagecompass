@@ -11,16 +11,23 @@ import yaml  # type: ignore[import-untyped]
 
 from app.platform.config.paths import AGENTS_DIR, APP_ROOT, CONFIG_DIR
 
+
 class FileLoader:
     """Load prompts, configs, and schemas from the filesystem."""
 
-    DEV_MODE = os.getenv("SAGECOMPASS_ENV", "prod").lower() == "dev"
+    _dev_mode: bool | None = None
 
     @staticmethod
     def _logger():
         from app.platform.contract.logging import get_logger
 
         return get_logger("utils.file_loader")
+
+    @classmethod
+    def _is_dev_mode(cls) -> bool:
+        if cls._dev_mode is None:
+            cls._dev_mode = os.getenv("SAGECOMPASS_ENV", "prod").lower() == "dev"
+        return cls._dev_mode
 
     @classmethod
     def _read_file(
@@ -48,7 +55,7 @@ class FileLoader:
         try:
             with open(file_path, mode, encoding="utf-8") as f:
                 data = loader(f) if loader else f.read()
-                if cls.DEV_MODE:
+                if cls._is_dev_mode():
                     logger.info(f"{category}.load.success", path=file_path)
                 return data
         except FileNotFoundError:

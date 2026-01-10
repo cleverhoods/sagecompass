@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from app.platform.config.paths import BACKEND_ROOT
+
 _ENV_LOADED = False
 
 

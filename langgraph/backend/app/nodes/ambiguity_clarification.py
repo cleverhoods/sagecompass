@@ -2,25 +2,25 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import OutputSchema
-from app.schemas.clarification import ClarificationResponse
+from app.platform.contract.logging import get_logger
 from app.platform.contract.state import validate_state_update
 from app.platform.contract.structured_output import (
     extract_structured_response,
     validate_structured_response,
 )
-from app.platform.contract.logging import get_logger
 from app.platform.runtime.state_helpers import (
     format_ambiguity_key,
     get_latest_user_input,
     get_pending_ambiguity_keys,
     reset_clarification_context,
 )
+from app.schemas.clarification import ClarificationResponse
 
 if TYPE_CHECKING:
     from collections.abc import Callable

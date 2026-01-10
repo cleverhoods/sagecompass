@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from app.platform.contract.logging import get_logger
 from app.platform.runtime.evidence import EvidenceBundle
 from app.platform.runtime.evidence import collect_phase_evidence as _collect_phase_evidence
-from app.platform.contract.logging import get_logger
 from app.state import SageState
 
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import structlog.stdlib
-
 from collections.abc import Mapping
 from typing import Any
+
+import structlog.stdlib
 
 from app.platform.observability.logger import configure_logging as _configure_logging
 from app.platform.observability.logger import get_logger as _get_logger
