@@ -17,6 +17,12 @@ composed without importing or constructing concrete dependencies at import time.
 supports fast unit tests, controlled integration tests, and clearer boundaries between
 orchestration and implementation.
 
+### Intentional exception: LangChain `@tool` usage
+The tools layer currently uses LangChain's `@tool` decorator for clarity and ecosystem
+alignment, even though it constructs tool instances at import time. This is a known
+exception to the DI-first, no import-time construction preference and is tracked for
+future refinement.
+
 ### Contract-driven platform rules
 The platform contracts in `app/platform/contract/` make behavioral guarantees executable
 and testable (state ownership, tool allowlists, prompt requirements, etc.). This keeps
