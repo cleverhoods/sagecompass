@@ -1,220 +1,47 @@
 # SageCompass changelog
 
 ## [Unreleased]
+- _No changes yet._
+
+## [v6.0.0]
 ### Added
-- [docs] Document backend architectural reasoning, including DI, contracts, and type-only imports.
-- [langgraph/backend] Add a bounded OpenAI integration test for Problem Framing with explicit API key checks.
-- [langgraph/backend] Add platform contract models for artifacts, namespaces, and prompt validation.
-- [langgraph/backend] Add contract helpers for state ownership, phases, agents, guardrails, tool allowlists, and structured outputs.
-- [langgraph/backend] Add a runtime helper to hydrate phase evidence into LangChain documents.
-- [langgraph/backend] Expose hydrated context docs via a dedicated tool + middleware to avoid prompt injection.
-- [langgraph/backend] Add deterministic context docs middleware unit coverage plus integration tests for ambiguity preflight and main graph flows.
-- [docs] Map platform contracts to official LangChain/LangGraph reference docs.
-- [docs] Reference the platform contract Docs map from RULES so every developer sees the same references.
-- [docs] Add compliance checks to keep the contract Docs map and audit linkage in RULES current.
-- [langgraph/backend] Add an OpenAI-backed ambiguity scan integration test that loads credentials from `.env`.
-### Fixed
-- [langgraph/backend] Ensure OpenAI integration tests override guardrails to allow churn prompts.
-- [langgraph/backend] Add an `ambiguity_supervisor` node to centralize ambiguity preflight routing.
-- [langgraph/backend] Introduce `ClarificationContext` plus runtime helpers to reset global clarification state for the preflight routing flow.
-- [langgraph/backend] Add an integration test that exercises guardrails -> ambiguity scan -> retrieval -> clarification -> phase supervisor routing.
-- [langgraph/backend] Add guardrails policy engine and middleware enforcement across model/tool boundaries.
-- [langgraph/backend] Add unit tests for guardrails policies and middleware enforcement behaviors.
-- [langgraph/backend] Add guardrail allow/deny unit tests and a tool-calling agent trajectory integration test.
-- [langgraph/backend] Add contract tests to enforce platform domain folder governance requirements.
-- [langgraph/backend] Add unit tests for ambiguity context state defaults and payloads.
-- [prompt] Created `few-shots.prompt` and `example.json` for Problem Framing agent.
-- [langgraph/backend] Created `problem_framing.mermaid` to demonstrate the Problem Framing agent logic
-- [langgraph/backend] Introduced boolean HILP middleware with dedicated prompt/answer schema using `runtime.human` for clarifications.
-- [langgraph/backend] Added offline behavioral tests for nodes, graph wiring, and HILP middleware to exercise core contracts.
-- [langgraph/backend] Added dual pytest lanes (stub vs real-deps) with markers and commands to exercise contract suites across dependency modes.
-- [langgraph/backend] Added contract coverage for runtime context, state update whitelists, and LangGraph interrupt/resume behavior with real checkpointers.
-- [langgraph/backend] Added `langchain-tests` dev dependency and placeholder standard test lanes for future LangChain component wrappers.
-- [docs] Documented offline test invocation via `UV_NO_SYNC=1 uv run pytest` to avoid dependency downloads.
-- [langgraph/backend] Added Gradio-specific UI contracts and HILP UI tests to govern clarification handling.
-- [docs] Added knowledge base with framework documentation links and contract map for reviewers.
-- [drupal] Added Drupal instance.
-- [drupal] Added Context management (endpoints, forms, content type and taxonomy vocabs).
-- [langgraph/backend] Added RAG via the built-in LangGraph store. Added corresponding nodes/graphs/schemas.
-- [langgraph/backend] Introduced `detect_ambiguity` node and proposed dual-entry architecture to enable ambiguity detection before and after `problem_framing`. Supports richer routing control and early user clarification. (ref: ambiguity roadmap)
-- [langgraph/backend] Added `gating_guardrail` node with scoped config for `allowed_topics` and `blocked_keywords`, allowing early filtering of unsafe or off-topic input. (ref: Gating Layer Roadmap)
-- [langgraph/backend] Added `make_dynamic_prompt_middleware()` with placeholder resolution and support for runtime prompt injection. (ref: middleware updates)
-- [langgraph/backend] Enabled support for FewShotPromptWithTemplates in middleware, allowing `few-shots.prompt` to be appended as the final agent instruction. (ref: ambiguity agent prompt contract)
-- [langgraph/backend] Introduce phase-level subgraph architecture, enabling each phase (starting with `problem_framing`) to run as a fully encapsulated LangGraph subgraph with its own control flow.
-- [langgraph/backend] Add reusable phase contract pattern to register phases declaratively and attach them dynamically to the main graph.
-- [langgraph/backend] Enable structured ambiguity clarification loops within phases, including human-in-the-loop handling and bounded retries.
-- [langgraph/backend] Support phase-scoped reuse of the existing supervisor node to handle routing, clarification resolution, and completion detection.
-- [docs] Document comprehensive system rules covering DI-first design, node orchestration contracts, phase subgraphs, and runtime purity.
-
-
+- [langgraph/backend] Expand the platform contract surface with models for artifacts, namespaces, and prompt validation, helpers for state ownership/phases/agents/guardrails/tool allowlists/structured outputs, evidence hydration tooling, deterministic context document middleware, and compliance checks that keep the RULES-backed contract map aligned with LangChain/LangGraph references.
+- [langgraph/backend] Add comprehensive contract and integration coverage, including a bounded OpenAI integration test for Problem Framing with explicit API key checks, an OpenAI-backed ambiguity scan that loads credentials from `.env`, guardrail policy/middleware allow and deny unit tests, a tool-calling agent trajectory integration test, domain-governance contract tests, LangGraph interrupt/resume coverage, dual pytest stub vs real-dependency lanes with markers and commands, deterministic context doc workflows, offline behavioral tests for nodes/graphs/HILP middleware, and supporting `langchain-tests` dev dependencies plus documentation for offline invocation.
+- [langgraph/backend] Introduce new ambiguity-detection and clarification infrastructure: `detect_ambiguity` and `gating_guardrail` nodes with scoped configs, configurable thresholds and max-selection counts, `make_dynamic_prompt_middleware()` with placeholder resolution and FewShotPromptWithTemplates support, phase-level subgraphs with declarative phase contracts, structured clarification loops (human-in-the-loop handling, boolean clarifications, bounded retries, HILP toggles, AI status messaging, and supervisor reuse), and dedicated context tooling that keeps retrieved evidence in deterministic documents instead of expanding the system prompt.
+- [langgraph/backend] Add built-in LangGraph store RAG nodes/graphs/schemas, a `problem_framing.mermaid` overview, and Gradio-specific UI contracts plus HILP UI tests that surface interrupts, collect boolean clarifications, resume execution with user answers, and normalize layout/state handling.
+- [prompt] Create few-shot example assets (`few-shots.prompt`, `example.json`) for the Problem Framing agent so deterministic prompts can be configured and validated.
+- [docs] Document the backend architecture reasoning, platform contract references, knowledge base with framework documentation links, architecture review milestones/checklist, global AGENTS linkage, and offline test guidance so every developer discovers the same references and compliance expectations.
+- [drupal] Stand up a Drupal instance with context management endpoints, forms, content types, and taxonomy vocabularies.
 ### Changed
-- [langgraph/backend] Replace backend RULES references with map-driven contracts and split platform guidance into `.shared/platform.yml`.
-- [langgraph/backend] Expand platform map metadata with component consumers.
-- [docs] Align langgraph AGENTS guidance to rely on local component contracts instead of backend-specific references.
-- [langgraph/backend] Disable HILP routing in ambiguity preflight so clarification always uses the internal agent loop.
-- [langgraph/backend] Validate SageState updates in ambiguity supervisor, retrieval, phase supervisor, and external clarification nodes.
-- [langgraph/backend] Remove legacy `graphs/phases` and tests directories after the subgraph layout move.
-- [docs] Document OpenAI integration test requirements in backend tests guidance and reference it from RULES.
-- [langgraph/backend] Enforce state ownership, phase status, agent schema field types, and prompt placeholder variables via contracts.
-- [langgraph/backend] Centralize evidence hydration in runtime helpers and stop injecting retrieved context into system prompts.
-- [langgraph/backend] Reuse phase evidence hydration for ambiguity scan and problem framing while routing context through deterministic tool messages.
-- [langgraph/backend] Remove the nothingizer tool from agent toolsets now that context docs tooling is available.
-- [docs] Lock the deterministic tool-calling rule in backend RULES.
-- [langgraph/backend] Drive deterministic context docs tool calls via wrap_model_call and wrap_tool_call middleware.
-- [langgraph/backend] Build store namespaces for context lookup and vector writing via platform namespace contracts.
-- [docs] Expand backend RULES with shared prompt asset guidance, testability expectations, and evidence hydration policy.
-- [docs] Compress backend RULES into a policy index that points to contract implementations.
-- [langgraph/backend] Move phase and non-phase subgraphs under `app/graphs/subgraphs/` and update imports/docs.
-- [langgraph/backend] Represent ambiguity keys as three-category lists and update clarification flow to track the new labels.
-- [langgraph/backend] Route ambiguity clarification to internal vs external nodes based on `hilp_enabled`, with a placeholder external path that ends the graph.
-- [langgraph/backend] Move ambiguity preflight routing into a reusable phase subgraph and route the supervisor through it.
-- [langgraph/backend] Add a HILP toggle to ambiguity state and use it to gate clarification waiting.
-- [langgraph/backend] Annotate node Command routes with Literal unions so LangSmith can render graph edges.
-- [langgraph/backend] Gate ambiguity preflight retrieval with bounded rounds and rescan after evidence is retrieved.
-- [langgraph/backend] Track ambiguity context retrieval rounds to prevent repeated scan/retrieve loops.
-- [langgraph/backend] Clarify OutputSchema requirements in RULES and align ambiguity agent schemas with typed Pydantic models.
-- [langgraph/backend] Route ambiguity scan/retrieval/clarification nodes and the global supervisor through the new context models so evidence, status, and messaging stay in sync.
-- [langgraph/backend] Make ambiguity scan importance/confidence thresholds and max-selection counts configurable so runtime locales can adjust which ambiguities flow into clarification.
-- [langgraph/backend] Skip clarification state updates when no high-priority ambiguities survive filtering so the next supervisor hit doesn’t rerun clarification on a resolved request.
-- [langgraph/backend] Filter ambiguity scan outputs to the top three high-confidence/high-importance ambiguities and drive clarification using those detected clarifying questions while keeping retrieved context in dedicated document inputs instead of expanding the system prompt.
-- [langgraph/backend] Add required docstrings and clarify middleware/prompt contracts to match updated RULES.md.
-- [langgraph/backend] Enforce strict pytest markers and register the real_deps marker in pytest config.
-- [langgraph/backend] Resolve lint/type gate failures by tightening node/runtime typing and suppressing add_node overload false positives.
-- [langgraph/backend] Extend PhaseContract with `retrieval_enabled` to match phase flag requirements.
-- [langgraph/backend] Move policies/utilities into `app/platform/*` domains and update imports/tests to match platform governance.
-- [langgraph/backend] Separate ambiguity tracking from gating state with a dedicated ambiguity context.
-- [langgraph/backend] Add user-facing status messages for supervisor, retrieval, ambiguity detection, and clarification steps.
-- [langgraph/backend] Add an AI status message during ambiguity clarification that reports which clarifying question is currently being processed.
-- [langgraph/backend] Flatten ambiguity schema fields and update ambiguity detector prompts/examples to match.
-- [langgraph/backend] Simplify ambiguity resolution fields to a single assumption and impact trio.
-- [langgraph/backend] Limit ambiguity detection context to three items and route clarification using clarifying questions.
-- [langgraph/backend] Rename ambiguity agents/nodes to `ambiguity_scan` and `ambiguity_clarification`.
-- [langgraph/backend] Reorder phase supervision to scan before retrieval and clarify before framing, with max-round clarification exit messaging.
-- [langgraph/backend] Clarify global supervisor messaging to reflect phase supervisor handoff.
-- [langgraph/backend] Move ambiguity and clarification tracking into global contexts and run preflight scan/retrieval/clarification before phases.
-- [langgraph/backend] Consolidate clarification metadata into `AmbiguityContext`, remove `ClarificationContext`, and drop `PhaseEntry.ambiguity_checked` so scan/clarification share a single authoritative context.
-- [langgraph/backend] Replace per-phase clarification sessions with a ClarificationContext and align global preflight routing.
-- [docs] Remove stub-lane references from backend test guidance and tasks to align with real framework testing.
-- [langgraph/backend] Align tests with LangChain fake model imports and add standard tool unit tests for `nothingizer_tool`. (ref: langchain tests update)
-- [langgraph/backend] Realigned backend docs and tests to rely on `RULES.md`, updated guardrail coverage, and standardized deterministic fakes for bounded lanes.
-- [prompts] Refactored `global_system.prompt` to reflect updated SageCompass role, reasoning norms, and safety constraints. 
-- [langgraph/backend] Refactored agent.py to support stateless, config-driven agent construction via agent specific AgentConfig. Enables LangGraph compatibility and improves testability.
-- [langgraph/backend] Simplified supervisor/graph/UI flow to persist HILP clarifications alongside phase data instead of routing through a dedicated node.
-- [langgraph/backend] Gradio UI now surfaces HILP interrupts, collects boolean clarifications, and resumes execution with user answers.
-- [langgraph/backend] Modularized Gradio UI layout with dedicated button builders and normalized state handling for user inputs.
-- [langgraph/backend] Align Gradio ChatInterface with LangChain message history and stream message events to the UI.
-- [langgraph/backend] Stream ChatInterface responses when the LangGraph app exposes a stream API.
-- [langgraph/backend] Enforced few-shot prompt contracts, added examples for Problem Framing, and made few-shot inclusion configurable.
-- [langgraph/backend] Shifted HILP controls into LangGraph runtime context, stripped import-time env/logging side effects, and enforced util-side AST guards.
-- [langgraph/backend] Fixed Problem Framing few-shot rendering to validate assets and include a final user stub.
-- [langgraph/backend] Consolidated architecture contract tests under `tests/contracts/` with topic-specific modules for layout, imports, state, graphs, and interrupts.
-- [prompt] Added few shot examples for Problem Framing agent.
-- [langgraph/backend] Removed redundant few-shot toggle in agent config and aligned tests directory layout with app components (agents/, middlewares/, etc.).
-- [langgraph/backend] Reorganised `tests/` folder to resemble the `app/` folder convictions.
-- [langgraph/backend] Stopped stubbing langchain related items in `tests/conftest.py`.
-- [docs] Completed root README with directory layout, setup/run steps, and pointers to component docs.
-- [docs] Add architecture review milestones and milestone checklist to ROADMAP.
-- [langgraph/backend] Route phase failures into `SageState["errors"]` and keep phase status to `pending|complete|stale`.
-- [docs] Document phase error handling in-app contracts and backend AGENTS.
-- [langgraph/backend] Cleaned Gradio UI handlers to preserve session state and centralize HILP control toggles.
-- [langgraph/backend] Stubbed Gradio for UI tests to avoid dependency downloads while exercising HILP flows.
-- [langgraph/ui] Relocated Gradio UI to `app/ui/` and added `app/ui/tests/` for offline tests.
-- [langgraph/backend] Followed up on missed HILP mentions in the langgraph related segments.
-- [docs] Refined the architecture review playbook to rely on the knowledge base and current framework docs for maintainability.
-- [docs] Linked the knowledge base from the global AGENTS guide for discoverability.
-- [langgraph/backend] Normalized structlog helpers to avoid global state and applied structured logging across app modules.
-- [langgraph/backend] Settled on the @tool decorator for agent-specific tools.
-- [langgraph/backend] Enforced all `SageState` and `PhaseEntry` models to use Pydantic with field-level metadata for stronger type safety and LLM schema introspection. (ref: Pydantic migration)
-- [langgraph/backend] Replaced legacy `user_query` dependency with state-derived `task_input`, making agent invocation more robust and context-aware. (ref: remove user_query)
-- [langgraph/backend] Refactored `supervisor` logic to cleanly read phase state via structured methods and avoid defensive dict access. (ref: supervisor cleanup)
-- [langgraph/backend] Moved few-shot prompt composition out of `compose_agent_prompt()` and into middleware to separate prompt rendering from prompt injection. (ref: prompt layering policy)
-- [langgraph/backend] Refactor `clarify_ambiguity` node to use new `ClarificationSession` model with scoped state and bounded loop handling.
-- [langgraph/backend] Add max clarification round cutoff logic to support fail-fast flow.
-- [langgraph/backend] Normalize all nodes to be orchestration-only factories (`make_node_*`) and accept injected agents/tools.
-- [langgraph/backend] Replace legacy problem framing node structure with cleaner DI and logging pattern.
-- [langgraph/backend] Standardize logger instantiation outside node factories as DI-safe singleton.
-- [langgraph/backend] Move ambiguity schema to `schemas/` since it is not phase- or agent-bound.
-- [langgraph/backend] Clarify distinction between `phase` vs `node` in supervisor and promote proper orchestration-only flow control.
-- [langgraph/backend] Add support for structured `ClarificationSession` list in `state.py` to support multiple per-phase loops.
-- [langgraph/backend] Improve `supervisor.py` to be fully reusable and phase-parametric with LangGraph-compliant routing logic.
-- [langgraph/backend] Refactor `problem_framing` into a standalone subgraph with explicit entry, loop, and termination semantics.
-- [langgraph/backend] Standardize node factories to allow optional dependency injection with safe default fallbacks (e.g., `agent or build_agent()`).
-- [langgraph/backend] Align all routing logic to use `Command(goto=...)` exclusively, removing reliance on static edges for control flow.
-- [langgraph/backend] Reorganize phase-related code under `app/graphs/phases/<phase>/` to clearly separate contracts, subgraphs, and wiring.
-- [docs] Clarify architectural distinction between global graph orchestration and phase-local control logic.
-- [docs] Centralize documentation governance by relying on `langgraph/backend/RULES.md` + backend `AGENTS.md` as the primary contracts.
-
-
+- [langgraph/backend] Replace backend RULES references with map-driven contracts in `.shared/platform.yml`, expand platform metadata with component consumers, align platform namespace store creation with governance rules, enforce state ownership/phase status/agent schema types/prompt placeholders, centralize evidence hydration so retrieved context hits middleware instead of system prompts, drive deterministic context-tool calls via `wrap_model_call` and `wrap_tool_call`, remove the `nothingizer` tool, and move policies/utilities into `app/platform/*` to match platform governance.
+- [langgraph/backend] Rework ambiguity preflight, retrieval, and clarification flows: disable HILP routing during preflight so clarifications always use the internal agent loop, validate SageState updates across the supervisor/retrieval/clarification nodes, route ambiguity preflight through a reusable phase subgraph, gate retrieval with bounded rounds and rescans, track retrieval context rounds, represent ambiguity keys as three-category lists, share routing through the new `AmbiguityContext` (replacing per-phase `ClarificationContext` and `PhaseEntry.ambiguity_checked`), route clarifications to internal vs external nodes based on `hilp_enabled`, reorder phase supervision to scan before retrieval and clarify before framing, annotate command routes with Literal unions for LangSmith, and keep status messaging/configurable thresholds/max-selection counts aligned with the shared context models.
+- [langgraph/backend] Restructure the app/test layout and documentation governance: move phase and non-phase subgraphs under `app/graphs/subgraphs/`, update imports/docs, reorganize `tests/` to mirror `app/` (dropping legacy `graphs/phases` and tests directories), compress backend RULES into a policy index that points to implementations, expand RULES with shared prompt asset/testability/evidence-hydration policies, lock the deterministic tool-calling rule, align langgraph AGENTS guidance with local component contracts, document OpenAI integration test requirements from RULES, and realign backend docs/tests with the new policy map while standardizing deterministic fakes for bounded lanes.
+- [langgraph/backend] Harmonize runtime, agent, prompt, and logging expectations: annotate node command routes for LangSmith visuals, enforce structlog helpers without global state, settle on the `@tool` decorator for agent-specific tools, require Pydantic SageState/PhaseEntry models with field metadata, replace `user_query` with state-derived `task_input`, refactor `agent.py` to be stateless and AgentConfig-driven, separate prompt rendering from injection by composing few-shot prompts in middleware, normalize HILP controls within the runtime context (stripping import-time side effects and AST guards), and refactor supervisor/problem framing nodes/graphs to rely on orchestration-only factories + command-based routing semantics.
+- [docs] Expand the knowledge base, align architecture review playbooks with the current framework docs, link the knowledge base from the global AGENTS guide, clarify the distinction between global graph orchestration and phase-local control logic, and centralize documentation governance on `langgraph/backend/RULES.md` plus backend `AGENTS.md`.
 ### Fixed
-- [langgraph/backend] Restore phase registry imports for supervisors and fix missing evidence reference in problem framing.
-- [langgraph/backend] Enforce state ownership groups and include external clarification ownership.
-- [langgraph/backend] Allow supervisor ambiguity updates and guard evidence hydration when runtime store is unavailable.
-- [langgraph/backend] Move ambiguity node agent construction into factories to remove import-time side effects.
-- [langgraph/backend] Resolve typing issues from deterministic context docs middleware and node update annotations to keep mypy passing.
-- [langgraph/backend] Avoid empty clarified keys in external clarification and surface missing evidence stores in node errors.
-- [docs] Remove deprecated UTC timestamp usage in artifact contract tests.
-- [langgraph/backend] Default autonomous ambiguity clarifications to resolve pending keys when the agent updates clarified_input without listing keys.
-- [langgraph/backend] Format `keys_to_clarify` as a list when injecting ambiguity clarification prompts.
-- [langgraph/backend] Stop the supervisor from looping when ambiguity clarification is exhausted.
-- [langgraph/backend] Prevent ambiguity clarification loops from re-running without new user input.
-- [langgraph/backend] Fix dynamic prompt placeholder injection for task_input and clarify ambiguity key labeling in clarification outputs.
-- [langgraph/backend] Use the resolved target phase when ambiguity scan fails to return structured output.
-- [langgraph/backend] Align ambiguity clarification schema, prompts, and node inputs so clarification loops carry structured fields and context.
-- [langgraph/backend] Guard against stale clarification loops by adding an integration regression for the shared `AmbiguityContext`, basing routing on resolved/pending keys, and surfacing the active clarifying question message.
-- [langgraph/backend] Keep the clarification context aligned with the latest user message even when agents omit `clarified_input`, and add an integration guardrail that catches stale clarified inputs.
-- [langgraph/backend] Ensure ambiguity scan reuses `reset_clarification_context()` so the clarification session always starts clean and doesn’t carry over stale clarified inputs before the clarifier runs.
-- [langgraph/backend] Preserve non-empty `gating.original_input` via reducer and populate it from incoming messages in guardrails.
-- [langgraph/backend] Add subgraph wiring test to ensure phase routes via `phase_supervisor` and avoids unknown supervisor edges.
-- [langgraph/backend] Fix phase subgraph routing to use `phase_supervisor` and avoid unknown node errors.
-- [langgraph/backend] Restore phase subgraph routing through retrieval and ambiguity detection by tracking ambiguity checks and clarification sessions.
-- [langgraph/backend] Default clarification sessions to the last known input when agents return a null clarified_input.
-- [langgraph/backend] Route global supervisor to phase subgraph supervisor nodes to avoid skipping phase-specific entrypoints.
-- [langgraph/backend] Avoid Pydantic instance access to `model_fields` in supervisor logging.
-- [langgraph/backend] Enforced few-shot stub contract for Problem Framing and fixed template rendering to include real examples.
-- [langgraph/backend] Escaped Problem Framing few-shot rendering to avoid placeholder collisions and restored format instructions in the system prompt.
-- [langgraph/backend] Added dynamic prompt middleware to fill user queries and format instructions at runtime for the Problem Framing agent.
-- [langgraph/backend] Ensured dynamic prompt middleware fills few-shot user stubs from request inputs so user queries reach agents.
-- [langgraph/backend] Documented proxy and offline wheel install steps to unblock uv dependency downloads in restricted environments.
-- [langgraph/backend] Relocated offline dependency stubs to `tests/stubs` and documented their use so tests run without external downloads or sandbox network flags.
-- [langgraph/backend] Stopped writing phase outputs to ad-hoc top-level keys and ensured Problem Framing node updates only canonical `state['phases']`.
-- [langgraph/backend] Updated Gradio UI to persist user queries and summarize problem framing from canonical phase data.
-- [langgraph/backend] Made UI interrupt extraction resilient to stream_events payloads so HILP clarifications surface instead of silent framing messages.
-- [langgraph/backend] Fixed runtime import and fixed test scrip running tasks
-- [langgraph/backend] Unblocked backend contract tests by making the app package importable and adding a stub for `langgraph.runtime`.
-- [langgraph/backend] Resolved bug where few-shot `task_input` placeholder was not preserved due to early formatting. Now injected only at runtime. (ref: dynamic prompt bug)
-- [langgraph/backend] Fixed error when returning FewShotPromptWithTemplates directly to `create_agent()` by converting to rendered SystemMessage before injection. (ref: agent build crash)
-- [langgraph/backend] Prevent import-time agent construction by moving `build_agent()` into node factories.
-- [langgraph/backend] Resolve missing structured response errors by validating and defaulting agent outputs.
-- [langgraph/backend] Fix incorrect assumption in supervisor that clarification always returns to `problem_framing`.
-- [langgraph/backend] Ensure clarification loop terminates cleanly with `goto=END` when round limit is exceeded.
-- [langgraph/backend] Avoid state mutation errors by introducing `reset_clarification_session(...)` helper.
-- [langgraph/backend] Fix `state.phase` lookup error by using phase from supervisor factory args instead.
-- [langgraph/backend] Resolve subgraph type mismatch errors by correctly treating compiled phase graphs as runnable subgraph nodes.
-- [langgraph/backend] Fix mixed static-edge / command-based routing conflicts that caused invalid or undefined execution paths.
-- [langgraph/backend] Eliminate import-time side effects and DI violations in nodes and graph builders.
-- [langgraph/backend] Correct supervisor routing assumptions to support reuse across multiple phases without hardcoded phase behavior.
-
-
+- [langgraph/backend] Harden guardrail and ambiguity clarification flows: restore phase registry imports, enforce state ownership groups (including external clarification ownership), allow supervisors to update ambiguity context while guarding evidence hydration when runtime stores are unavailable, reset clarification contexts before scans, avoid empty clarified keys, stop the supervisor from looping when clarification is exhausted, prevent clarification reruns without new user input, default clarified_input when agents omit it, format `keys_to_clarify` as lists, and preserve non-empty `gating.original_input` via reducers sourced from incoming messages.
+- [langgraph/backend] Correct dynamic prompt, few-shot, and agent-building behaviors: fix placeholder injection for `task_input`, ensure Problem Framing few-shot renders validate assets and include final user stubs, fill few-shot user stubs from request inputs, convert `FewShotPromptWithTemplates` into rendered system messages before injection, move `build_agent()` out of import-time code, resolve missing structured response errors by validating/defaulting agent outputs, and keep the clarification context aligned with the latest user message even when agents omit `clarified_input`.
+- [langgraph/backend] Stabilize supervisor/phase routing, graphs, and imports: add subgraph wiring tests to ensure phases route via `phase_supervisor`, use resolved target phases when scans fail, treat compiled phase graphs as runnable subgraph nodes, fix mixed static-edge vs command routing conflicts, correct `state.phase` lookups by using supervisor factory args, eliminate import-time side effects in nodes/graph builders, resolve type mismatches, and make the app package importable by stubbing `langgraph.runtime` for contract tests.
+- [langgraph/backend] Improve offline/test infrastructure and documentation: document proxy and offline wheel install steps to unblock uv dependency downloads in restricted environments, relocate offline dependency stubs to `tests/stubs` with guidance to avoid network flags, register the `real_deps` pytest marker, and keep backend contract tests perpendicular to runtime imports while staying unblocked.
+- [langgraph/backend] Persist canonical state and UI behavior: stop writing phase outputs to ad-hoc top-level keys so Problem Framing updates only `state['phases']`, update Gradio UI to persist user queries and summarize problem framing from canonical phase data, and make UI interrupt extraction resilient to `stream_events` payloads so HILP clarifications surface instead of silent framing messages.
+- [langgraph/ui] Harden Gradio UI handling: relocate the UI to `app/ui/`, add offline `app/ui/tests/`, stub Gradio for those tests, centralize HILP control toggles, preserve session state, and align ChatInterface history/streaming with LangChain expectations while streaming responses when the LangGraph app exposes a stream API.
 ### Removed
-- [langgraph/backend] Dropped previous tests approach and replaced with a more comprehensive contract-driven approach.
-- [langgraph/backend] Removed dynamic_prompt and tool_errors middlewares
-- [langgraph/backend] Removed hilp.prompt-driven state machine and the hilp node in favor of middleware-first HITL handling.
-- [langgraph/backend] Removed translation agent.
-- [langgraph/backend] Removed HILP middleware.
-- [langgraph/backend] Removed unused `mw.py` file from agents that had no agent-specific middleware logic. (ref: folder contract cleanup)
+- [langgraph/backend] Replaced the previous tests approach with the new contract-driven suite.
+- [langgraph/backend] Removed the dedicated HILP middleware/state machine, the `hilp` node, and `tool_errors` middleware in favor of the middleware-first clarification flow.
+- [langgraph/backend] Removed the translation agent.
+- [langgraph/backend] Removed redundant `mw.py` files from agents that had no agent-specific middleware logic.
 - [docs] Removed redundant docs scaffolding (`DOCS_INDEX.md`, `REVIEW_CHECKLIST.md`).
-
-
 ### Security
+- None.
 
 ---
 
 ## Legacy releases
 
-### v6.0 – alpha2
+### v6.0.0-alpha2
 - Added AGENTS.md files
 
-### v6.0 – alpha1
+### v6.0.0-alpha1
 - Created enforced Contracts (via tests)
 - Added Added Agent Chat UI via DDev, 
 - added generic Tool and Middleware management 
@@ -229,7 +56,7 @@
 - Added experimental translation agent with language detection and translation nodes
 - Added capability of step-debug (probably should remove eventually)
 
-### v5.0 - alpha2
+### v5.0.0-alpha2
 - Project package management is done via 'uv' (poetry has been removed)
 - Restructured project
   - Agents and Nodes have been separated
@@ -243,12 +70,12 @@
 - Models have been updated with Descriptions, prompts are heavily relying on it
 - Added global_system.prompt
  
-### v5.0 - alpha1
+### v5.0.0-alpha1
 - Implement LangGraph solution
 - Vastly reduce the size of the project
 - Reorganize agents
  
-### v4.0 - alpha5
+### v4.0.0-alpha5
 - Reorganize project → each agent in its own folder (/agents/{agent}/)
 - Keep utils/ for infrastructure and drop DI concepts
 - Redefine BaseAgent → now CoreAgent with full PRAL and hooks
@@ -265,7 +92,7 @@
 - Shared state dictionary for intermediate results
 - Schema validation between agent outputs/inputs
 
-### v4.0 - alpha4
+### v4.0.0-alpha4
 - Moved provider config under config/
 - Added 'agent' config
 - Updated yaml configuration data structures
@@ -275,7 +102,7 @@
 - Rewrite agents/base.py to comply with generic agent abstraction (PRAL)
 - Rewrite agents/problem_framing.py to comply with base.py abstraction
 
-### v4.0 - alpha3
+### v4.0.0-alpha3
 - Created BaseAgent abstract class
 - Implemented basic PRAL
 - Implemented *_shared* and *problem_framing* Schemas and their validation
@@ -288,18 +115,18 @@
 - Updated README.md
 - Created LEARNING.md to store certain learning materials
 
-### v4.0 - alpha2
+### v4.0.0-alpha2
 - Rework ddev integration into a separate Python service
 - Replacing requirements.txt with Potery (pyproject.toml) to manage project requirements.
 - Added new ddev command: ddev poetry
 - Fine-tuning python compose to manage Poetry and Python cache
 
-### v4.0 - alpha1 
+### v4.0.0-alpha1 
 - Adding DDev environment (generic, with python 3 installed on web)
 - Adding Python project necessities (requirements.txt)
 - Reorganising project setup (configs, prompts, providers, utils, main/logic and ui.py)
 
-### v1.0 - v3.3  
+### v1.0.0 - v3.3.0  
 - v3.3 – Pumping up version number 
 - v3.2 – Added decision_confidence, handling missing baseline 
 - v3.1 – Missed knowledge files references 
