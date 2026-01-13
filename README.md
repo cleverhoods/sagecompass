@@ -91,7 +91,7 @@ before anyone spends time and money building it.
 
 4) **Run Gradio UI**
    ```bash
-   uv run python -m app.main
+   uv run python -m main
    ```
 
 5) **Run tests**
