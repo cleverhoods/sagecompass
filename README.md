@@ -3,14 +3,14 @@ SageCompass is an augmented decision system that checks whether a business idea 
 before anyone spends time and money building it.
 
 ## You Do What?
-“It’s a virtual consultant that applies consistent logic to every AI idea and tells you — with numbers — if it’s worth doing or not.”
+“It's a virtual consultant that applies consistent logic to every AI idea and tells you - with numbers - if it’s worth doing or not.”
 
 | Human equivalent                                    | SagePass equivalent                               |
-| --------------------------------------------------- |---------------------------------------------------|
-| Consultant asking “What problem are we solving?”    | Stage 1 – Problem framing & information gathering |
+|-----------------------------------------------------|---------------------------------------------------|
+| Consultant asking "What problem are we solving?"    | Stage 1 – Problem framing & information gathering |
 | Analyst turning that into measurable goals          | Stage 2 – Goals & KPIs                            |
-| Data scientist checking “Do we have data for this?” | Stage 3 – Feasibility                             |
-| Executive deciding “Is this worth doing?”           | Stage 4 – Decision synthesis                      |
+| Data scientist checking "Do we have data for this?" | Stage 3 – Feasibility                             |
+| Executive deciding "Is this worth doing?"           | Stage 4 – Decision synthesis                      |
 
 ## Encompassing roles/Agents (v4)
 
@@ -28,20 +28,29 @@ before anyone spends time and money building it.
 ---
 ## Project structure
 ### Local requirements
-- Python 3 (>=v3.12)
+- Python 3 (>=v3.13)
 - uv (>=v0.9.13)
 - ddev (>=v1.24.10)
 
 ### Directory structure
 ```
 .
+├── .ddev/                    # DDEV orchestration for containers and infra services
+├── docs/                     # Documentation assets
+│   ├── mermaids/             # Mermaid exports/diagrams
+│   └── assets/               # Images, htmls
 ├── drupal/                   # Drupal site root/
+│   └── README.md             
 ├── langgraph/                # LangGraph workspace, configs, and UI/backend code
-│   ├── backend/              # Runnable LangGraph backend + Gradio UI (uv-managed)
-│   └── ui/                   # Planned dedicated UI surface (currently co-located)
-├── mermaids/                 # Mermaid exports/diagrams
-├── images/                   # Documentation assets
-└── CHANGELOG.md              # Required changelog (update under [Unreleased])
+│   ├── backend/              # Runnable LangGraph backend (uv-managed)
+│   │   └── README.md         
+│   └── ui/                   # Runnable Gradio UI surface (uv-managed)
+│       └── README.md         
+├── AGENTS.md                 # Top level AGENTS directives
+├── CHANGELOG.md              # Required changelog (update under [Unreleased])
+├── LEARNING.md               # Useful learning resources
+├── README.md                 # This file
+└── LICENSE                   # MIT
 ```
 
 ---
@@ -49,31 +58,47 @@ before anyone spends time and money building it.
 ## Getting started
 
 1) **Install tooling**
-   - Install [uv](https://github.com/astral-sh/uv) and Python 3.12+.
-   - Optional: install [ddev](https://ddev.com/) if you plan to run containerized services.
+    - Install [DDEV](https://ddev.com/)
+    - Install [uv](https://github.com/astral-sh/uv) and Python 3.12+.
 
-2) **Create the virtual environment**
-   ```bash
-   cd langgraph/backend
-   uv sync
-   ```
+2) **Create the virtual environments for the different layouts**
 
-3) **Run the app (Gradio UI)**
+    ```bash
+    # Installing Drupal
+    ddev start
+    ddev drush site:install --existing-config -y
+    ddev drush uli #to get the login url.
+    ```
+    
+    ```bash
+    # Installing Langgraph
+    cd langgraph/backend
+    uv sync
+    ```
+        
+    ```bash
+    # Installing Gradio UI
+    cd langgraph/ui
+    uv sync
+    ```
+
+3) **Run LangGraph**
+    ```bash
+    uv run langgraph dev
+    # or with host IF you want to play around the Drupal - LangGraph integration. See Known errors.
+    uv run langgraph dev --host 0.0.0.0
+    ```
+
+4) **Run Gradio UI**
    ```bash
    uv run python -m app.main
    ```
-   The UI binds to `http://localhost:1111`.
 
-4) **Run tests (offline: no network calls; uses deterministic fakes + in-memory persistence) (default)**
+5) **Run tests**
    ```bash
    cd langgraph/backend
-   UV_NO_SYNC=1 uv run pytest -v
+   uv run pytest -v
    ```
-
-## Component docs
-- **Monorepo guidance:** [`AGENTS.md`](./AGENTS.md)
-- **LangGraph workspace:** [`langgraph/AGENTS.md`](./langgraph/AGENTS.md)
-- **Backend contracts & architecture:** [`langgraph/backend/app/README.md`](./langgraph/backend/app/README.md) and per-folder READMEs under `app/agents`, `app/nodes`, `app/graphs`, `app/tools`, `app/middlewares`, `app/utils`.
 
 ## Known errors:
 

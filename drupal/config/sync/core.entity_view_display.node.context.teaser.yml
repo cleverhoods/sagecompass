@@ -1,0 +1,35 @@
+uuid: a7c53da3-0121-4fb9-8765-7bed883e9ba8
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.context.field_agents
+    - field.field.node.context.field_description
+    - field.field.node.context.field_hash
+    - field.field.node.context.field_tags
+    - node.type.context
+  module:
+    - user
+id: node.context.teaser
+targetEntityType: node
+bundle: context
+mode: teaser
+content:
+  field_tags:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden:
+  field_agents: true
+  field_description: true
+  field_hash: true

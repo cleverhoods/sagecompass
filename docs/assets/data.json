@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Goal: detect early quality degradation before defect rates rise",
+    "text": "Problem intent: Use weak signals from support logs, product reviews, and return reasons to detect emerging quality degradation in specific mattress models before formal defect-rate KPIs spike. Output expectation: A ranked list of model-level early-warning indicators and a proposal for how to validate them against later defect outcomes.",
+    "tags": ["quality_degradation", "early_warning", "mattress_models"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Data source definitions: support logs vs reviews vs return reasons",
+    "text": "Support logs: Structured tickets (category, subcategory, timestamps, free-text notes). Often early and noisy but timely. Product reviews: Customer feedback with star rating plus free text; delayed but sentiment-rich. Return reasons: Operational codes (comfort, defect, size, delivery damage, other); can lag but directly tied to product disposition. Framing note: Treat each source as a different lens with different latency and bias.",
+    "tags": ["support_logs", "product_reviews", "return_reasons", "data_sources"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "What counts as 'quality degradation' for mattresses",
+    "text": "Working definition: quality degradation is an increase over time in customer-reported or operationally observed issues attributable to materials, construction, or assembly that reduces perceived performance (comfort/support) or durability. Examples: sagging, loss of support, edge collapse, noise, seam failure, cover pilling, odor persistence. Non-examples: pure preference mismatch unrelated to product fault unless it correlates with a specific model change.",
+    "tags": ["definitions", "quality_degradation", "mattress_issue_types"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Outcome metric: defect rate vs leading indicators",
+    "text": "Lagging outcome: defect rate (returns labeled defect, warranty claims, repair rates, QC failures). Leading indicators: shifts in complaint mix, review topic prevalence, sentiment drop for durability topics, rising mentions of specific failure modes, increased repeat contacts for the same issue. Framing note: Define a ground-truth time window (defects later) to validate whether early signals predict it.",
+    "tags": ["kpi_definitions", "defect_rates", "leading_indicators", "validation"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Product model identity and changes over time",
+    "text": "Model identity: Ensure a stable key for 'mattress model' (SKU family, generation, firmness variant). Change events: supplier/material changes, process changes, BOM updates, return-code remapping, ticket taxonomy changes. Framing risk: If model keys or definitions change midstream, signals may reflect catalog or taxonomy changes rather than product degradation.",
+    "tags": ["mattress_models", "sku_mapping", "product_changes", "taxonomy_mapping"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Bias and noise considerations per channel",
+    "text": "Support logs bias: contact propensity differs by customer segment; agent categorization drift; seasonal spikes. Reviews bias: self-selection; early purchasers; delayed posting. Returns bias: policy changes, retailer behavior, logistics damage may be coded as defects. Framing note: Signal design must explicitly account for channel-specific biases and taxonomy drift.",
+    "tags": ["bias", "noise", "support_logs", "product_reviews", "return_reasons"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Linking data sources: customer/product/time joins",
+    "text": "Joins: unify by product model plus purchase date plus event date; optionally customer/order id where available. Time windows: define 'early' (e.g., weeks 0–8 post-purchase) vs 'late' (months 3–12). Framing note: If you cannot join at customer level, do model-level aggregation with careful normalization and denominator selection.",
+    "tags": ["data_joining", "time_windows", "mattress_models", "normalization"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Candidate early-warning features (examples)",
+    "text": "Text features: topic prevalence for failure modes (sagging, edge, noise), sentiment toward durability, novelty of complaint phrases, increase in co-mentions (model name plus defect terms). Operational features: repeat contacts per order, escalation rate, return reason mix shift, time-to-first-complaint shortening. Framing note: Prioritize interpretable signals that QA and product teams can act on.",
+    "tags": ["feature_ideas", "early_warning", "interpretability", "quality_degradation"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Validation approach: backtesting and holdout periods",
+    "text": "Backtest: compute leading indicators over historical periods, then check whether defect-rate increases followed for the same model. Holdout: reserve recent months to test generalization. Thresholding: choose alert thresholds based on acceptable false positives and operational response capacity.",
+    "tags": ["validation", "backtesting", "alerting_thresholds", "defect_rates"],
+    "agents": ["problem_framing"]
+  },
+  {
+    "title": "Constraints: privacy, access, and operational response",
+    "text": "Privacy: minimize PII in embeddings; prefer anonymized or aggregated text where possible. Access: ensure support logs, reviews, and returns are accessible with consistent taxonomy over time. Operational response: define who receives alerts (QA, product, CX) and what actions follow (investigation, supplier check, proactive outreach).",
+    "tags": ["constraints", "privacy_gdpr", "access_control", "operational_response"],
+    "agents": ["problem_framing"]
+  }
+]

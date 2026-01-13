@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from langchain_core.messages import AIMessage
 from langgraph.graph import END
 from langgraph.types import Command
 
@@ -71,6 +72,7 @@ def make_node_guardrails_check(
         # Stop only if unsafe
         if not (guardrail.is_safe and guardrail.is_in_scope):
             logger.warning("guardrails.blocked")
+            update["messages"] = AIMessage(content="Not in scope or not safe for execution.")
             return Command(update=update, goto=END)
 
         return Command(update=update, goto=goto_if_safe)

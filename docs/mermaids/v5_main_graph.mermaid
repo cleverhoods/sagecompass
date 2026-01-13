@@ -1,0 +1,79 @@
+flowchart TD
+  subgraph Client
+    UI["UI (Streamlit/FastAPI frontend)"]
+  end
+
+  subgraph App["SageCompass App (app/)"]
+    ORCH["Orchestrator (orchestrator.py)"]
+    GRAPH["LangGraph Graph (graph.py)"]
+    SUP["Supervisor Node (nodes/supervisor.py)"]
+
+    subgraph Agents["LLM Agents (app/agents/)"]
+      PF["Problem Framing Agent"]
+      BG["Business Goals Agent"]
+      ELIG["Eligibility Agent"]
+      KPI["KPI Agent"]
+      SD["Solution Design Agent"]
+      CE["Cost Estimation Agent"]
+      OF["Output Formatter Agent"]
+    end
+
+    subgraph Nodes["Non-LLM Nodes (app/nodes/)"]
+      N_RAG["RAG Tool Node (nodes/rag.py)"]
+    end
+
+    subgraph Tools["Tools (app/tools/)"]
+      T_RAG["RAG Tool wrapper"]
+    end
+
+    subgraph Services["Services (app/services/)"]
+      VEC["VectorStoreService (Chroma, embeddings)"]
+    end
+
+    subgraph Runtime["Runtime scripts (app/runtime/)"]
+      ING["ingest_unstructured.py"]
+    end
+
+    subgraph Utils["Utils (app/utils/)"]
+      PATHS["paths.py"]
+      LOG["logger.py"]
+      PROVIDER["provider_config.py"]
+    end
+
+    subgraph Data["Data (data/)"]
+      VS["Vector DB (data/vector_store/)"]
+      UNSTR["Unstructured docs (data/unstructured/<phase>/)"]
+    end
+
+    subgraph Output["Output (output/)"]
+      LOGS["Logs (output/logs/)"]
+      REPS["HTML Reports (output/reports/)"]
+    end
+  end
+
+  UI --> ORCH
+  ORCH --> GRAPH
+  GRAPH --> SUP
+
+  SUP --> PF
+  SUP --> BG
+  SUP --> ELIG
+  SUP --> KPI
+  SUP --> SD
+  SUP --> CE
+  SUP --> OF
+
+  PF -.optional RAG .-> N_RAG
+  BG -.optional RAG .-> N_RAG
+  KPI -.optional RAG .-> N_RAG
+  SD -.optional RAG .-> N_RAG
+  CE -.optional RAG .-> N_RAG
+
+  N_RAG --> T_RAG
+  T_RAG --> VEC
+  VEC --> VS
+  ING --> VEC
+  ING --> UNSTR
+
+  GRAPH --> LOGS
+  OF --> REPS

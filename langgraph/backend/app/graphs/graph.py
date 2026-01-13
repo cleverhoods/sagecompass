@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Any, TypeVar
 
 from langchain_core.runnables import Runnable
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
@@ -64,5 +65,6 @@ def build_main_app(
 
     graph.add_edge(START, "supervisor")
 
-    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile()
+    checkpointer = InMemorySaver()
+    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile(checkpointer=checkpointer)
     return compiled_graph

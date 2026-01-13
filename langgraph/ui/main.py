@@ -14,9 +14,9 @@ from streamer import (
 )
 
 EXAMPLE_MESSAGES = [
-    "At Auping can we use support logs, product reviews, and return reasons to identify early signals of quality degradation in certain mattress models before defect rates rise?",
-    "Am I cool?",
-    "Could we build a single, agency-wide model in our digital marketing - web development agency that forecasts required developer capacity per client per sprint based on project history, tech stack, and ticket complexity, to optimize planning?",
+    {"text": "At our bed manufacturing company can we use support logs, product reviews, and return reasons to identify early signals of quality degradation in certain mattress models before defect rates rise?"},
+    {"text": "Fawzy variable"},
+    {"text": "Could we build a single, agency-wide model in our digital marketing - web development agency that forecasts required developer capacity per client per sprint based on project history, tech stack, and ticket complexity, to optimize planning?"},
 ]
 
 CSS = """
@@ -67,18 +67,25 @@ class SageCompassUI:
     ):
         yield from self._submit(user_message, history, state)
 
+    def _on_example_select(self, evt: gr.SelectData):
+        v = evt.value
+        if isinstance(v, dict):
+            return v.get("text", "")
+        return str(v)
+
     def launch(self) -> None:
         """Build and launch the Gradio chat interface."""
         with gr.Blocks(title="SageCompass") as demo:
             gr.Markdown("## SageCompass")
 
-            # ✅ Gradio 6.3.0 Chatbot already expects messages (list of dicts),
+            # Gradio 6.3.0 Chatbot already expects messages (list of dicts),
             # so DO NOT pass type="messages".
             chatbot = gr.Chatbot(
                 render_markdown=True,
                 line_breaks=True,
                 layout="panel",
                 height=420,
+                examples=EXAMPLE_MESSAGES,
             )
 
             message_box = gr.Textbox(
@@ -92,7 +99,7 @@ class SageCompassUI:
             history_holder = gr.State([])
             state_holder = gr.State({})
 
-            # ✅ Progress panel: Accordion + Markdown (bold headers + bullets)
+            # Progress panel: Accordion + Markdown (bold headers + bullets)
             with gr.Accordion("Progress", open=True):
                 chain_of_thought_log = gr.Markdown(value="", elem_id="progress_md")
 
@@ -134,7 +141,18 @@ class SageCompassUI:
                 ],
             )
 
-        # ✅ Gradio 6 moved css= here
+            chatbot.example_select(
+                self._on_example_select,
+                inputs=None,
+                outputs=message_box,
+            ).then(
+                send_action,
+                inputs=[message_box, history_holder, state_holder],
+                outputs=[chatbot, history_holder, state_holder, message_box, chain_of_thought_log],
+                queue=True,
+            )
+
+        # Gradio 6 moved css= here
         demo.launch(
             server_name=self.host,
             server_port=self.port,

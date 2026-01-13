@@ -17,7 +17,7 @@ class ContextImportForm extends FormBase {
     $form['json_payload'] = [
       '#type' => 'textarea',
       '#title' => $this->t('JSON Payload'),
-      '#description' => $this->t('Paste the JSON payload with "items".'),
+      '#description' => $this->t('Paste the JSON payload array.'),
       '#rows' => 15,
       '#required' => TRUE,
     ];
@@ -34,7 +34,7 @@ class ContextImportForm extends FormBase {
     $json = $form_state->getValue('json_payload');
     $data = json_decode($json, TRUE);
 
-    if (!isset($data['items']) || !is_array($data['items'])) {
+    if (empty($data) || !is_array($data)) {
       $this->messenger()->addError($this->t('Invalid JSON structure.'));
       return;
     }
@@ -42,7 +42,7 @@ class ContextImportForm extends FormBase {
     $created = 0;
     $updated = 0;
 
-    foreach ($data['items'] as $item) {
+    foreach ($data as $item) {
       $title = $item['title'] ?? '';
       $desc = $item['text'] ?? '';
       $tags = $item['tags'] ?? [];

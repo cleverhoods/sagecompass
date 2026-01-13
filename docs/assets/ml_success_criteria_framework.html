@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ML success criteria framework (editable)</title>
+  <style>
+    :root{
+      --purple: #7b4fd5;
+      --purple-100:#eee7ff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#cbd5e1;
+      --bg:#ffffff;
+      --explain-bg:#f3f4f6; /* light grey */
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      padding:24px;
+      background:var(--bg);
+      color:var(--text);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    }
+
+    .wrap{ max-width:1100px; margin:0 auto; }
+
+    .frame{
+      border:2px solid #111827;
+      border-radius:10px;
+      padding:28px 28px 28px 28px;
+      background:#fff;
+    }
+
+    .title{
+      margin:0;
+      font-size:40px;
+      font-weight:800;
+      letter-spacing:-0.02em;
+      line-height:1.1;
+    }
+
+    .rule{
+      height:5px;
+      background:var(--purple);
+      margin:14px 0 22px;
+      border-radius:999px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:18px;
+    }
+
+    .col{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .header{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+      padding:0 6px 10px;
+      text-align:center;
+    }
+
+    .badge{
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      background:var(--purple-100);
+      border:3px solid var(--purple);
+      color:#111827;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      font-size:18px;
+      flex:0 0 auto;
+    }
+
+    .hlabel{
+      font-weight:800;
+      font-size:18px;
+      line-height:1.15;
+      margin:0;
+    }
+
+    .pill{
+      background: var(--purple-100);
+      border: 2px solid var(--purple);
+      border-radius:6px;
+      padding:10px 12px;
+      text-align:center;
+      font-weight:800;
+      font-size:14px;
+      line-height:1.2;
+      color:#111827;
+      min-height:44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .explain{
+      margin-top:10px;
+      border:2px solid var(--border);
+      border-radius:6px;
+      background:var(--explain-bg);
+      padding:16px 14px;
+      min-height:160px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+
+    .explain p{
+      margin:0;
+      font-size:16px;
+      line-height:1.35;
+      font-weight:600;
+    }
+
+    /* Inline editing UX */
+    [contenteditable="true"]{
+      cursor:text;
+      outline:none;
+    }
+    [contenteditable="true"]:focus{
+      outline:3px solid rgba(123,79,213,.35);
+      outline-offset:3px;
+      border-radius:6px;
+    }
+
+    .hint{
+      margin:14px 0 0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 920px){
+      .title{ font-size:34px; }
+      .grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px){
+      body{ padding:14px; }
+      .frame{ padding:18px; }
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    @media print{
+      body{ padding:0; }
+      .frame{ border:2px solid #111827; }
+      .hint{ display:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="frame" role="img" aria-label="ML success criteria framework diagram, editable">
+      <h1 class="title" contenteditable="true" spellcheck="false">ML success criteria framework</h1>
+      <div class="rule" aria-hidden="true"></div>
+
+      <div class="grid">
+        <!-- Column 1 -->
+        <div class="col">
+          <div class="header">
+            <div class="badge" contenteditable="true" spellcheck="false">1</div>
+            <p class="hlabel" contenteditable="true" spellcheck="false">Business challenge</p>
+          </div>
+          <div class="pill" contenteditable="true" spellcheck="false">Data-driven and specific</div>
+          <div class="explain">
+            <p contenteditable="true" spellcheck="false">Identify specific business challenges that you need to solve.</p>
+          </div>
+        </div>
+
+        <!-- Column 2 -->
+        <div class="col">
+          <div class="header">
+            <div class="badge" contenteditable="true" spellcheck="false">2</div>
+            <p class="hlabel" contenteditable="true" spellcheck="false">Defined goals</p>
+          </div>
+          <div class="pill" contenteditable="true" spellcheck="false">Quantitative and attainable</div>
+          <div class="explain">
+            <p contenteditable="true" spellcheck="false">Establish clear, measurable, and achievable goals.</p>
+          </div>
+        </div>
+
+        <!-- Column 3 -->
+        <div class="col">
+          <div class="header">
+            <div class="badge" contenteditable="true" spellcheck="false">3</div>
+            <p class="hlabel" contenteditable="true" spellcheck="false">Success metric</p>
+          </div>
+          <div class="pill" contenteditable="true" spellcheck="false">Concrete business KPI criteria</div>
+          <div class="explain">
+            <p contenteditable="true" spellcheck="false">Define concrete metrics to measure success and return on investment (ROI).</p>
+          </div>
+        </div>
+
+        <!-- Column 4 -->
+        <div class="col">
+          <div class="header">
+            <div class="badge" contenteditable="true" spellcheck="false">4</div>
+            <p class="hlabel" contenteditable="true" spellcheck="false">Machine learning solution?</p>
+          </div>
+          <div class="pill" contenteditable="true" spellcheck="false">ML model alignment</div>
+          <div class="explain">
+            <p contenteditable="true" spellcheck="false">Determine whether ML is the appropriate approach to a solution.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

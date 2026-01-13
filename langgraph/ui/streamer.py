@@ -216,7 +216,7 @@ class SageCompassStreamer:
 
         request_state = _prepare_state(state or {}, user_message)
 
-        # We'll keep collecting “progress” lines and render them as Markdown.
+        # We'll keep collecting progress lines and render them as Markdown.
         progress_lines: list[str] = []
         prev_assistant_text = ""
 
@@ -224,8 +224,8 @@ class SageCompassStreamer:
             for next_state in self.api.stream_state(request_state):
                 display = _normalize_messages(next_state.get("messages"))
 
-                # If your graph writes reasoning/progress into assistant messages,
-                # we extract the incremental new lines and treat them as progress.
+
+                # Extract the incremental new lines and treat them as progress.
                 new_lines, prev_assistant_text = _collect_streamed_assistant_lines(
                     next_state.get("messages"), prev_assistant_text
                 )

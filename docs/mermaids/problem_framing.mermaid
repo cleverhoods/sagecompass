@@ -1,0 +1,11 @@
+graph TD
+    A[User Input] --> B[Problem Framing Agent]
+    B -->|returns structured output| C{Is output ambiguous?}
+
+    C -- No --> Z[Continue pipeline]
+
+    C -- Yes --> D[Clarification Agent / Runnable]
+    D -->|generates| E[Questions to Ask User -HILP]
+    E --> F[User Answers]
+    F --> G[Merge original + clarified input]
+    G --> H[Re-run Problem Framing Agent]

@@ -1,0 +1,54 @@
+uuid: 2a232cd1-7e99-498a-a613-edf0a7e054c4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.context.field_agents
+    - field.field.node.context.field_description
+    - field.field.node.context.field_hash
+    - field.field.node.context.field_tags
+    - node.type.context
+  module:
+    - user
+id: node.context.default
+targetEntityType: node
+bundle: context
+mode: default
+content:
+  field_agents:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 102
+    region: content
+  field_description:
+    type: basic_string
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 101
+    region: content
+  field_hash:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 103
+    region: content
+  field_tags:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 10
+    region: content
+  links:
+    settings: {  }
+    third_party_settings: {  }
+    weight: 100
+    region: content
+hidden: {  }

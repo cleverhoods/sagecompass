@@ -1,0 +1,19 @@
+uuid: 1eb90379-bb67-4c01-a811-0e0a8b6e71ae
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_description
+    - node.type.context
+id: node.context.field_description
+field_name: field_description
+entity_type: node
+bundle: context
+label: Description
+description: 'This text will be indexed into the Vector db.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

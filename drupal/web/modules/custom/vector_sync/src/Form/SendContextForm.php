@@ -20,7 +20,7 @@ class SendContextForm extends FormBase {
     $form['batch_size'] = [
       '#type' => 'number',
       '#title' => $this->t('Batch size'),
-      '#default_value' => 5,
+      '#default_value' => 50,
       '#min' => 1,
       '#required' => TRUE,
     ];

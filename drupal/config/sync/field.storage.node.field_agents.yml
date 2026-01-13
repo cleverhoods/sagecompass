@@ -1,0 +1,20 @@
+uuid: 58b7f8b6-28b0-4c51-b8f6-ea59d0ec6ec3
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+id: node.field_agents
+field_name: field_agents
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -4,18 +4,18 @@ Gradio-based UI that drives a LangGraph graph over HTTP.
 ## Running the demo
 
 1. Start the LangGraph API server so it can expose the `agent` graph:
+    
+    ```bash
+    # Run this from the langgraph/backend folder.
+    uv run langgraph dev
+    ```
 
-```
-langgraph dev --config backend/langgraph.json
-```
+2. Launch the Gradio frontend:
 
-This command comes from the `langgraph-cli[inmem]` dependency used by the backend; run it from the repo root so `backend/langgraph.json` and `.env` are reachable.
-
-2. Launch the Gradio frontend from the same root:
-
-```
-python -m ui.main
-```
+    ```bash
+    # Run this from the langgraph/ui folder.
+    uv run python -m main
+    ```
 
 The UI posts serialized `SageState` payloads to `http://127.0.0.1:2024/runs` by default, so keep the API server running while the chat is open. Use the **Send** button or press Enter to submit new prompts and the **Reset conversation** button to clear the chat history/state.
 
