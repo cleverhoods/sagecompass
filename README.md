@@ -70,6 +70,10 @@ before anyone spends time and money building it.
     ddev drush uli #to get the login url.
     ```
     
+    **IMPORTANT:**
+   - Don't forget to copy the `langgraph/backend/.env.example` file to `langgraph/backend/.env`
+   - Current implementation was created for **_OPENAI_API_KEY_** only
+   
     ```bash
     # Installing Langgraph
     cd langgraph/backend
@@ -82,19 +86,19 @@ before anyone spends time and money building it.
     uv sync
     ```
 
-3) **Run LangGraph**
+4) **Run LangGraph**
     ```bash
     uv run langgraph dev
     # or with host IF you want to play around the Drupal - LangGraph integration. See Known errors.
     uv run langgraph dev --host 0.0.0.0
     ```
 
-4) **Run Gradio UI**
+5) **Run Gradio UI**
    ```bash
    uv run python -m main
    ```
 
-5) **Run tests**
+6) **Run tests**
    ```bash
    cd langgraph/backend
    uv run pytest -v
