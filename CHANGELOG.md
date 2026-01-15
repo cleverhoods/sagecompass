@@ -3,6 +3,9 @@
 ## [Unreleased]
 ### Added
 - [docs] Create CLAUDE.md instruction files across the repository mirroring AGENTS.md structure for Claude Code agent compatibility.
+- [langgraph/backend] Create `app/platform/core/` directory structure with dto, contract, and policy subdirectories for clean architecture separation.
+- [langgraph/backend] Create `app/platform/adapters/` directory for boundary translation layer between core and orchestration.
+- [langgraph/backend] Add `PhaseContract` type definition to `app/platform/core/contract/phases.py` (Phase 0 of hexagonal architecture refactor).
 
 ### Changed
 - [docs] Update all `.shared/*.yml` navigation maps to reference CLAUDE.md instead of AGENTS.md as the primary instruction surface for agents.
