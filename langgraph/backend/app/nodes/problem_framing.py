@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Any, Literal
 from langgraph.types import Command
 
 from app.agents.problem_framing.schema import ProblemFrame
-from app.platform.contract.evidence import collect_phase_evidence
-from app.platform.contract.logging import get_logger
-from app.platform.contract.state import validate_state_update
-from app.platform.contract.structured_output import (
+from app.platform.core.contract.evidence import collect_phase_evidence
+from app.platform.core.contract.logging import get_logger
+from app.platform.core.contract.state import validate_state_update
+from app.platform.core.contract.structured_output import (
     extract_structured_response,
     validate_structured_response,
 )

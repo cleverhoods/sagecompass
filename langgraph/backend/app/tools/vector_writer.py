@@ -7,7 +7,7 @@ from typing import Any
 from langchain_core.tools import tool
 from langgraph.config import get_store
 
-from app.platform.contract.namespaces import NamespaceParts, build_namespace
+from app.platform.utils.namespace_utils import build_agent_namespace
 
 
 def write_to_vectorstore(content: str, collection: str, metadata: dict | None = None) -> str:
@@ -29,15 +29,7 @@ def write_to_vectorstore(content: str, collection: str, metadata: dict | None = 
 
     # Agent-scoped namespace so you can query per agent later:
     # ("drupal","context","agent","problem_framing")
-    ns = build_namespace(
-        NamespaceParts(
-            app="drupal",
-            tenant=None,
-            thread="context",
-            phase="agent",
-            artifact_type=collection,
-        )
-    )
+    ns = build_agent_namespace(collection)
 
     # Optional: skip if unchanged
     existing = store.get(ns, uuid)

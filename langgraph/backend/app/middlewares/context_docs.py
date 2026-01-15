@@ -25,15 +25,13 @@ class ContextDocsState(AgentState, total=False):
 
 
 def _serialize_context_docs(docs: list[Document]) -> list[dict[str, object]]:
-    payload: list[dict[str, object]] = []
-    for doc in docs:
-        payload.append(
-            {
-                "text": doc.page_content,
-                "metadata": dict(doc.metadata or {}),
-            }
-        )
-    return payload
+    return [
+        {
+            "text": doc.page_content,
+            "metadata": dict(doc.metadata or {}),
+        }
+        for doc in docs
+    ]
 
 
 def _doc_sort_key(doc: Document) -> tuple[str, str, str]:

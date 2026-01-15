@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.platform.contract.state import validate_state_update
+from app.platform.core.contract.state import validate_state_update
 
 pytestmark = pytest.mark.compliance
 

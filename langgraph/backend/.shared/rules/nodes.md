@@ -6,7 +6,7 @@ Source: `app/RULES.md` → “Nodes” (+ “Testability”).
 - Implement nodes as `make_node_*` factories.
 - Keep nodes orchestration-only (no domain reasoning).
 - Log entry, routing decisions, errors, and output summaries (no raw sensitive data).
-- Validate structured outputs with `validate_structured_response` (`app/platform/contract/structured_output.py`).
+- Validate structured outputs with `validate_structured_response` (`app/platform/core/contract/structured_output.py`).
 - Isolate complex branching into pure helper functions with unit tests.
 - Prefer small, pure functions for branching/decision logic; keep them separate from I/O.
 - Keep control flow shallow (no nested if/else beyond one level).

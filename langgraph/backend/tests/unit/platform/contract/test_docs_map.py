@@ -33,4 +33,3 @@ def test_docs_map_contains_required_links() -> None:
 
     assert "knowledge base" in content
     assert "audits" in content
-

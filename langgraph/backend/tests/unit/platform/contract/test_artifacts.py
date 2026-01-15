@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.platform.contract import ArtifactEnvelope, ArtifactProvenance, EvidencePointer
+from app.platform.core.contract.artifacts import ArtifactEnvelope, ArtifactProvenance, EvidencePointer
 
 pytestmark = pytest.mark.compliance
 

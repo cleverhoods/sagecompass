@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from app.platform.contract.structured_output import (
+from app.platform.core.contract.structured_output import (
     extract_structured_response,
     validate_structured_response,
 )

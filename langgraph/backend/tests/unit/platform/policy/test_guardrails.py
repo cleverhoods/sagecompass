@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
+from app.platform.core.policy.guardrails import build_guardrails_config, evaluate_guardrails
 
 pytestmark = pytest.mark.compliance
 

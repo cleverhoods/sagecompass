@@ -12,7 +12,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 
 from app.graphs.subgraphs.phases.registry import PHASES
-from app.platform.contract.phases import validate_phase_registry
+from app.platform.core.contract.registry import validate_phase_registry
 from app.runtime import SageRuntimeContext
 from app.state import SageState
 
@@ -21,7 +21,7 @@ NodeFn = Callable[[SageState, Runtime[SageRuntimeContext] | None], object]
 T = TypeVar("T")
 
 
-def _as_runtime_node(
+def _as_runtime_node[T](
     node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T],
 ) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
     def runtime_node(state: SageState, runtime: Runtime[SageRuntimeContext]) -> T:
@@ -66,5 +66,7 @@ def build_main_app(
     graph.add_edge(START, "supervisor")
 
     checkpointer = InMemorySaver()
-    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile(checkpointer=checkpointer)
+    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile(
+        checkpointer=checkpointer
+    )
     return compiled_graph

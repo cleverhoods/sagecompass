@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from langchain_core.documents import Document
 from langgraph.config import get_store
 
-from app.platform.contract.logging import get_logger
+from app.platform.core.contract.logging import get_logger
 from app.state import EvidenceItem, PhaseEntry, SageState
 
 logger = get_logger("runtime.evidence")

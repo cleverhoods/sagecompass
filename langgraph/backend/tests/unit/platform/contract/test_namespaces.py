@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.platform.contract import NamespaceParts, build_namespace
+from app.platform.core.contract.namespaces import NamespaceParts, build_namespace
 
 pytestmark = pytest.mark.compliance
 

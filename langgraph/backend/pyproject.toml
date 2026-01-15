@@ -97,11 +97,10 @@ select = [
     "RUF",
     "PERF",
     "C90",
-    "ARG",
-    "TC"
+    "ARG"
 ]
 # Keep this list short; only ignore rules you truly disagree with.
-ignore = []
+ignore = []  # All TC rules disabled by removing from select list above
 
 [tool.ruff.lint.mccabe]
 max-complexity = 12

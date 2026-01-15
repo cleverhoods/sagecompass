@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from app.agents.problem_framing.schema import ProblemFrame
-from app.graphs.subgraphs.phases.contract import PhaseContract
 from app.graphs.subgraphs.phases.problem_framing.subgraph import (
     build_problem_framing_subgraph,
 )
+from app.platform.core.contract.phases import PhaseContract
 
 problem_framing_contract = PhaseContract(
     name="problem_framing",

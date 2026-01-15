@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal, TypeVar
+from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -39,7 +39,6 @@ def build_write_graph(
     graph = StateGraph(VectorWriteState, context_schema=SageRuntimeContext)
 
     resolved_write_node: WriteNodeFn = write_node or make_node_write_vector()
-    T = TypeVar("T")
 
     def _as_runtime_node(
         node: Callable[[VectorWriteState, Runtime[SageRuntimeContext] | None], Command[Literal["__end__"]]],

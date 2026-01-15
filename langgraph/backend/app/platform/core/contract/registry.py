@@ -1,4 +1,4 @@
-"""Phase registry contract for PhaseContract entries.
+"""Phase registry validation for PhaseContract entries.
 
 Contract meaning:
 - Every phase is defined via PhaseContract and registered under its name.
@@ -12,7 +12,7 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from app.graphs.subgraphs.phases.contract import PhaseContract
+from app.platform.core.contract.phases import PhaseContract
 
 
 def validate_phase_registry(phases: Mapping[str, PhaseContract]) -> None:

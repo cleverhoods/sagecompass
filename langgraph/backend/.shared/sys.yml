@@ -13,9 +13,8 @@ backend_tree:
 - app/state/
 - app/tools/
 - app/platform/config/
-- app/platform/contract/
+- app/platform/core/
 - app/platform/observability/
-- app/platform/policy/
 - app/platform/runtime/
 - app/platform/utils/
 - .shared/

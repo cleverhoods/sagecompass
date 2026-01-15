@@ -3,17 +3,39 @@
 ## [Unreleased]
 ### Added
 - [docs] Create CLAUDE.md instruction files across the repository mirroring AGENTS.md structure for Claude Code agent compatibility.
-- [langgraph/backend] Create `app/platform/core/` directory structure with dto, contract, and policy subdirectories for clean architecture separation.
-- [langgraph/backend] Create `app/platform/adapters/` directory for boundary translation layer between core and orchestration.
-- [langgraph/backend] Add `PhaseContract` type definition to `app/platform/core/contract/phases.py` (Phase 0 of hexagonal architecture refactor).
+- [langgraph/backend] Complete hexagonal architecture refactor with full `app/platform/core/` implementation including contract, policy, and dto layers.
+- [langgraph/backend] Add `GuardrailResult`, `EvidenceBundle`, and `PhaseResult` DTOs in `app/platform/core/dto/` for clean boundary translation.
+- [langgraph/backend] Add `app/platform/core/contract/registry.py` with extracted `validate_phase_registry` function.
+- [langgraph/backend] Add `app/schemas/field_types.py` with reusable `ConfidenceScore` type definition for consistent validation across schemas.
+- [langgraph/backend] Add `app/platform/utils/namespace_utils.py` with `build_agent_namespace()` helper to consolidate duplicate namespace construction logic.
+- [langgraph/backend] Add `app/platform/adapters/` directory structure for future boundary translation layer.
 
 ### Changed
 - [docs] Update all `.shared/*.yml` navigation maps to reference CLAUDE.md instead of AGENTS.md as the primary instruction surface for agents.
 - [docs] Add CLAUDE.md to root README.md directory tree.
+- [langgraph/backend] **BREAKING**: Move all contract files from `app/platform/contract/` to `app/platform/core/contract/` with no backwards compatibility.
+- [langgraph/backend] **BREAKING**: Move all policy files from `app/platform/policy/` to `app/platform/core/policy/` with no backwards compatibility.
+- [langgraph/backend] Update 31 application files and 11 test files to use new `app.platform.core.*` import paths.
+- [langgraph/backend] Update 11 `.shared/` configuration files (contracts.yml, platform.yml, sys.yml, and 8 rules/*.md) with new platform structure and file paths.
+- [langgraph/backend] Refactor `app/state/gating.py` to import `GuardrailResult` from core DTO instead of defining duplicate class.
+- [langgraph/backend] Extract duplicate namespace construction in tools into single `build_agent_namespace()` utility.
+- [langgraph/backend] Refactor `ConfidenceScore` fields in `problem_framing/schema.py` and `schemas/ambiguities.py` to use shared type definition.
+- [langgraph/backend] Disable TC (type-checking import) linting rules in `pyproject.toml` to reduce noise and improve code readability.
 
 ### Fixed
 - [docs] Remove stale `.codex/skills/` references from backend AGENTS.md and CLAUDE.md files, replacing with actual documentation paths (`app/platform/contract/README.md` and `tests/README.md`).
 - [docs] Remove non-existent contracts reference from schemas CLAUDE.md since schemas have no contract enforcement by design.
+- [langgraph/backend] Fix complexity warning in `make_dynamic_prompt_middleware` by adding noqa comment for acceptable complexity.
+- [langgraph/backend] Fix ambiguous dash characters (EN DASH → HYPHEN-MINUS) in schema field descriptions.
+- [langgraph/backend] Convert type parameters to modern Python 3.12 syntax with PEP 695 style.
+- [langgraph/backend] Convert inefficient for-loops with append to list comprehensions and extend for better performance.
+- [langgraph/backend] Add missing docstrings to all new package `__init__.py` files.
+- [langgraph/backend] Remove unused `TypeVar` import from `app/graphs/write_graph.py`.
+
+### Removed
+- [langgraph/backend] Delete `app/graphs/subgraphs/phases/contract.py` to fix backwards dependency (PhaseContract now in platform/core).
+- [langgraph/backend] Delete `app/platform/contract/__init__.py`, `app/platform/contract/phases.py`, and `app/platform/policy/__init__.py` re-export modules (no backwards compatibility).
+- [langgraph/backend] Remove duplicate `GuardrailResult` class definition from `app/state/gating.py` in favor of core DTO.
 
 ## [v6.0.0]
 ### Added

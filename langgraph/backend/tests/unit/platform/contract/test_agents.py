@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.agents.problem_framing.schema import ProblemFrame
-from app.platform.contract.agents import validate_agent_schema
+from app.platform.core.contract.agents import validate_agent_schema
 
 pytestmark = pytest.mark.compliance
 

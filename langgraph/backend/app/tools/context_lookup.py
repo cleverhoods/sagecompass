@@ -6,7 +6,7 @@ from langchain_core.documents import Document
 from langchain_core.tools import tool
 from langgraph.config import get_store
 
-from app.platform.contract.namespaces import NamespaceParts, build_namespace
+from app.platform.utils.namespace_utils import build_agent_namespace
 
 
 @tool
@@ -30,15 +30,7 @@ def context_lookup(query: str, collection: str) -> list[Document]:
             (store_namespace, store_key) and an optional similarity score.
     """
     store = get_store()
-    ns_prefix = build_namespace(
-        NamespaceParts(
-            app="drupal",
-            tenant=None,
-            thread="context",
-            phase="agent",
-            artifact_type=collection,
-        )
-    )
+    ns_prefix = build_agent_namespace(collection)
 
     # NOTE: namespace prefix is positional (not namespace_prefix=...)
     results = store.search(

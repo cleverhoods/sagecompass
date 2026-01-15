@@ -11,7 +11,7 @@ platform_layers:
     - nodes
     - tools
   contract:
-    path: app/platform/contract/
+    path: app/platform/core/contract/
     purpose: "Typed contracts + validators for backend invariants."
     consumers:
     - agents
@@ -27,7 +27,7 @@ platform_layers:
     - nodes
     - tools
   policy:
-    path: app/platform/policy/
+    path: app/platform/core/policy/
     purpose: "Pure deterministic policy evaluation used by guardrails/middleware."
     consumers:
     - middlewares

@@ -12,9 +12,9 @@ from langchain_core.tools import BaseTool
 
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.middlewares.guardrails import make_guardrails_middleware
-from app.platform.contract.agents import validate_agent_schema
-from app.platform.contract.logging import get_logger
-from app.platform.contract.tools import (
+from app.platform.core.contract.agents import validate_agent_schema
+from app.platform.core.contract.logging import get_logger
+from app.platform.core.contract.tools import (
     build_allowlist_contract,
     validate_allowlist_contains_schema,
 )

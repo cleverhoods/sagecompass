@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.graphs.subgraphs.ambiguity_check.subgraph import (
     build_ambiguity_preflight_subgraph,
 )
-from app.graphs.subgraphs.phases.contract import PhaseContract
+from app.platform.core.contract.phases import PhaseContract
 from app.state.ambiguity import AmbiguityContext
 
 ambiguity_preflight_contract = PhaseContract(

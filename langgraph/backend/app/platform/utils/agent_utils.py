@@ -13,7 +13,7 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel
 
 from app.platform.config.file_loader import FileLoader
-from app.platform.contract.prompts import validate_prompt_suffix_order
+from app.platform.core.contract.prompts import validate_prompt_suffix_order
 
 
 def _render_few_shots(agent_name: str, *, user_placeholder: str = "{task_input}") -> str:
@@ -98,8 +98,7 @@ def compose_agent_prompt(
         parts.append(FileLoader.load_prompt("global_system").strip())
 
     # Render normal prompts in the order the caller gave.
-    for name in normal_prompt_names:
-        parts.append(FileLoader.load_prompt(name, agent_name).strip())
+    parts.extend(FileLoader.load_prompt(name, agent_name).strip() for name in normal_prompt_names)
 
     # Compute format instructions once; place them BEFORE few-shots so "Output:" remains last.
     if include_format_instructions and output_schema is not None:

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Annotated
 
 from pydantic import BaseModel, Field
+
+from app.schemas.field_types import ConfidenceScore
 
 # --- Problem framing ---
 
@@ -34,13 +35,10 @@ class ProblemFrame(BaseModel):
         default_factory=list, description="Relevant constraints or boundaries (e.g. data, regulation, team, time)."
     )
     confidence: Annotated[
-        Decimal,
+        ConfidenceScore,
         Field(
             ...,
-            ge=0.01,
-            le=0.99,
-            decimal_places=2,
-            description=("Overall confidence (0.01–0.99) that this ProblemFrame correctly captures the situation."),
+            description=("Overall confidence that this ProblemFrame correctly captures the situation."),
         ),
     ]
 

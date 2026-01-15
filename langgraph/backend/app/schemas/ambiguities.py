@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator
+
+from app.schemas.field_types import ConfidenceScore
 
 
 class AmbiguityItem(BaseModel):
@@ -39,15 +40,12 @@ class AmbiguityItem(BaseModel):
         ...,
         ge=0.0,
         le=1.0,
-        description="Normalized impact strength for the assumption (0–1).",
+        description="Normalized impact strength for the assumption (0-1).",
     )
     importance: Annotated[
-        Decimal,
+        ConfidenceScore,
         Field(
             ...,
-            ge=0.01,
-            le=0.99,
-            decimal_places=2,
             description=(
                 "How critical this ambiguity is for framing the problem. "
                 "Higher values (close to 0.99) are routed first."
@@ -55,12 +53,9 @@ class AmbiguityItem(BaseModel):
         ),
     ]
     confidence: Annotated[
-        Decimal,
+        ConfidenceScore,
         Field(
             ...,
-            ge=0.01,
-            le=0.99,
-            decimal_places=2,
             description=(
                 "How confident the agent is that the ambiguity is valid. "
                 "Combine with importance to sort clarifications."

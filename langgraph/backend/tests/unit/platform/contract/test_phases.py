@@ -6,8 +6,8 @@ import pytest
 from langchain_core.runnables import Runnable, RunnableLambda
 from pydantic import BaseModel, ValidationError
 
-from app.graphs.subgraphs.phases.contract import PhaseContract
-from app.platform.contract.phases import validate_phase_registry
+from app.platform.core.contract.phases import PhaseContract
+from app.platform.core.contract.registry import validate_phase_registry
 
 pytestmark = pytest.mark.compliance
 

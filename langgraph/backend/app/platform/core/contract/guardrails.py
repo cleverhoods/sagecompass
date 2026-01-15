@@ -1,7 +1,7 @@
 """Guardrails policy contract.
 
 Contract meaning:
-- Guardrail decisions come from app.platform.policy.guardrails.
+- Guardrail decisions come from app.platform.core.policy.guardrails.
 - Both the gating node and middleware must call the same policy logic.
 """
 
@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.platform.policy.guardrails import build_guardrails_config, evaluate_guardrails
+from app.platform.core.policy.guardrails import build_guardrails_config, evaluate_guardrails
 from app.state.gating import GuardrailResult
 
-GUARDRAILS_ENTRYPOINT = "app.platform.policy.guardrails.evaluate_guardrails"
+GUARDRAILS_ENTRYPOINT = "app.platform.core.policy.guardrails.evaluate_guardrails"
 
 
 def evaluate_guardrails_contract(

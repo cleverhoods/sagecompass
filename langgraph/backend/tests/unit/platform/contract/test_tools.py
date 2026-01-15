@@ -4,7 +4,7 @@ import pytest
 from langchain_core.tools import tool
 from pydantic import BaseModel
 
-from app.platform.contract.tools import (
+from app.platform.core.contract.tools import (
     build_allowlist_contract,
     validate_allowlist_contains_schema,
 )

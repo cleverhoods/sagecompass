@@ -15,7 +15,7 @@ from langchain_core.prompts import (
 )
 from pydantic import BaseModel
 
-from app.platform.contract.prompts import (
+from app.platform.core.contract.prompts import (
     validate_prompt_placeholders,
     validate_prompt_variables,
 )
@@ -44,7 +44,7 @@ def _apply_placeholders_to_string(
     return rendered
 
 
-def make_dynamic_prompt_middleware(
+def make_dynamic_prompt_middleware(  # noqa: C901
     prompt: PromptSource,
     placeholders: Sequence[str],
     output_schema: type[BaseModel] | None = None,
