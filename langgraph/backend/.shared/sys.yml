@@ -20,4 +20,4 @@ backend_tree:
 - app/platform/utils/
 - .shared/
 notes:
-- Folder-level AGENTS.md provided for app/agents, app/graphs, app/nodes, app/tools, app/middlewares, app/state, app/schemas, and app/platform.
+- Folder-level CLAUDE.md provided for app/agents, app/graphs, app/nodes, app/tools, app/middlewares, app/state, app/schemas, and app/platform.

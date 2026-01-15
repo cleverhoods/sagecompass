@@ -7,7 +7,7 @@ This file is the **primary** instruction surface when editing `app/graphs/**`.
 - Use `component_types.graphs.contracts` in `../../.shared/components.yml` to find enforceable contracts and rule snippets.
 
 ## References
-- Backend AGENTS: `../../AGENTS.md`
+- Backend CLAUDE: `../../CLAUDE.md`
 - Component map: `../../.shared/components.yml`
 - System map: `../../.shared/sys.yml`
 - Platform map: `../../.shared/platform.yml`

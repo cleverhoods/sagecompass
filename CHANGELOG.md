@@ -1,7 +1,16 @@
 # SageCompass changelog
 
 ## [Unreleased]
-- _No changes yet._
+### Added
+- [docs] Create CLAUDE.md instruction files across the repository mirroring AGENTS.md structure for Claude Code agent compatibility.
+
+### Changed
+- [docs] Update all `.shared/*.yml` navigation maps to reference CLAUDE.md instead of AGENTS.md as the primary instruction surface for agents.
+- [docs] Add CLAUDE.md to root README.md directory tree.
+
+### Fixed
+- [docs] Remove stale `.codex/skills/` references from backend AGENTS.md and CLAUDE.md files, replacing with actual documentation paths (`app/platform/contract/README.md` and `tests/README.md`).
+- [docs] Remove non-existent contracts reference from schemas CLAUDE.md since schemas have no contract enforcement by design.
 
 ## [v6.0.0]
 ### Added

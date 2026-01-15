@@ -3,12 +3,12 @@
 ## Purpose
 This folder contains **canonical, shared** rule snippets (MUST / MUST NOT) for the backend.
 They are intended to be:
-- referenced from `AGENTS.md` files via the `.shared/components.yml` and `.shared/platform.yml` maps,
+- referenced from `CLAUDE.md` files via the `.shared/components.yml` and `.shared/platform.yml` maps,
 - used for audits and compliance checks,
 - kept short and stable.
 
 ## Instruction loading policy
-- Treat **folder-level `AGENTS.md`** as the primary local instruction surface.
+- Treat **folder-level `CLAUDE.md`** as the primary local instruction surface.
 - Use the map references to locate the rule snippets or contract files that apply to a component.
 
 ## Rule files

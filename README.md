@@ -47,6 +47,7 @@ before anyone spends time and money building it.
 │   └── ui/                   # Runnable Gradio UI surface (uv-managed)
 │       └── README.md         
 ├── AGENTS.md                 # Top level AGENTS directives
+├── CLAUDE.md                 # Top level CLAUDE directives
 ├── CHANGELOG.md              # Required changelog (update under [Unreleased])
 ├── LEARNING.md               # Useful learning resources
 ├── README.md                 # This file

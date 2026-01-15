@@ -9,9 +9,9 @@ Scope: `langgraph/backend/**`. Working dir: `langgraph/backend`.
 - Prefer these maps before touching `rg`/`find`; only widen scope when a map lacks the target path.
 
 ## Instruction loading policy
-- Treat folder-level `AGENTS.md` as the primary local instruction surface.
+- Treat folder-level `CLAUDE.md` as the primary local instruction surface.
 - Use the maps to locate contracts, rule snippets, and local instructions (e.g., `component_types.agents.contracts`).
-- Do not hard-link rule snippet files from `AGENTS.md`; route through the maps instead.
+- Do not hard-link rule snippet files from `CLAUDE.md`; route through the maps instead.
 
 ## Operating loop
 1. **Plan**: confirm the relevant component via the maps and document the minimal changes.
