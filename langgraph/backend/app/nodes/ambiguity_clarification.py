@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import OutputSchema
-from app.platform.core.contract.logging import get_logger
+from app.platform.adapters.logging import get_logger
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
     extract_structured_response,

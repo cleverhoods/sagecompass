@@ -3,12 +3,20 @@
 This adapter provides boundary translation functions that convert between:
 - Core DTOs (pure, extractable): GuardrailResult
 - State models (LangGraph-specific): GatingContext
+
+This adapter also provides the canonical entrypoint for guardrail evaluation
+that coordinates policy evaluation with configuration building.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from app.platform.core.dto.guardrails import GuardrailResult
+from app.platform.core.policy.guardrails import build_guardrails_config, evaluate_guardrails
 from app.state.gating import GatingContext, GatingDecision
+
+GUARDRAILS_ENTRYPOINT = "app.platform.adapters.guardrails.evaluate_guardrails_contract"
 
 
 def guardrail_to_gating(
@@ -81,3 +89,23 @@ def extract_guardrail_summary(gating_context: GatingContext) -> dict[str, object
         "reasons": gating_context.guardrail.reasons,
         "decision": gating_context.decision,
     }
+
+
+def evaluate_guardrails_contract(
+    text: str,
+    raw_config: Mapping[str, object] | None,
+) -> GuardrailResult:
+    """Evaluate guardrails using the canonical policy entrypoint (adapter wrapper).
+
+    This is the canonical entrypoint for guardrail evaluation. Both gating nodes
+    and middleware must call this function to ensure consistent policy enforcement.
+
+    Args:
+        text: Text to evaluate for safety and scope.
+        raw_config: Raw guardrails configuration mapping.
+
+    Returns:
+        GuardrailResult DTO with evaluation results.
+    """
+    config = build_guardrails_config(raw_config or {})
+    return evaluate_guardrails(text, config)

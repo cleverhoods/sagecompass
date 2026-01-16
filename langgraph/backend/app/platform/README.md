@@ -93,33 +93,43 @@ The platform implements hexagonal architecture (ports and adapters) with three l
 
 ## Directory Structure
 
-### `adapters/` - Boundary Translation
-**Purpose:** Translate between pure core DTOs and framework-specific state models.
+### `adapters/` - Boundary Translation & Runtime Wrappers
+**Purpose:** Translate between pure core DTOs and framework-specific state models. Provide runtime wrappers that coordinate core logic with wiring concerns.
 
 **Contains:**
-- `evidence.py` - Evidence ↔ State translation
-- `guardrails.py` - Guardrails ↔ GatingContext translation
+- `evidence.py` - Evidence ↔ State translation + `collect_phase_evidence()` wrapper
+- `guardrails.py` - Guardrails ↔ GatingContext translation + `evaluate_guardrails_contract()` wrapper
 - `phases.py` - PhaseResult ↔ PhaseEntry translation
+- `logging.py` - Structured logging wrappers
+- `tools.py` - Tool allowlist building wrapper
+- `agents.py` - Agent schema validation wrapper
 
-**Why it exists:** Keeps core DTOs pure (no state dependencies) while enabling LangGraph integration.
+**Why it exists:** Keeps core DTOs pure (no state dependencies) while enabling LangGraph integration. Runtime wrappers coordinate core logic with logging, config, and state handling.
 
 **Learn more:** [adapters/README.md](./adapters/README.md)
 
 ---
 
 ### `core/` - Pure Business Logic
-**Purpose:** Framework-independent contracts, DTOs, and policies.
+**Purpose:** Framework-independent contracts, DTOs, and policies (pure types and validators only).
 
 **Contains:**
-- `core/contract/` - Type validators and enforcement (validate_state_update, etc.)
-- `core/dto/` - Pure data transfer objects (EvidenceBundle, GuardrailResult, etc.)
-- `core/policy/` - Pure decision logic (evaluate_guardrails, etc.)
+- `core/contract/` - Pure type definitions and validators (PhaseContract, validate_state_update, etc.)
+- `core/dto/` - Pure data transfer objects (EvidenceBundle, GuardrailResult, PhaseResult)
+- `core/policy/` - Pure decision logic that returns DTOs (evaluate_guardrails, etc.)
 
 **Why it exists:** Enables core logic to be extracted, tested without framework setup, and reused across projects.
 
-**Dependency rule:** Core has NO imports from `app/state/`, `app/nodes/`, or LangGraph-specific types.
+**Dependency rule:** Core has NO imports from:
+- `app/state/`, `app/graphs/`, `app/nodes/`, `app/agents/` (app orchestration)
+- `app/platform/adapters/` (boundary layer)
+- `app/platform/config/`, `app/platform/observability/`, `app/platform/runtime/`, `app/platform/utils/` (wiring)
 
-**Learn more:** [core/README.md](./core/README.md)
+**Architecture enforcement:** Validated by `tests/architecture/test_core_purity.py`
+
+**Runtime wrappers:** Moved to `adapters/` to maintain core purity
+
+**Learn more:** [core/README.md](./core/README.md), [core/contract/README.md](./core/contract/README.md)
 
 ---
 

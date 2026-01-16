@@ -8,9 +8,9 @@ from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResp
 from langchain.agents.middleware.types import ToolCallRequest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
+from app.platform.adapters.guardrails import evaluate_guardrails_contract
+from app.platform.adapters.logging import get_logger
 from app.platform.config.file_loader import FileLoader
-from app.platform.core.contract.guardrails import evaluate_guardrails_contract
-from app.platform.core.contract.logging import get_logger
 from app.platform.core.policy.guardrails import GuardrailsConfig, build_guardrails_config
 
 logger = get_logger("middlewares.guardrails")

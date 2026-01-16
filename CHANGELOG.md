@@ -10,6 +10,9 @@
 - [langgraph/backend] Add `app/platform/utils/namespace_utils.py` with `build_agent_namespace()` helper to consolidate duplicate namespace construction logic.
 - [langgraph/backend] Add adapter layer in `app/platform/adapters/` with `evidence.py`, `guardrails.py`, and `phases.py` for boundary translation between core DTOs and state models.
 - [langgraph/backend] Add comprehensive adapter tests in `tests/unit/platform/adapters/` with 12 test cases covering DTO-to-state and state-to-DTO conversions.
+- [langgraph/backend] Add runtime wrapper functions to adapters: `collect_phase_evidence()` in `adapters/evidence.py`, `evaluate_guardrails_contract()` in `adapters/guardrails.py`.
+- [langgraph/backend] Add new adapter modules: `adapters/logging.py`, `adapters/tools.py`, and `adapters/agents.py` for wiring coordination.
+- [langgraph/backend] Add architecture enforcement tests in `tests/architecture/` with `test_core_purity.py` and `test_adapter_boundary.py` to validate hexagonal architecture rules using AST-based import checking.
 - [docs] Add comprehensive platform documentation to `app/platform/README.md` explaining the overall platform architecture, directory structure, and how layers work together.
 - [docs] Add comprehensive architecture documentation to `app/platform/core/README.md` explaining hexagonal architecture, dependency rules, and the rationale for the 3-layer separation.
 - [docs] Add comprehensive adapter documentation to `app/platform/adapters/README.md` explaining boundary translation, adapter principles, and when to create new adapters.
@@ -19,8 +22,8 @@
 - [docs] Add CLAUDE.md to root README.md directory tree.
 - [docs] Remove unnecessary UV cache directory setup from AGENTS.md and CLAUDE.md QA instructions.
 - [langgraph/backend] Add `.cache` directory to `.gitignore` to exclude build artifacts.
-- [langgraph/backend] **BREAKING**: Move all contract files from `app/platform/contract/` to `app/platform/core/contract/` with no backwards compatibility.
-- [langgraph/backend] **BREAKING**: Move all policy files from `app/platform/policy/` to `app/platform/core/policy/` with no backwards compatibility.
+- [langgraph/backend] Move all contract files from `app/platform/contract/` to `app/platform/core/contract/` with no backwards compatibility.
+- [langgraph/backend] Move all policy files from `app/platform/policy/` to `app/platform/core/policy/` with no backwards compatibility.
 - [langgraph/backend] Update 31 application files and 11 test files to use new `app.platform.core.*` import paths.
 - [langgraph/backend] Update 14 `.shared/` configuration files with new platform structure: add adapters and dto layers to platform.yml, add adapters to sys.yml backend_tree, and update 3 rules files (platform.md, middlewares.md, guardrails-and-memory.md) to reference core/policy paths.
 - [langgraph/backend] Refactor `app/state/gating.py` to import `GuardrailResult` from core DTO instead of defining duplicate class.
@@ -30,6 +33,10 @@
 - [langgraph/backend] Refactor `app/platform/runtime/evidence.py` to use core `EvidenceBundle` DTO instead of defining duplicate class with state dependencies.
 - [langgraph/backend] Update `app/platform/core/contract/evidence.py` to import `EvidenceBundle` from core DTO layer.
 - [langgraph/backend] Update `app/nodes/problem_framing.py` and `app/nodes/ambiguity_scan.py` to get `phase_entry` from state instead of evidence bundle, maintaining DTO purity.
+- [langgraph/backend] Split contract layer into pure types (stay in `core/contract/`) and runtime wrappers (moved to `adapters/`). This completes Option C of the hexagonal architecture refactor, ensuring core contract enforcement remains pure while coordination logic lives in adapters.
+- [langgraph/backend] Fix `app/platform/core/policy/guardrails.py` to import `GuardrailResult` from `core.dto.guardrails` instead of `app.state.gating`, eliminating core-to-state dependency violation.
+- [langgraph/backend] Update all imports from deleted contract wrappers to use adapter equivalents across 19+ application files and tests.
+- [langgraph/backend] Add `architecture` marker to pytest configuration for hexagonal architecture enforcement tests.
 
 ### Fixed
 - [docs] Remove stale `.codex/skills/` references from backend AGENTS.md and CLAUDE.md files, replacing with actual documentation paths (`app/platform/contract/README.md` and `tests/README.md`).
@@ -46,6 +53,7 @@
 - [langgraph/backend] Delete `app/platform/contract/__init__.py`, `app/platform/contract/phases.py`, and `app/platform/policy/__init__.py` re-export modules (no backwards compatibility).
 - [langgraph/backend] Remove duplicate `GuardrailResult` class definition from `app/state/gating.py` in favor of core DTO.
 - [langgraph/backend] Remove duplicate `EvidenceBundle` class definition from `app/platform/runtime/evidence.py` in favor of core DTO, eliminating state dependency violation.
+- [langgraph/backend] Remove wrapper functions from `core/contract/`: delete `evidence.py`, `guardrails.py`, `logging.py`, `agents.py`, and move `build_allowlist_contract()` from `tools.py` to adapters. Keep only pure validators and type definitions in `core/contract/tools.py`.
 
 ## [v6.0.0]
 ### Added

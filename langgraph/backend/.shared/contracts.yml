@@ -1,21 +1,21 @@
 contracts:
   - id: contract.agents
     name: Agent OutputSchema contract
-    path: app/platform/core/contract/agents.py
-    benefit: Validates each agent's Pydantic OutputSchema so nodes can trust strictly typed structured responses (no raw dict/Any leakage).
+    path: app/platform/adapters/agents.py
+    benefit: Validates each agent's Pydantic OutputSchema so nodes can trust strictly typed structured responses (no raw dict/Any leakage). Runtime wrapper that loads schemas and validates them.
     consumers:
       - agents
   - id: contract.tools
     name: Tool allowlist contract
-    path: app/platform/core/contract/tools.py
-    benefit: Builds and checks the canonical tool allowlist (including the structured-output tool) so middleware and agents call only approved tool names.
+    path: app/platform/adapters/tools.py (builder) + app/platform/core/contract/tools.py (validator)
+    benefit: Builds the canonical tool allowlist via adapter wrapper, and validates allowlist contains schema via pure contract validator. Ensures middleware and agents call only approved tool names.
     consumers:
       - agents
       - middlewares
   - id: contract.guardrails
     name: Guardrails evaluation contract
-    path: app/platform/core/contract/guardrails.py
-    benefit: Routes guardrail checks through the shared policy entrypoint so middleware and gating nodes reject the same unsafe/out-of-scope prompts.
+    path: app/platform/adapters/guardrails.py
+    benefit: Routes guardrail checks through the shared policy entrypoint (evaluate_guardrails_contract) so middleware and gating nodes reject the same unsafe/out-of-scope prompts. Adapter wrapper that coordinates policy with config building.
     consumers:
       - middlewares
       - gating nodes
@@ -52,14 +52,14 @@ contracts:
       - tools
   - id: contract.evidence
     name: Evidence hydration contract
-    path: app/platform/runtime/evidence.py
-    benefit: Requires nodes to call `collect_phase_evidence`, respect the `missing_store` flag, and hydrate deterministic metadata before mutating phase state, keeping runtime behavior consistent.
+    path: app/platform/adapters/evidence.py
+    benefit: Requires nodes to call `collect_phase_evidence` adapter wrapper, respect the `missing_store` flag, and hydrate deterministic metadata before mutating phase state. Returns pure EvidenceBundle DTO while coordinating with runtime and logging.
     consumers:
       - nodes
   - id: contract.logging
     name: Structured logging contract
-    path: app/platform/observability/logger.py
-    benefit: Demands that nodes, agents, and related components use `get_logger`/`configure_logging` so all emissions stay in the structured pipeline instead of ad-hoc stdlib logging.
+    path: app/platform/adapters/logging.py
+    benefit: Demands that nodes, agents, and related components use `get_logger`/`configure_logging` adapter wrappers so all emissions stay in the structured pipeline instead of ad-hoc stdlib logging. Coordinates with observability layer.
     consumers:
       - agents
       - nodes

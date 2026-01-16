@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any, Literal
 from langgraph.types import Command
 
 from app.agents.problem_framing.schema import ProblemFrame
-from app.platform.core.contract.evidence import collect_phase_evidence
-from app.platform.core.contract.logging import get_logger
+from app.platform.adapters.evidence import collect_phase_evidence
+from app.platform.adapters.logging import get_logger
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
     extract_structured_response,

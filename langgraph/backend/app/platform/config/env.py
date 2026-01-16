@@ -25,7 +25,7 @@ def load_project_env() -> None:
 
     env_path: Path = BACKEND_ROOT / ".env"
 
-    from app.platform.core.contract.logging import get_logger
+    from app.platform.adapters.logging import get_logger
 
     logger = get_logger("utils.env")
     try:

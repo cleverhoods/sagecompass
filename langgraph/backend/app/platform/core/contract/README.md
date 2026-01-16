@@ -1,24 +1,58 @@
 # Platform Contracts
 
 Purpose:
-- Provide typed contracts + validators for backend invariants.
+- Provide **pure type definitions and validators** for backend invariants (no wiring dependencies).
 - Serve as canonical enforcement targets referenced by `.shared/components.yml` and `.shared/platform.yml`.
+- **Runtime wrappers moved to `app/platform/adapters/`** to maintain core purity.
 
-Public entrypoints:
+## Architecture: Pure Core
+
+This directory contains **only pure types and validators**:
+- No imports from `app.state`, `app.graphs`, `app.nodes` (app orchestration)
+- No imports from `app.platform.adapters` (boundary layer)
+- No imports from `app.platform.config`, `app.platform.observability`, `app.platform.runtime`, `app.platform.utils` (wiring)
+- **Enforced by architecture tests** in `tests/architecture/test_core_purity.py`
+
+For runtime coordination (logging, config, state handling), use the **adapter wrappers** in `app/platform/adapters/`.
+
+## Public entrypoints (Pure Types & Validators)
+
+**Artifact Contracts** (`artifacts.py`):
 - `ArtifactEnvelope`, `ArtifactProvenance`, `EvidencePointer`
-- `NamespaceParts`, `build_namespace`
-- `PromptContract`, `validate_prompt_placeholders`, `validate_prompt_suffix_order`
-- `StateOwnershipRule`, `STATE_OWNERSHIP_RULES`, `validate_state_update`
-- `validate_phase_registry`
-- `validate_agent_schema`
-- `evaluate_guardrails_contract`
-- `build_allowlist_contract`, `validate_allowlist_contains_schema`
-- `extract_structured_response`, `validate_structured_response`
-- `validate_prompt_variables`
 
-Non-goals:
+**Namespace Contracts** (`namespaces.py`):
+- `NamespaceParts`, `build_namespace()`
+
+**Prompt Contracts** (`prompts.py`):
+- `PromptContract`, `validate_prompt_placeholders()`, `validate_prompt_suffix_order()`, `validate_prompt_variables()`
+
+**State Contracts** (`state.py`):
+- `StateOwnershipRule`, `STATE_OWNERSHIP_RULES`, `validate_state_update()`
+
+**Phase Contracts** (`phases.py`, `registry.py`):
+- `PhaseContract`, `validate_phase_registry()`
+
+**Tool Contracts** (`tools.py`):
+- `validate_allowlist_contains_schema()` *(pure validator)*
+- For `build_allowlist_contract()`, use `app/platform/adapters/tools.py`
+
+**Structured Output Contracts** (`structured_output.py`):
+- `extract_structured_response()`, `validate_structured_response()`
+
+## Runtime Wrappers (Use Adapters Instead)
+
+The following functions were **moved to `app/platform/adapters/`** because they coordinate with wiring concerns:
+
+- ~~`validate_agent_schema()`~~ → `app/platform/adapters/agents.py`
+- ~~`evaluate_guardrails_contract()`~~ → `app/platform/adapters/guardrails.py`
+- ~~`build_allowlist_contract()`~~ → `app/platform/adapters/tools.py`
+- ~~`collect_phase_evidence()`~~ → `app/platform/adapters/evidence.py`
+- ~~`get_logger()`, `configure_logging()`~~ → `app/platform/adapters/logging.py`
+
+## Non-goals:
 - Business/domain reasoning
 - Graph/node orchestration logic
+- Runtime coordination (logging, config, state) - **use adapters for this**
 
 ## Docs map
 This Docs map is the required knowledge base for audits and contract design. Use the official LangChain/LangGraph/LangSmith documentation as the source of truth (not third-party summaries) to avoid deviating from the frameworks or reinventing existing guidance.

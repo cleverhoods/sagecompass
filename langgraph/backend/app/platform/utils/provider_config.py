@@ -3,10 +3,10 @@
 import importlib
 import os
 
+from app.platform.adapters.logging import get_logger
 from app.platform.config.env import load_project_env
 from app.platform.config.file_loader import FileLoader
 from app.platform.config.paths import CONFIG_DIR
-from app.platform.core.contract.logging import get_logger
 
 PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
 

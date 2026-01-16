@@ -19,7 +19,7 @@ class FileLoader:
 
     @staticmethod
     def _logger():
-        from app.platform.core.contract.logging import get_logger
+        from app.platform.adapters.logging import get_logger
 
         return get_logger("utils.file_loader")
 

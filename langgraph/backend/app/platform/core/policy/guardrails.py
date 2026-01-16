@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from app.state.gating import GuardrailResult
+from app.platform.core.dto.guardrails import GuardrailResult
 
 
 @dataclass(frozen=True)

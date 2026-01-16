@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.graph import END
 from langgraph.types import Command
 
-from app.platform.core.contract.logging import get_logger
+from app.platform.adapters.logging import get_logger
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import phase_to_node
 

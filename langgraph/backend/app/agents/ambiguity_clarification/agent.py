@@ -12,12 +12,10 @@ from langchain_core.tools import BaseTool
 
 from app.middlewares.dynamic_prompt import make_dynamic_prompt_middleware
 from app.middlewares.guardrails import make_guardrails_middleware
-from app.platform.core.contract.agents import validate_agent_schema
-from app.platform.core.contract.logging import get_logger
-from app.platform.core.contract.tools import (
-    build_allowlist_contract,
-    validate_allowlist_contains_schema,
-)
+from app.platform.adapters.agents import validate_agent_schema
+from app.platform.adapters.logging import get_logger
+from app.platform.adapters.tools import build_allowlist_contract
+from app.platform.core.contract.tools import validate_allowlist_contains_schema
 from app.platform.utils.agent_utils import compose_agent_prompt
 from app.platform.utils.model_factory import get_model_for_agent
 

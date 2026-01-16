@@ -4,10 +4,8 @@ import pytest
 from langchain_core.tools import tool
 from pydantic import BaseModel
 
-from app.platform.core.contract.tools import (
-    build_allowlist_contract,
-    validate_allowlist_contains_schema,
-)
+from app.platform.adapters.tools import build_allowlist_contract
+from app.platform.core.contract.tools import validate_allowlist_contains_schema
 
 pytestmark = pytest.mark.compliance
 

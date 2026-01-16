@@ -148,22 +148,28 @@ def update_phase_evidence(
 ## Current Adapters
 
 ### `evidence.py`
-**Purpose:** Translate between evidence DTOs and state models.
+**Purpose:** Translate between evidence DTOs and state models. Provides runtime wrapper for evidence collection.
 
-**Functions:**
+**Translation Functions:**
 - `evidence_to_items()` - DTO dicts → EvidenceItem models
 - `items_to_evidence_dicts()` - EvidenceItem models → DTO dicts
 - `update_phase_evidence()` - Merge evidence bundle into phase entry
 
+**Runtime Wrappers:**
+- `collect_phase_evidence()` - Wrapper that coordinates core evidence collection with logging
+
 **When to use:** When working with evidence data from core layer in nodes.
 
 ### `guardrails.py`
-**Purpose:** Translate between guardrail DTOs and gating context.
+**Purpose:** Translate between guardrail DTOs and gating context. Provides canonical guardrail evaluation entrypoint.
 
-**Functions:**
+**Translation Functions:**
 - `guardrail_to_gating()` - Create GatingContext from GuardrailResult
 - `update_gating_guardrail()` - Update existing GatingContext with new guardrail
 - `extract_guardrail_summary()` - Extract logging/display summary
+
+**Runtime Wrappers:**
+- `evaluate_guardrails_contract()` - Canonical entrypoint that coordinates policy evaluation with config building
 
 **When to use:** When integrating guardrail policy evaluation with state.
 
@@ -177,6 +183,32 @@ def update_phase_evidence(
 - `extract_phase_summary()` - Extract logging/display summary
 
 **When to use:** When handling phase execution results in nodes.
+
+### `logging.py`
+**Purpose:** Provide structured logging wrappers that coordinate with observability layer.
+
+**Functions:**
+- `configure_logging()` - Initialize structured logging
+- `get_logger()` - Get logger for named component
+- `log()` - Emit structured log event
+
+**When to use:** When you need logging in agents, nodes, middlewares, or tools.
+
+### `tools.py`
+**Purpose:** Provide tool allowlist building wrapper.
+
+**Functions:**
+- `build_allowlist_contract()` - Build canonical tool allowlist including structured output tool
+
+**When to use:** In agent builders when configuring tool allowlists.
+
+### `agents.py`
+**Purpose:** Provide agent schema loading and validation wrapper.
+
+**Functions:**
+- `validate_agent_schema()` - Load and validate agent OutputSchema with contract enforcement
+
+**When to use:** In agent builders to validate schema before agent construction.
 
 ## Adapter Principles
 

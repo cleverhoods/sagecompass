@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from langchain_core.documents import Document
 from langgraph.config import get_store
 
-from app.platform.core.contract.logging import get_logger
+from app.platform.adapters.logging import get_logger
 from app.platform.core.dto.evidence import EvidenceBundle
 from app.state import EvidenceItem, PhaseEntry, SageState
 

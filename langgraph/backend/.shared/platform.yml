@@ -6,8 +6,10 @@ platform:
 platform_layers:
   adapters:
     path: app/platform/adapters/
-    purpose: "Boundary translation between core DTOs and application state models."
+    purpose: "Boundary translation between core DTOs and application state models. Runtime wrappers that coordinate core logic with wiring concerns (logging, config, state)."
     consumers:
+    - agents
+    - middlewares
     - nodes
     - runtime
   config:
@@ -18,14 +20,13 @@ platform_layers:
     - tools
   contract:
     path: app/platform/core/contract/
-    purpose: "Typed contracts + validators for backend invariants."
+    purpose: "Pure type definitions and validators for backend invariants (no wiring dependencies)."
     consumers:
+    - adapters
     - agents
     - graphs
-    - middlewares
     - nodes
     - state
-    - tools
   dto:
     path: app/platform/core/dto/
     purpose: "Pure data transfer objects for boundary translation (no framework dependencies)."
@@ -41,8 +42,9 @@ platform_layers:
     - tools
   policy:
     path: app/platform/core/policy/
-    purpose: "Pure deterministic policy evaluation used by guardrails/middleware."
+    purpose: "Pure deterministic policy evaluation used by guardrails/middleware (returns core DTOs)."
     consumers:
+    - adapters
     - middlewares
     - nodes
   runtime:

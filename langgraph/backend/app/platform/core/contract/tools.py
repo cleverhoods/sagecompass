@@ -9,25 +9,24 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from langchain_core.tools import BaseTool
 from pydantic import BaseModel
-
-from app.platform.utils.agent_utils import build_tool_allowlist
-
-
-def build_allowlist_contract(
-    tools: Sequence[BaseTool],
-    response_schema: type[BaseModel] | None = None,
-) -> list[str]:
-    """Build the canonical allowlist for tools and structured output."""
-    return build_tool_allowlist(tools, response_schema)
 
 
 def validate_allowlist_contains_schema(
     allowlist: Sequence[str],
     response_schema: type[BaseModel] | None,
 ) -> None:
-    """Ensure the allowlist contains the structured output tool name if required."""
+    """Ensure the allowlist contains the structured output tool name if required.
+
+    This is a pure validator that enforces the contract expectation.
+
+    Args:
+        allowlist: List of allowed tool names.
+        response_schema: Optional Pydantic schema for structured output.
+
+    Raises:
+        ValueError: If schema is provided but not in allowlist.
+    """
     if response_schema is None:
         return
     schema_name = response_schema.__name__

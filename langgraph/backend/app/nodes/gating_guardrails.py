@@ -8,9 +8,9 @@ from langchain_core.messages import AIMessage
 from langgraph.graph import END
 from langgraph.types import Command
 
+from app.platform.adapters.guardrails import evaluate_guardrails_contract
+from app.platform.adapters.logging import get_logger
 from app.platform.config.file_loader import FileLoader
-from app.platform.core.contract.guardrails import evaluate_guardrails_contract
-from app.platform.core.contract.logging import get_logger
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import get_latest_user_input
 

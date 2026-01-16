@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.platform.core.contract.guardrails import evaluate_guardrails_contract
+from app.platform.adapters.guardrails import evaluate_guardrails_contract
 
 pytestmark = pytest.mark.compliance
 

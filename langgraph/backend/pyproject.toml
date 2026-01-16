@@ -48,6 +48,7 @@ addopts = "--strict-markers"
 markers = [
   "compliance: flavoritism",
   "structural: more flavoritism",
+  "architecture: hexagonal architecture enforcement tests",
   "external-connection: tests that need external connection",
   "integration: tests that hit live/external services (opt-in)",
   "real_deps: tests that run against real dependencies without network calls"
