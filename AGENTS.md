@@ -20,16 +20,15 @@ If anything conflicts, the **nearest component contract wins**.
 
 ## 1) Monorepo boundaries (what belongs where)
 
-SageCompass is a monorepo with multiple layers of responsibility:
+SageCompass is a monorepo with three primary components:
 
-- **.ddev/** — local orchestration for containers and infra services (DBs/caches/vector DBs, etc.).  
-  *Infra services are added via ddev, not via Python tooling.*
-- **drupal/** — "brain & memory" layer (curation + structured storage).  
-  *Long-lived domain knowledge and artifacts live here conceptually, even if implementations start elsewhere.*
-- **langgraph/** — LangGraph workspace (graphs/configs/UI boundary).
-- **langgraph/backend/** — LangGraph runtime/API server (Python, uv-managed).  
-  *This is the primary runnable backend today.*
-- **langgraph/ui/** — Separate UI surface built with Gradio (Python, uv-managed).
+- **drupal/** — Structured storage layer
+  - Tech: PHP, Drupal, composer-managed
+  - Local dev: DDEV (`drupal/.ddev/`)
+- **langgraph/** — LangGraph runtime/API
+  - Tech: Python, uv-managed
+- **gradio-ui/** — Gradio interface
+  - Tech: Python, uv-managed
 
 ---
 
@@ -37,9 +36,9 @@ SageCompass is a monorepo with multiple layers of responsibility:
 
 1. **Nearest `AGENTS.md` wins** for any file you edit (closest in the directory tree).
 2. If multiple rulebooks apply, prefer **more specific** guidance over global guidance.
-3. For the backend layer, **component rulebooks beat this file**:
-   - `langgraph/backend/AGENTS.md` (backend operating contract)
-   - `langgraph/backend/.shared/sys.yml` + `langgraph/backend/.shared/components.yml` (canonical navigation maps)
+3. For the langgraph component, **component rulebooks beat this file**:
+   - `langgraph/AGENTS.md` (LangGraph operating contract)
+   - `langgraph/.shared/sys.yml` + `langgraph/.shared/maps/components.yml` (canonical navigation maps)
 
 > Principle: global docs define *boundaries*; component docs define *behavior*.
 
@@ -47,17 +46,10 @@ SageCompass is a monorepo with multiple layers of responsibility:
 
 ## 3) Canonical rulebooks (what to read)
 
-### Backend (LangGraph runtime)
-- Backend operating contract: `langgraph/backend/AGENTS.md`
-- Backend navigation maps: `langgraph/backend/.shared/sys.yml`, `langgraph/backend/.shared/components.yml`
-- Backend app architecture map: `langgraph/backend/app/README.md`
-
-### Workspace (LangGraph configs/UI boundary)
-- `langgraph/AGENTS.md` (workspace conventions)
-
-### Orchestration / platform
-- `.ddev/` docs (local orchestration)
-- `drupal/AGENTS.md` (planned; when present)
+Component rulebooks (in order of precedence):
+- `langgraph/AGENTS.md` — LangGraph operating contract
+- `gradio-ui/AGENTS.md` — Gradio UI operating contract
+- `drupal/AGENTS.md` — Drupal operating contract (planned)
 
 ---
 
@@ -86,7 +78,7 @@ All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
 ### Entry rules
 - One change = one bullet.
 - Start with a component prefix in square brackets:
-  - `[langgraph/backend]`, `[langgraph/ui]`, `[gradio]`, `[ddev]`, `[drupal]`, `[docs]`, `[prompts]`
+  - `[langgraph]`, `[gradio-ui]`, `[drupal]`, `[docs]`
 - Use imperative, user-facing phrasing (what changed and why it matters).
 - If applicable, include references: `(PR #123)` / `(issue #456)` / `(ref: <id>)`.
 
@@ -94,8 +86,8 @@ All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
 ```text
 ## [Unreleased]
 ### Fixed
-- [langgraph/backend] Prevent import-time agent construction by moving `build_agent()` into node factories. (PR #123)
+- [langgraph] Prevent import-time agent construction by moving `build_agent()` into node factories. (PR #123)
 
 ### Changed
-- [docs] Centralize backend maps in `.shared/sys.yml` and `.shared/components.yml` to slim AGENTS/READMEs.
+- [docs] Centralize backend maps in `.shared/sys.yml` and `.shared/maps/components.yml` to slim AGENTS/READMEs.
 ```

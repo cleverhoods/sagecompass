@@ -1,4 +1,4 @@
-# Rules index (`langgraph/backend/.shared/rules`)
+# Rules index (`langgraph/.shared/rules`)
 
 ## Purpose
 This folder contains **canonical, shared** rule snippets (MUST / MUST NOT) for the backend.

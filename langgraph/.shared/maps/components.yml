@@ -1,7 +1,7 @@
-# Component Definitions (langgraph/backend/app/**)
+# Component Definitions (langgraph/app/**)
 # Purpose: Component purposes, contracts, and rules. Paths in ../.shared/sys.yml
 
-scope: langgraph/backend/app/**
+scope: langgraph/app/**
 path_index: ../.shared/sys.yml  # See sys.yml for all component paths
 
 component_types:

@@ -17,7 +17,7 @@ Drupal 11 project for LangChain integration demo.
   ddev drush uli
 
   # Make sure that LangGraph is running on http://0.0.0.0:2024
-  cd ./../langgraph/backend && uv run langgraph dev --host 0.0.0.0
+  cd ./../langgraph && uv run langgraph dev --host 0.0.0.0
   ```
 
 ## How it works:

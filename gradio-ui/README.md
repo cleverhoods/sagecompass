@@ -4,16 +4,16 @@ Gradio-based UI that drives a LangGraph graph over HTTP.
 ## Running the demo
 
 1. Start the LangGraph API server so it can expose the `agent` graph:
-    
+
     ```bash
-    # Run this from the langgraph/backend folder.
+    # Run this from the langgraph folder.
     uv run langgraph dev
     ```
 
 2. Launch the Gradio frontend:
 
     ```bash
-    # Run this from the langgraph/ui folder.
+    # Run this from the gradio-ui folder.
     uv run python -m main
     ```
 

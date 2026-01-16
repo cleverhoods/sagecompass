@@ -1,6 +1,12 @@
 # SageCompass — Global Guide (CLAUDE.md)
 
-> Scope: Applies to all files in `PROJECT_ROOT/**` **unless** a nearer `CLAUDE.md` or component rulebook applies.
+> **Purpose:** SageCompass is an augmented decision system that evaluates
+> whether business ideas need AI before investing time and money. It applies
+> consistent logic and provides evidence-based recommendations across four stages:
+> problem framing, goals/KPIs, feasibility, and decision synthesis.
+
+> Scope: Applies to all files in `PROJECT_ROOT/**` **unless** a nearer
+> `CLAUDE.md` or component rulebook applies.
 
 This global `CLAUDE.md` is intentionally short:
 - it defines **monorepo boundaries**
@@ -14,64 +20,45 @@ If anything conflicts, the **nearest component contract wins**.
 
 ## 1) Monorepo boundaries (what belongs where)
 
-SageCompass is a monorepo with multiple layers of responsibility:
+SageCompass is a monorepo with three primary components:
 
-- **.ddev/** — local orchestration for containers and infra services (DBs/caches/vector DBs, etc.).
-  *Infra services are added via ddev, not via Python tooling.*
-- **drupal/** — "brain & memory" layer (curation + structured storage).
-  *Long-lived domain knowledge and artifacts live here conceptually, even if implementations start elsewhere.*
-- **langgraph/** — LangGraph workspace (graphs/configs/UI boundary).
-- **langgraph/backend/** — LangGraph runtime/API server (Python, uv-managed).
-  *This is the primary runnable backend today.*
-- **langgraph/ui/** — Separate UI surface built with Gradio (Python, uv-managed).
+- **drupal/** — Structured storage layer
+  - Tech: PHP, Drupal, composer-managed
+  - Local dev: DDEV (`drupal/.ddev/`)
+- **langgraph/** — LangGraph runtime/API
+  - Tech: Python, uv-managed
+- **gradio-ui/** — Gradio interface
+  - Tech: Python, uv-managed
 
 ---
 
 ## 2) Contract precedence (how to decide what rules apply)
 
-1. **Nearest `CLAUDE.md` wins** for any file you edit (closest in the directory tree).
-2. If multiple rulebooks apply, prefer **more specific** guidance over global guidance.
-3. For the backend layer, **component rulebooks beat this file**:
-   - `langgraph/backend/CLAUDE.md` (backend operating contract)
-   - `langgraph/backend/.shared/sys.yml` + `langgraph/backend/.shared/components.yml` (canonical navigation maps)
-
-> Principle: global docs define *boundaries*; component docs define *behavior*.
+**Nearest CLAUDE.md wins** (closest in directory tree). Component contracts beat global guidance. Maps beat READMEs.
 
 ---
 
 ## 3) Canonical rulebooks (what to read)
 
-### Backend (LangGraph runtime)
-- Backend operating contract: `langgraph/backend/CLAUDE.md`
-- Backend navigation maps: `langgraph/backend/.shared/sys.yml`, `langgraph/backend/.shared/maps/`
-
-### Workspace (LangGraph configs/UI boundary)
-- `langgraph/CLAUDE.md` (workspace conventions)
-
-### Orchestration / platform
-- `.ddev/` docs (local orchestration)
-- `drupal/CLAUDE.md` (planned; when present)
+Component rulebooks (in order of precedence):
+- `langgraph/CLAUDE.md` — LangGraph operating contract
+- `gradio-ui/CLAUDE.md` — Gradio UI operating contract
+- `drupal/CLAUDE.md` — Drupal operating contract (planned)
 
 ---
 
 ## 4) Documentation & version alignment (repo-wide)
 
-- `uv.lock` in each Python component is the **source of truth** for installed versions.
-  - **Never read this file directly**
-  - Check specific package version: `uv pip show <package-name>`
-  - Check if package exists: `grep <package> pyproject.toml`
-  - List all production dependencies: `grep -A 20 '^dependencies = \[' pyproject.toml`
-- Any non-trivial code or documentation change MUST:
-  - align with pinned versions
-  - cite official docs (links) when describing framework behavior
-- Do not add new dependencies casually:
-  - propose explicitly
-  - pin and update lockfile
-  - document migration impact
+All components MUST:
+- Maintain version alignment with locked dependencies
+- Cite official docs (links) when describing framework behavior
+- Propose new dependencies explicitly before adding
 
-### Documentation writing principles
+Dependency management is component-specific:
+- Python components: See component CLAUDE.md for `uv` workflow
+- Drupal: See `drupal/CLAUDE.md` for `composer` workflow (planned)
 
-- **No meta-commentary in token-sensitive files**: CLAUDE.md, UNRELEASED.md, .shared/ files must not include token cost estimates, performance notes, or explanatory commentary. State facts, commands, and rules only.
+**Documentation writing principle:** No meta-commentary in token-sensitive files (CLAUDE.md, UNRELEASED.md, .shared/). State facts, commands, and rules only.
 
 ---
 
@@ -79,63 +66,22 @@ SageCompass is a monorepo with multiple layers of responsibility:
 
 All changes MUST be documented using the **UNRELEASED.md workflow**.
 
-### Two-File Approach
+**Format:** Keep a Changelog style (see `docs/CHANGELOG-template.md` for details and examples)
 
-**During development:**
-- Update `PROJECT_ROOT/UNRELEASED.md` (small, fast)
-- Use same Keep a Changelog format
+**Entry rules:**
+- One change = one bullet with component prefix: `[langgraph]`, `[gradio-ui]`, `[drupal]`, `[docs]`
+- Use imperative phrasing
+- Include references when applicable: `(PR #123)` / `(issue #456)`
 
-**At release:**
-- Merge `UNRELEASED.md` → `CHANGELOG.md`
-- Update version number and date in CHANGELOG.md
-- Clear UNRELEASED.md for next release
-
-### Format (Keep a Changelog-style)
-- Always write new entries under `## [Unreleased]` in one of these buckets:
-  - `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Security`
-- Do not edit older release sections in CHANGELOG.md except to correct factual mistakes.
-
-### Entry rules
-- One change = one bullet.
-- Start with a component prefix in square brackets:
-  - `[langgraph/backend]`, `[langgraph/ui]`, `[gradio]`, `[ddev]`, `[drupal]`, `[docs]`, `[prompts]`
-- Use imperative, user-facing phrasing (what changed and why it matters).
-- If applicable, include references: `(PR #123)` / `(issue #456)` / `(ref: <id>)`.
-
-### Example
-```text
-## [Unreleased]
-### Fixed
-- [langgraph/backend] Prevent import-time agent construction by moving `build_agent()` into node factories. (PR #123)
-
-### Changed
-- [docs] Centralize backend maps in `.shared/sys.yml` and `.shared/components.yml` to slim AGENTS/READMEs.
-```
+**Workflow:**
+- During development: Update `UNRELEASED.md`
+- At release: Merge into `CHANGELOG.md`, clear UNRELEASED
 
 ---
 
-## 6) Token usage tracking (required for all agent sessions)
+## 6) Token efficiency requirements
 
-**All agent sessions MUST follow token efficiency guidelines.**
-
-### Primary guidelines
-- Token efficiency rules: Component-specific (e.g., `langgraph/backend/.shared/efficient-commands.md`)
-- Tracking specification: `tmp/token_usage/CLAUDE.md`
-
-### Agent responsibilities (permanent commitments)
-1. **Session start ritual**: Always read `sys.yml` + ONE relevant map before other operations
-2. **Proactive compliance**: Follow efficiency guidelines strictly (offset/limit for exploration, head_limit for grep)
-3. **Self-reporting**: Immediately call out violations when noticed during session
-4. **Post-session analysis**: Create token usage log before compaction (format in `tmp/token_usage/CLAUDE.md`)
-5. **Avoid violation patterns**: Never skip ritual, never full read for exploration, never redundant reads
-
-### Violation threshold
-- Only log operations > 1,500 tokens that violate guidelines
-- See `tmp/token_usage/CLAUDE.md` for detection logic and entry format
-
-### Session closing requirement
-**Before session closes:** Check token usage and create analysis log if violations occurred.
-- Triggers: User indicates completion, natural session end, approaching token limits (~150k-180k)
-- Required: Review session for violations > 1,500 tokens
-- If violations found: Create `tmp/token_usage/token-usage-alert-[YYYY.MM.DD]-[session-id].log`
-- Format: Follow specification in `tmp/token_usage/CLAUDE.md`
+**All agent sessions MUST follow token efficiency guidelines:**
+- Session ritual: Read `.shared/sys.yml` + ONE relevant map before other operations
+- Efficiency patterns: Component-specific (e.g., `langgraph/.shared/efficient-commands.md`)
+- Violation tracking: See `tmp/token_usage/CLAUDE.md` for detection logic and reporting requirements

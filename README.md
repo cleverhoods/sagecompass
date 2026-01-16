@@ -35,21 +35,19 @@ before anyone spends time and money building it.
 ### Directory structure
 ```
 .
-├── .ddev/                    # DDEV orchestration for containers and infra services
 ├── docs/                     # Documentation assets
 │   ├── mermaids/             # Mermaid exports/diagrams
 │   └── assets/               # Images, htmls
 ├── drupal/                   # Drupal site root/
+│   ├── .ddev/                # DDEV orchestration
 │   └── README.md             
-├── langgraph/                # LangGraph workspace, configs, and UI/backend code
-│   ├── backend/              # Runnable LangGraph backend (uv-managed)
-│   │   └── README.md         
-│   └── ui/                   # Runnable Gradio UI surface (uv-managed)
-│       └── README.md         
-├── AGENTS.md                 # Top level AGENTS directives
+├── gradio-ui/                # Runnable Gradio UI surface (uv-managed)
+│   └── README.md         
+├── langgraph/                # Runnable LangGraph backend (uv-managed)
+│   └── README.md         
+├── AGENTS.md                 # Top level AGENTS directives (Codex mirror)
 ├── CLAUDE.md                 # Top level CLAUDE directives
 ├── CHANGELOG.md              # Required changelog (update under [Unreleased])
-├── LEARNING.md               # Useful learning resources
 ├── README.md                 # This file
 └── LICENSE                   # MIT
 ```
@@ -72,18 +70,18 @@ before anyone spends time and money building it.
     ```
     
     **IMPORTANT:**
-   - Don't forget to copy the `langgraph/backend/.env.example` file to `langgraph/backend/.env`
-   - Current implementation was created for **_OPENAI_API_KEY_** only
+   - Remember to copy the `langgraph/.env.example` file to `langgraph/.env`
+   - The current implementation was created for **_OPENAI_API_KEY_** only
    
     ```bash
     # Installing Langgraph
-    cd langgraph/backend
+    cd langgraph
     uv sync
     ```
         
     ```bash
     # Installing Gradio UI
-    cd langgraph/ui
+    cd gradio-ui
     uv sync
     ```
 
@@ -101,7 +99,7 @@ before anyone spends time and money building it.
 
 6) **Run tests**
    ```bash
-   cd langgraph/backend
+   cd langgraph
    uv run pytest -v
    ```
 

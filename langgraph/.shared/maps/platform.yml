@@ -1,7 +1,7 @@
-# Platform Layer Architecture (langgraph/backend/app/platform/**)
+# Platform Layer Architecture (langgraph/app/platform/**)
 # Purpose: Platform layer breakdown. Paths in ../.shared/sys.yml
 
-scope: langgraph/backend/app/platform/**
+scope: langgraph/app/platform/**
 path_index: ../.shared/sys.yml  # See sys.yml for all platform paths
 
 platform_overview:

@@ -1,4 +1,4 @@
-# Shared resources (langgraph/backend/.shared)
+# Shared resources (langgraph/.shared)
 
 This folder hosts **shared, long-lived references** for the backend, used by:
 - backend-wide `CLAUDE.md`

@@ -1,12 +1,7 @@
-# Backend System Map (langgraph/backend)
+# LangGraph System Map (langgraph)
 # Purpose: Complete path index to prevent searches. Read this first on every session.
 
-working_dir: langgraph/backend
-
-layers:
-  backend: langgraph/backend
-  ui: langgraph/ui
-  drupal: langgraph/drupal
+working_dir: langgraph
 
 ## Navigation Maps (detailed component/platform/contract info)
 navigation_maps:
