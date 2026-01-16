@@ -12,6 +12,7 @@ backend_tree:
 - app/schemas/
 - app/state/
 - app/tools/
+- app/platform/adapters/
 - app/platform/config/
 - app/platform/core/
 - app/platform/observability/

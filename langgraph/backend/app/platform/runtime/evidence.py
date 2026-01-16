@@ -2,26 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable
 
 from langchain_core.documents import Document
 from langgraph.config import get_store
 
 from app.platform.core.contract.logging import get_logger
+from app.platform.core.dto.evidence import EvidenceBundle
 from app.state import EvidenceItem, PhaseEntry, SageState
 
 logger = get_logger("runtime.evidence")
-
-
-@dataclass(frozen=True)
-class EvidenceBundle:
-    """Evidence items and hydrated docs for a phase."""
-
-    phase_entry: PhaseEntry
-    evidence: Sequence[EvidenceItem | dict]
-    context_docs: list[Document]
-    missing_store: bool = False
 
 
 def _extract_evidence_fields(item: EvidenceItem | dict) -> tuple[list[str] | None, str | None, float | None]:
@@ -100,7 +90,11 @@ def collect_phase_evidence(
     phase: str,
     max_items: int = 8,
 ) -> EvidenceBundle:
-    """Return evidence items and hydrated docs for a phase."""
+    """Return evidence items and hydrated docs for a phase.
+
+    Returns the core EvidenceBundle DTO with pure data. The caller should
+    access phase_entry from state directly if needed.
+    """
     phase_entry = state.phases.get(phase) or PhaseEntry()
     evidence = list(phase_entry.evidence or [])
     store = _get_runtime_store(phase)
@@ -111,9 +105,13 @@ def collect_phase_evidence(
         max_items=max_items,
         store=store,
     )
+    # Convert EvidenceItem objects to dicts for the pure DTO
+    evidence_dicts = [
+        {"namespace": item.namespace, "key": item.key, "score": item.score} if isinstance(item, EvidenceItem) else item
+        for item in evidence
+    ]
     return EvidenceBundle(
-        phase_entry=phase_entry,
-        evidence=evidence,
+        evidence=evidence_dicts,
         context_docs=context_docs,
         missing_store=missing_store,
     )

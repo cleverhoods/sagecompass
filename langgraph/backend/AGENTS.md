@@ -16,14 +16,13 @@ Scope: `langgraph/backend/**`. Working dir: `langgraph/backend`.
 ## Operating loop
 1. **Plan**: confirm the relevant component via the maps and document the minimal changes.
 2. **Implement**: make the smallest correct change, keeping DI/import purity in mind.
-3. **Fast QA loop**: `mkdir -p ./.cache/uv && UV_CACHE_DIR="$PWD/.cache/uv" uv run poe qa_fast`.
-4. **Full QA loop (conditional)**: run `mkdir -p ./.cache/uv && UV_CACHE_DIR="$PWD/.cache/uv" uv run poe qa` when touching high-risk areas listed in `.shared/sys.yml`.
+3. **Fast QA loop**: `uv run poe qa_fast`.
+4. **Full QA loop (conditional)**: run `uv run poe qa` when touching high-risk areas listed in `.shared/sys.yml`.
 5. **Done gate**: update `CHANGELOG.md` under `## [Unreleased]`, verify map references, and double-check the instruction surface before wrapping up.
 
 ## QA lanes
-- `qa_fast`: quick architecture-level compliance via `uv run poe qa_fast` (cached).
+- `qa_fast`: quick architecture-level compliance via `uv run poe qa_fast`.
 - `qa`: full suite for sensitive changes; run only when the domain map or `app/platform/contract` tests flag the area as high risk.
-- Always create `./.cache/uv` before running these lanes so the cached environment is isolated to the component.
 
 ## Cross-cutting non-negotiables
 - DI-first + no import-time construction.

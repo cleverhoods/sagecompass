@@ -12,6 +12,7 @@ output/*
 __pycache__/
 *.py[cod]
 .venv
+.cache
 
 # LangGraph API aggregates
 .langgraph_api

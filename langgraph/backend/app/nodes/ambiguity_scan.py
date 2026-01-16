@@ -17,6 +17,7 @@ from app.platform.core.contract.structured_output import (
     validate_structured_response,
 )
 from app.platform.runtime.state_helpers import get_latest_user_input, reset_clarification_context
+from app.state import PhaseEntry
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -98,7 +99,8 @@ def make_node_ambiguity_scan(
             phase=target_phase,
             max_items=max_context_items,
         )
-        phase_entry = evidence_bundle.phase_entry
+        # Get phase_entry from state (not from bundle - keeping DTOs pure)
+        phase_entry = state.phases.get(target_phase) or PhaseEntry()
         context_docs = evidence_bundle.context_docs
         include_errors = False
         if evidence_bundle.missing_store:

@@ -74,8 +74,8 @@ def make_node_problem_framing(
             phase=phase,
             max_items=max_context_items,
         )
-        phase_entry = evidence_bundle.phase_entry
-        evidence = evidence_bundle.evidence
+        # Get phase_entry from state (not from bundle - keeping DTOs pure)
+        phase_entry = state.phases.get(phase) or PhaseEntry()
         context_docs = evidence_bundle.context_docs
         include_errors = False
         if evidence_bundle.missing_store:
@@ -112,8 +112,10 @@ def make_node_problem_framing(
 
         logger.info("problem_framing.success", phase=phase)
 
+        # Normalize evidence from DTO dicts back to EvidenceItem
         normalized_evidence = [
-            item if isinstance(item, EvidenceItem) else EvidenceItem.model_validate(item) for item in evidence
+            item if isinstance(item, EvidenceItem) else EvidenceItem.model_validate(item)
+            for item in evidence_bundle.evidence
         ]
         state.phases[phase] = PhaseEntry(
             data=pf.model_dump(),

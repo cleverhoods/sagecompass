@@ -18,7 +18,7 @@ Source: `app/RULES.md` → “Documentation + version alignment”, “State + c
 - Treat `app/platform/core/contract/**` as the canonical enforcement targets for backend invariants.
 - Keep platform logic aligned with the platform contract tests (`tests/unit/platform/test_platform_contracts.py`).
 - Keep configuration and path conventions centralized under `app/platform/config/**`.
-- Keep policy logic pure and deterministic under `app/platform/policy/**`.
+- Keep policy logic pure and deterministic under `app/platform/core/policy/**`.
 - Keep runtime helpers under `app/platform/runtime/**` and use them for evidence hydration.
 
 ## MUST NOT

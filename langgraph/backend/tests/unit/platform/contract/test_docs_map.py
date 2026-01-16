@@ -13,7 +13,7 @@ def _read(path: pathlib.Path) -> str:
 
 def test_docs_map_contains_required_links() -> None:
     root = pathlib.Path(__file__).resolve().parents[4]
-    docs_map = root / "app" / "platform" / "contract" / "README.md"
+    docs_map = root / "app" / "platform" / "core" / "contract" / "README.md"
     content = _read(docs_map)
 
     required_links = [

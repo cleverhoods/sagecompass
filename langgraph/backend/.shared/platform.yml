@@ -4,6 +4,12 @@ platform:
   purpose: "Backend platform layer: contracts, config, observability, policy, runtime, and shared utils."
   local_instructions: app/platform/CLAUDE.md
 platform_layers:
+  adapters:
+    path: app/platform/adapters/
+    purpose: "Boundary translation between core DTOs and application state models."
+    consumers:
+    - nodes
+    - runtime
   config:
     path: app/platform/config/
     purpose: "Env loading, file access helpers, path conventions."
@@ -20,6 +26,13 @@ platform_layers:
     - nodes
     - state
     - tools
+  dto:
+    path: app/platform/core/dto/
+    purpose: "Pure data transfer objects for boundary translation (no framework dependencies)."
+    consumers:
+    - adapters
+    - contract
+    - runtime
   observability:
     path: app/platform/observability/
     purpose: "Structured logging and opt-in debugging hooks."

@@ -3,7 +3,7 @@
 Source: `app/RULES.md` → “Guardrails”, “Evidence + retrieval”, “Storage + memory”, “Global invariants”.
 
 ## MUST
-- Centralize guardrail logic in `app/platform/policy/*`.
+- Centralize guardrail logic in `app/platform/core/policy/*`.
 - Call the same guardrail policies from the gate node and middleware.
 - Use `evaluate_guardrails_contract` (`app/platform/core/contract/guardrails.py`).
 - Centralize evidence hydration in `app/platform/runtime` helpers; nodes must not read from the Store directly.
