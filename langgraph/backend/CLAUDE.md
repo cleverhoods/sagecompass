@@ -91,8 +91,6 @@ Scope: `langgraph/backend/**`. Working dir: `langgraph/backend`.
 - Documented framework bugs with version info and link to issue
 - Third-party library stubs that are provably incorrect
 
-**Philosophy:** If types don't match, the solution is to learn the framework better, not to suppress the error.
-
 ## Cross-cutting non-negotiables
 - DI-first + no import-time construction.
 - Platform governance, version alignment, and contract enforcement.

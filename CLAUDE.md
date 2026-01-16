@@ -111,3 +111,31 @@ All changes MUST be documented using the **UNRELEASED.md workflow**.
 ### Changed
 - [docs] Centralize backend maps in `.shared/sys.yml` and `.shared/components.yml` to slim AGENTS/READMEs.
 ```
+
+---
+
+## 6) Token usage tracking (required for all agent sessions)
+
+**All agent sessions MUST follow token efficiency guidelines.**
+
+### Primary guidelines
+- Token efficiency rules: Component-specific (e.g., `langgraph/backend/.shared/efficient-commands.md`)
+- Tracking specification: `tmp/token_usage/CLAUDE.md`
+
+### Agent responsibilities (permanent commitments)
+1. **Session start ritual**: Always read `sys.yml` + ONE relevant map before other operations
+2. **Proactive compliance**: Follow efficiency guidelines strictly (offset/limit for exploration, head_limit for grep)
+3. **Self-reporting**: Immediately call out violations when noticed during session
+4. **Post-session analysis**: Create token usage log before compaction (format in `tmp/token_usage/CLAUDE.md`)
+5. **Avoid violation patterns**: Never skip ritual, never full read for exploration, never redundant reads
+
+### Violation threshold
+- Only log operations > 1,500 tokens that violate guidelines
+- See `tmp/token_usage/CLAUDE.md` for detection logic and entry format
+
+### Session closing requirement
+**Before session closes:** Check token usage and create analysis log if violations occurred.
+- Triggers: User indicates completion, natural session end, approaching token limits (~150k-180k)
+- Required: Review session for violations > 1,500 tokens
+- If violations found: Create `tmp/token_usage/token-usage-alert-[YYYY.MM.DD]-[session-id].log`
+- Format: Follow specification in `tmp/token_usage/CLAUDE.md`

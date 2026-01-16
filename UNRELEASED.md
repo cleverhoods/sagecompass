@@ -31,10 +31,13 @@
 - [langgraph/backend] Add quick-reference section to contracts.yml (id → path table) and shorten benefits to one-liners, reducing from 67 to 79 lines but with faster lookup.
 - [langgraph/backend] Add platform as explicit component in components.yml with hexagonal architecture attribution and rules linkage.
 - [langgraph/backend] Link all `.shared/rules/*.md` files from components.yml and platform.yml for direct rule access.
-- [langgraph/backend] Add `tmp/token_usage/` directory with README.md specification for context-aware token tracking feature (1,500 token threshold, alerts only on guideline violations).
+- [langgraph/backend] Add `tmp/token_usage/` directory with CLAUDE.md specification for context-aware token tracking feature (1,500 token threshold, alerts only on guideline violations).
 - [langgraph/backend] Create example token usage log for this session showing 4 violations with 9,250 tokens optimization potential (7.1% of session).
+- [docs] Add token usage tracking section (section 6) to PROJECT_ROOT/CLAUDE.md establishing permanent agent commitments for session rituals, proactive compliance, self-reporting, and post-session analysis.
+- [docs] Add session closing requirement to PROJECT_ROOT/CLAUDE.md section 6 requiring token usage check and analysis log creation before session ends.
 
 ### Changed
+- [langgraph/backend] Rename `tmp/token_usage/README.md` to `tmp/token_usage/CLAUDE.md` to align with project's instruction file convention and ensure contract precedence rules apply.
 - [langgraph/backend] Extract test organization rules from `tests/CLAUDE.md` to `.shared/rules/testing.md` to eliminate duplication and establish single source of truth for test structure, naming conventions, priorities, and quality guidelines.
 - [langgraph/backend] Reduce `tests/CLAUDE.md` from 378 lines to 21 lines by referencing `.shared/rules/testing.md` and `.shared/efficient-commands.md` instead of duplicating content, following the same minimal pattern used by component CLAUDE.md files.
 - [langgraph/backend] Reduce `CLAUDE.md` from 99 lines to 68 lines by removing Token Efficiency duplication and replacing with concise reference to `.shared/efficient-commands.md`, while keeping session ritual, operating loop, and QA lanes inline as workflow orchestration.
@@ -72,6 +75,9 @@
 - [langgraph/backend] Add `architecture` marker to pytest configuration for hexagonal architecture enforcement tests.
 
 ### Fixed
+- [docs] Remove meta-commentary from PROJECT_ROOT/CLAUDE.md (deleted "Philosophy" section) to comply with "facts, commands, and rules only" directive in section 4.
+- [langgraph/backend] Remove meta-commentary from backend/CLAUDE.md (deleted "Philosophy:" line explaining framework usage rationale).
+- [langgraph/backend] Remove meta-commentary from app/tools/CLAUDE.md (removed "for clarity and ecosystem alignment" explanation from `@tool` decorator exception).
 - [langgraph/backend] Update `tests/architecture/test_platform_structure.py` to skip "core" domain since its tests are organized by subdirectory (contract, policy) rather than at the core level.
 - [docs] Remove stale `.codex/skills/` references from backend AGENTS.md and CLAUDE.md files, replacing with actual documentation paths (`app/platform/contract/README.md` and `tests/README.md`).
 - [docs] Remove non-existent contracts reference from schemas CLAUDE.md since schemas have no contract enforcement by design.
