@@ -7,6 +7,7 @@ from app.platform.adapters.phases import (
     merge_phase_results,
     phase_entry_to_result,
     phase_result_to_entry,
+    update_phases_dict,
 )
 from app.platform.core.dto.phases import PhaseResult
 from app.state import EvidenceItem, PhaseEntry
@@ -91,3 +92,24 @@ def test_extract_phase_summary_returns_structured_data():
     assert summary["has_data"] is True
     assert summary["has_error"] is False
     assert summary["evidence_count"] == 1
+
+
+def test_update_phases_dict_returns_new_dict():
+    """Test updating phases dictionary without mutating original."""
+    original_phases = {
+        "phase1": PhaseEntry(data={"old": "data"}, error={}, status="complete", evidence=[]),
+    }
+    new_entry = PhaseEntry(data={"new": "data"}, error={}, status="pending", evidence=[])
+
+    updated_phases = update_phases_dict(original_phases, "phase2", new_entry)
+
+    # Original should not be mutated
+    assert "phase2" not in original_phases
+    assert len(original_phases) == 1
+
+    # Updated should contain both phases
+    assert "phase1" in updated_phases
+    assert "phase2" in updated_phases
+    assert len(updated_phases) == 2
+    assert updated_phases["phase2"].data == {"new": "data"}
+    assert updated_phases["phase2"].status == "pending"

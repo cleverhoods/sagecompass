@@ -6,7 +6,7 @@ import pytest
 
 from app.platform.config import CONFIG_DIR, FileLoader, load_project_env
 
-pytestmark = pytest.mark.structural
+pytestmark = pytest.mark.platform
 
 
 def test_config_paths_resolve() -> None:

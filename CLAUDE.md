@@ -1,9 +1,3 @@
----
-name: "SageCompass (Global)"
-description: "Top-level monorepo orientation for SageCompass. Monorepo boundaries, precedence, and change policy only."
-category: "Project"
----
-
 # SageCompass — Global Guide (CLAUDE.md)
 
 > Scope: Applies to all files in `PROJECT_ROOT/**` **unless** a nearer `CLAUDE.md` or component rulebook applies.
@@ -49,8 +43,7 @@ SageCompass is a monorepo with multiple layers of responsibility:
 
 ### Backend (LangGraph runtime)
 - Backend operating contract: `langgraph/backend/CLAUDE.md`
-- Backend navigation maps: `langgraph/backend/.shared/sys.yml`, `langgraph/backend/.shared/components.yml`
-- Backend app architecture map: `langgraph/backend/app/README.md`
+- Backend navigation maps: `langgraph/backend/.shared/sys.yml`, `langgraph/backend/.shared/maps/`
 
 ### Workspace (LangGraph configs/UI boundary)
 - `langgraph/CLAUDE.md` (workspace conventions)
@@ -64,6 +57,10 @@ SageCompass is a monorepo with multiple layers of responsibility:
 ## 4) Documentation & version alignment (repo-wide)
 
 - `uv.lock` in each Python component is the **source of truth** for installed versions.
+  - **Never read this file directly**
+  - Check specific package version: `uv pip show <package-name>`
+  - Check if package exists: `grep <package> pyproject.toml`
+  - List all production dependencies: `grep -A 20 '^dependencies = \[' pyproject.toml`
 - Any non-trivial code or documentation change MUST:
   - align with pinned versions
   - cite official docs (links) when describing framework behavior
@@ -72,16 +69,31 @@ SageCompass is a monorepo with multiple layers of responsibility:
   - pin and update lockfile
   - document migration impact
 
+### Documentation writing principles
+
+- **No meta-commentary in token-sensitive files**: CLAUDE.md, UNRELEASED.md, .shared/ files must not include token cost estimates, performance notes, or explanatory commentary. State facts, commands, and rules only.
+
 ---
 
 ## 5) CHANGELOG.md policy (required)
 
-All changes MUST update `PROJECT_ROOT/CHANGELOG.md`.
+All changes MUST be documented using the **UNRELEASED.md workflow**.
+
+### Two-File Approach
+
+**During development:**
+- Update `PROJECT_ROOT/UNRELEASED.md` (small, fast)
+- Use same Keep a Changelog format
+
+**At release:**
+- Merge `UNRELEASED.md` → `CHANGELOG.md`
+- Update version number and date in CHANGELOG.md
+- Clear UNRELEASED.md for next release
 
 ### Format (Keep a Changelog-style)
 - Always write new entries under `## [Unreleased]` in one of these buckets:
   - `### Added`, `### Changed`, `### Fixed`, `### Removed`, `### Security`
-- Do not edit older release sections except to correct factual mistakes.
+- Do not edit older release sections in CHANGELOG.md except to correct factual mistakes.
 
 ### Entry rules
 - One change = one bullet.

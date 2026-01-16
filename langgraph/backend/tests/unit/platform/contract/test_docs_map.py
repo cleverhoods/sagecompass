@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def _read(path: pathlib.Path) -> str:

@@ -101,3 +101,23 @@ def extract_phase_summary(entry: PhaseEntry, phase_name: str) -> dict[str, objec
         "has_error": bool(entry.error),
         "evidence_count": len(entry.evidence),
     }
+
+
+def update_phases_dict(
+    phases: dict[str, PhaseEntry],
+    phase_name: str,
+    phase_entry: PhaseEntry,
+) -> dict[str, PhaseEntry]:
+    """Update phases dictionary with new phase entry.
+
+    Args:
+        phases: Existing phases dictionary from state.
+        phase_name: Phase key to update.
+        phase_entry: New phase entry to set.
+
+    Returns:
+        New phases dict with updated entry (does not mutate original).
+    """
+    updated = dict(phases)
+    updated[phase_name] = phase_entry
+    return updated

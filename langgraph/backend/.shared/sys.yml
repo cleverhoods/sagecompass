@@ -1,23 +1,84 @@
+# Backend System Map (langgraph/backend)
+# Purpose: Complete path index to prevent searches. Read this first on every session.
+
 working_dir: langgraph/backend
+
 layers:
   backend: langgraph/backend
   ui: langgraph/ui
   drupal: langgraph/drupal
+
+## Navigation Maps (detailed component/platform/contract info)
+navigation_maps:
+  - .shared/maps/components.yml    # Component purposes, contracts, rules
+  - .shared/maps/platform.yml      # Platform layer architecture
+  - .shared/maps/contracts.yml     # Contract definitions and paths
+
+## Instruction Files (CLAUDE.md locations)
+instructions:
+  root: CLAUDE.md                  # Backend operating contract
+  components:
+    - app/agents/CLAUDE.md
+    - app/graphs/CLAUDE.md
+    - app/middlewares/CLAUDE.md
+    - app/nodes/CLAUDE.md
+    - app/platform/CLAUDE.md
+    - app/schemas/CLAUDE.md
+    - app/state/CLAUDE.md
+    - app/tools/CLAUDE.md
+  tests: tests/CLAUDE.md           # Test organization rules
+
+## Application Structure (hierarchical)
 backend_tree:
-- app/agents/
-- app/graphs/
-- app/graphs/subgraphs/
-- app/middlewares/
-- app/nodes/
-- app/schemas/
-- app/state/
-- app/tools/
-- app/platform/adapters/
-- app/platform/config/
-- app/platform/core/
-- app/platform/observability/
-- app/platform/runtime/
-- app/platform/utils/
-- .shared/
-notes:
-- Folder-level CLAUDE.md provided for app/agents, app/graphs, app/nodes, app/tools, app/middlewares, app/state, app/schemas, and app/platform.
+  shared:
+    - .shared/maps/                # Navigation maps
+    - .shared/rules/               # Component rule snippets
+    - .shared/rules/testing.md     # Test organization rules
+    - .shared/efficient-commands.md
+  orchestration:                   # LangGraph orchestration layer
+    - app/agents/
+    - app/nodes/
+    - app/graphs/
+    - app/graphs/subgraphs/
+    - app/middlewares/
+    - app/tools/
+    - app/schemas/
+    - app/state/
+  platform:                        # Platform layer (hexagonal architecture)
+    - app/platform/core/           # Pure core (no dependencies)
+    - app/platform/core/contract/
+    - app/platform/core/dto/
+    - app/platform/core/policy/
+    - app/platform/adapters/
+    - app/platform/runtime/
+    - app/platform/config/
+    - app/platform/observability/
+    - app/platform/utils/
+
+## Test Structure (category-based organization)
+tests:
+  unit:
+    - tests/unit/architecture/     # Structural validation tests
+    - tests/unit/platform/         # Platform layer tests
+    - tests/unit/orchestration/    # Orchestration component tests (future)
+  integration:
+    - tests/integration/platform/
+    - tests/integration/orchestration/
+  e2e:
+    - tests/e2e/workflows/
+
+## Documentation
+docs:
+  architecture:
+    - docs/architecture-phases-completed.md
+    - docs/architecture-rules-validation.md
+  guides:
+    - docs/test-reorganization-plan.md
+
+## High-Risk Areas (changes require full QA)
+high_risk_areas:
+  - app/platform/core/contract/    # Contract changes affect all consumers
+  - app/platform/core/policy/      # Policy changes affect guardrails/middleware
+  - app/state/                     # State changes require careful validation across all nodes
+  - app/graphs/                    # Graph changes affect routing and control flow
+  - app/platform/adapters/         # Adapter changes affect boundary translation

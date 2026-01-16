@@ -8,6 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.phases import update_phases_dict
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import get_latest_user_input
 from app.state import EvidenceItem, PhaseEntry
@@ -105,11 +106,15 @@ def make_node_retrieve_context(
             results=len(evidence),
         )
 
-        # Update phase entry
-        phase_entry = state.phases.get(target_phase) or PhaseEntry()
-        phase_entry.evidence = evidence
-        phases = dict(state.phases)
-        phases[target_phase] = phase_entry
+        # Use adapter to update phase entry with evidence
+        existing_entry = state.phases.get(target_phase) or PhaseEntry()
+        updated_entry = PhaseEntry(
+            data=existing_entry.data,
+            error=existing_entry.error,
+            status=existing_entry.status,
+            evidence=evidence,
+        )
+        phases = update_phases_dict(state.phases, target_phase, updated_entry)
 
         message = f"Retrieved {len(evidence)} context items."
         update = {

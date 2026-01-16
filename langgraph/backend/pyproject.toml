@@ -1,10 +1,11 @@
 [project]
 name = "sagecompass"
-version = "1.0.0-alpha5"
+version = "6.1.0"
 description = "AI reasoning runtime for SageCompass"
 authors = [{ name = "Gábor M." }]
 requires-python = ">=3.12,<3.13"
 
+# ---- Dependencies ----
 dependencies = [
     "langchain>=1.0.4,<2.0.0",
     "langchain-chroma>=0.1.2",
@@ -36,75 +37,95 @@ dev = [
     "semgrep>=1.146.0",
 ]
 
+# ---- Tooling config ----
 [tool.uv]
 environments = ["platform_python_implementation == 'CPython'"]
 
 
-# ---- Test config ----
+# ---- Pytest config ----
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["tests"]
+
+# Folder structure: tests/[test_type(unit/integration/e2e])/[test_category(architecture/orchestration/platform)]
+testpaths = [
+  "tests/unit/architecture",
+  "tests/unit/platform",
+  "tests/unit/orchestration",
+  "tests/integration/platform",
+  "tests/integration/orchestration",
+  "tests/e2e",
+]
 addopts = "--strict-markers"
+
+# Test markers for categorizing tests by purpose and scope
 markers = [
-  "compliance: flavoritism",
-  "structural: more flavoritism",
-  "architecture: hexagonal architecture enforcement tests",
-  "external-connection: tests that need external connection",
-  "integration: tests that hit live/external services (opt-in)",
-  "real_deps: tests that run against real dependencies without network calls"
+  # Test Type Markers (by scope)
+  "unit: Fast, isolated tests with no external dependencies",
+  "integration: Tests crossing component boundaries (may use test fixtures)",
+  "e2e: End-to-end workflow tests (full pipeline validation)",
+
+  # Test Category Markers (organizational categories)
+  "architecture: Hexagonal architecture enforcement (import rules, layer boundaries)",
+  "orchestration: LangGraph orchestration components (agents, nodes, graphs, middlewares, tools)",
+  "platform: Platform layer tests (hexagonal architecture - core, adapters, runtime)",
 ]
 
-# ---- Pylint config ----
+# ---- Structural QA - Pylint config ----
 [tool.pylint.main]
 
 [tool.pylint.messages_control]
 disable = ["all"]
+
+# linting rules, these help to implement tests more easily.
 enable = [
-  "duplicate-code",
-  "too-many-lines",
-  "too-many-statements",
-  "too-many-branches",
+  "duplicate-code",       # Detect code duplication
+  "too-many-lines",       # Module length limits
+  "too-many-statements",  # Function complexity limits
+  "too-many-branches",    # Branching complexity limits
 ]
 
-# per function/method
+# per function/method, same as above.
 [tool.pylint.design]
-max-branches = 12
-max-statements = 50
+max-branches = 12         # Maximum branches per function (prevents complex control flow)
+max-statements = 50       # Maximum statements per function (keeps functions focused)
 
 # per file
 [tool.pylint.format]
-max-module-lines = 300
+max-module-lines = 300    # Prevent module size and responsibility bloating
 
+# detects repetition
 [tool.pylint.similarities]
-min-similarity-lines = 4
+min-similarity-lines = 4  # Minimum consecutive identical lines to trigger duplication warning
 ignore-imports = true
 ignore-signatures = true
 
 [tool.ruff]
 target-version = "py312"
 line-length = 120
-extend-exclude = [".shared/vendor"]
 
+# ---- Code QA - Ruff config ----
 [tool.ruff.lint]
+
 # Baseline quality + imports + modernize + bugbear + simplifications + docstrings
 select = [
-    "E",
-    "F",
-    "I",
-    "UP",
-    "B",
-    "SIM",
-    "D",
-    "RUF",
-    "PERF",
-    "C90",
-    "ARG"
+    "ARG",  # flake8-unused-arguments
+    "B",            # flake8-bugbear
+    "C90",                # mccabe complexity
+    "D",                # pydocstyle (docstrings)
+    "E",               # pycodestyle errors
+    "F",                  # pyflakes
+    "I",                     # isort (import sorting)
+    "PERF",                # performance
+    "RUF",        # Ruff-specific rules
+    "SIM",           # flake8-simplify
+    "UP",               # pyupgrade (modernize syntax)
 ]
+
 # Keep this list short; only ignore rules you truly disagree with.
 ignore = []  # All TC rules disabled by removing from select list above
 
 [tool.ruff.lint.mccabe]
-max-complexity = 12
+max-complexity = 12 # Maximum cyclomatic complexity (prevents complex code paths)
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -113,31 +134,32 @@ convention = "google"
 # Tests don't need full docstring coverage.
 "tests/**" = ["D"]
 
-# ---- MYPY ----
+
+# ---- Type checking QA - MYPY config ----
 [tool.mypy]
 python_version = "3.12"
-no_implicit_optional = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-warn_unused_ignores = true
-warn_redundant_casts = true
+no_implicit_optional = true # Reject Optional[T] when None is implicit (requires explicit typing)
+disallow_incomplete_defs = true # Require complete type annotations on all function definitions
+check_untyped_defs = true # Check body of functions even if they lack type annotations
+warn_unused_ignores = true # Warn about unnecessary type: ignore comments
+warn_redundant_casts = true # Warn about unnecessary type casts
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
-disallow_untyped_defs = false
+disallow_untyped_defs = false # Allow test functions to omit type annotations (improves readability)
 
-
+# ---- Task automation - poe config ----
 [tool.poe]
 # Optional: load env files automatically for tasks
 # envfile = [".env", ".env.local"]
 
 [tool.poe.tasks]
 
-# ---- Consolidated QA lanes (agent-friendly) ----
-qa_fast = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export UV_CACHE_DIR=\"$PWD/.cache/uv\"; uv run poe fmt; uv run poe lint_fix; uv run poe lint; uv run poe pylint_struct; uv run poe semgrep_fast'", help = "Fast lane (self-correcting): fmt + ruff safe fixes, lint, pylint_struct, semgrep_fast" }
-qa = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export UV_CACHE_DIR=\"$PWD/.cache/uv\"; uv run poe qa_fast; uv run poe type_stats; uv run poe test_unit'", help = "Full lane: qa_fast + mypy summary + unit tests" }
+# -- QA lanes (Consolidated)
+qa = { cmd = "uv run poe qa_fast; uv run poe type_stats; uv run poe test_unit'", help = "Full lane: qa_fast + mypy summary + unit tests" }
+qa_fast = { cmd = "uv run poe fmt; uv run poe lint_fix; uv run poe lint; uv run poe pylint_struct; uv run poe semgrep_fast'", help = "Fast lane (self-correcting): fmt + ruff safe fixes, lint, pylint_struct, semgrep_fast" }
 
-# ---- Test lanes ----
+# -- Test lanes
 test = { ref = "test_unit", help = "Default: run offline unit test lane" }
 test_unit = { cmd = "pytest tests/unit -v -m \"not real_deps and not integration\"", help = "Unit lane (fast, offline)" }
 test_real = { cmd = "pytest -v -m real_deps", help = "Real-deps lane (offline)" }
@@ -154,10 +176,20 @@ fmt = { cmd = "ruff format .", help = "Formats code" }
 fmt_check = { cmd = "ruff format --check .", help = "Checks formatting" }
 
 type = { cmd = "mypy .", help = "Run mypy typecheck" }
-type_stats = { cmd = "mypy . --error-summary --show-error-codes", help = "Mypy summary (for agent decisions)" }
+type_stats = { cmd = "mypy . --pretty --color-output --error-summary --show-error-codes", help = "Mypy summary (for agent decisions)" }
 
 # ---- semgrep checks ----
 semgrep_fast = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export SEMGREP_LOG_FILE=\"$PWD/.cache/uv/semgrep.log\"; export SEMGREP_VERSION_CACHE_PATH=\"$PWD/.cache/uv/semgrep_version\"; semgrep --config .semgrep/fast.yml'", help = "Semgrep fast-lane architecture checks" }
+
+[tool.poe.tasks.type_stats_scoped]
+cmd = "mypy ${path} --follow-imports=skip --pretty --color-output --error-summary --show-error-codes"
+help = "Typecheck stats for a given component path"
+
+  [[tool.poe.tasks.type_stats_scoped.args]]
+  name = "path"
+  positional = true
+  required = true
+  help = "Path to typecheck, e.g. graphs"
 
 [tool.poe.tasks.type_scoped]
 cmd = "mypy app/${path} --follow-imports=skip --error-summary --show-error-codes"

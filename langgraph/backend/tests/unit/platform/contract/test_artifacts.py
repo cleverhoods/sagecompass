@@ -6,7 +6,7 @@ import pytest
 
 from app.platform.core.contract.artifacts import ArtifactEnvelope, ArtifactProvenance, EvidencePointer
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def _provenance() -> ArtifactProvenance:

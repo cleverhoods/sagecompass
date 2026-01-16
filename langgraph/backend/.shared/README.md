@@ -6,11 +6,16 @@ This folder hosts **shared, long-lived references** for the backend, used by:
 
 ## Conventions
 - Keep files small, stable, and easy to link to from `CLAUDE.md`.
-- Use `sys.yml` and `components.yml` as the primary navigation maps for contracts and rules.
-- Avoid duplicating full rule sets in multiple places—link through the maps instead.
+- Use `sys.yml` as the comprehensive path index (read first on every session).
+- Use navigation maps in `maps/` for detailed component/platform/contract info.
+- Avoid duplicating paths—`sys.yml` is the single source of truth for paths.
+- Link through maps instead of duplicating rules.
 
 ## Contents
-- `sys.yml` — canonical backend folder map and “high-risk” areas
-- `components.yml` — canonical component map for `app/**`
-- `platform.yml` — platform layer map referenced by `components.yml`
-- `rules/*` — component/platform MUST/MUST NOT snippets (extracted from long-form docs)
+- `sys.yml` — comprehensive path index, high-risk areas, complete backend structure
+- `maps/` — navigation maps for detailed info:
+  - `maps/components.yml` — component purposes, contracts, rules
+  - `maps/platform.yml` — platform layer architecture
+  - `maps/contracts.yml` — contract definitions with quick reference
+- `rules/` — component/platform MUST/MUST NOT snippets (extracted from long-form docs)
+- `efficient-commands.md` — token-efficient command patterns

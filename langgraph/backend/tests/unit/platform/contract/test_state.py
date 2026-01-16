@@ -4,7 +4,7 @@ import pytest
 
 from app.platform.core.contract.state import validate_state_update
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def test_validate_state_update_accepts_known_fields() -> None:

@@ -8,7 +8,7 @@ from app.platform.core.contract.structured_output import (
     validate_structured_response,
 )
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 class DummyOutput(BaseModel):

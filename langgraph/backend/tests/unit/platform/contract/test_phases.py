@@ -9,7 +9,7 @@ from pydantic import BaseModel, ValidationError
 from app.platform.core.contract.phases import PhaseContract
 from app.platform.core.contract.registry import validate_phase_registry
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 class DummyOutput(BaseModel):

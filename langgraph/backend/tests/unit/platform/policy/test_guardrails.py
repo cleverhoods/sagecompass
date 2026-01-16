@@ -4,7 +4,7 @@ import pytest
 
 from app.platform.core.policy.guardrails import build_guardrails_config, evaluate_guardrails
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def test_evaluate_guardrails_allows_in_scope() -> None:

@@ -1,0 +1,78 @@
+# Contract Definitions (langgraph/backend)
+# Purpose: Contract enforcement definitions. Quick reference first, details below.
+
+## Quick Reference (id → path)
+quick_ref:
+  contract.agents: app/platform/adapters/agents.py
+  contract.tools: app/platform/adapters/tools.py + app/platform/core/contract/tools.py
+  contract.guardrails: app/platform/adapters/guardrails.py
+  contract.prompts: app/platform/core/contract/prompts.py
+  contract.state: app/platform/core/contract/state.py
+  contract.structured_output: app/platform/core/contract/structured_output.py
+  contract.phases: app/platform/core/contract/registry.py
+  contract.namespaces: app/platform/core/contract/namespaces.py
+  contract.evidence: app/platform/adapters/evidence.py
+  contract.logging: app/platform/adapters/logging.py
+
+## Contract Details
+
+contracts:
+  - id: contract.agents
+    name: Agent OutputSchema contract
+    path: app/platform/adapters/agents.py
+    benefit: Validates agent Pydantic schemas for strictly typed responses
+    consumers: [agents]
+
+  - id: contract.tools
+    name: Tool allowlist contract
+    path: app/platform/adapters/tools.py (builder) + app/platform/core/contract/tools.py (validator)
+    benefit: Ensures only approved tool names are callable
+    consumers: [agents, middlewares]
+
+  - id: contract.guardrails
+    name: Guardrails evaluation contract
+    path: app/platform/adapters/guardrails.py
+    benefit: Centralizes unsafe/out-of-scope prompt rejection
+    consumers: [middlewares, gating nodes]
+
+  - id: contract.prompts
+    name: Prompt placeholder contract
+    path: app/platform/core/contract/prompts.py
+    benefit: Validates prompt placeholders for deterministic rendering
+    consumers: [agents]
+
+  - id: contract.state
+    name: SageState ownership contract
+    path: app/platform/core/contract/state.py
+    benefit: Restricts state mutations to authorized fields/owners
+    consumers: [nodes, supervisors]
+
+  - id: contract.structured_output
+    name: Structured-answer validation contract
+    path: app/platform/core/contract/structured_output.py
+    benefit: Forces validation against agent schema before persisting
+    consumers: [nodes]
+
+  - id: contract.phases
+    name: Phase registry contract
+    path: app/platform/core/contract/registry.py
+    benefit: Ensures phase keys match names with declared schemas
+    consumers: [graphs]
+
+  - id: contract.namespaces
+    name: Store namespace contract
+    path: app/platform/core/contract/namespaces.py
+    benefit: Provides typed namespace parts for consistent store operations
+    consumers: [tools]
+
+  - id: contract.evidence
+    name: Evidence hydration contract
+    path: app/platform/adapters/evidence.py
+    benefit: Enforces deterministic evidence metadata before state updates
+    consumers: [nodes]
+
+  - id: contract.logging
+    name: Structured logging contract
+    path: app/platform/adapters/logging.py
+    benefit: Centralizes logging through structured pipeline
+    consumers: [agents, nodes, middlewares, tools]

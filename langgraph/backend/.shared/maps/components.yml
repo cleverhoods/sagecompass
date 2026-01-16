@@ -1,0 +1,78 @@
+# Component Definitions (langgraph/backend/app/**)
+# Purpose: Component purposes, contracts, and rules. Paths in ../.shared/sys.yml
+
+scope: langgraph/backend/app/**
+path_index: ../.shared/sys.yml  # See sys.yml for all component paths
+
+component_types:
+  agents:
+    domain: Agent
+    purpose: Stateless, recreatable reasoning components. Own domain reasoning logic.
+    contracts:
+      - contract.agents
+      - contract.logging
+    rules: ../.shared/rules/agents.md
+    tests: tests/unit/orchestration/agents/ (future)
+
+  nodes:
+    domain: Langgraph
+    purpose: Orchestration units; call DI-injected deps, validate outputs, update state keys, route explicitly.
+    contracts:
+      - contract.structured_output
+      - contract.state
+      - contract.evidence
+      - contract.logging
+    rules: ../.shared/rules/nodes.md
+    tests: tests/unit/orchestration/nodes/ (future)
+
+  graphs:
+    domain: Langgraph
+    purpose: Composition-only wiring (nodes + control flow). No business logic.
+    contracts:
+      - contract.phases
+    rules: ../.shared/rules/graphs.md
+    tests: tests/unit/orchestration/graphs/ (future)
+
+  middlewares:
+    domain: Langgraph
+    purpose: "Policy boundary: admissibility, redaction/normalization, tool-call validation, output shaping."
+    contracts:
+      - contract.guardrails
+      - contract.tools
+      - contract.logging
+    rules: ../.shared/rules/middlewares.md
+    tests: tests/unit/orchestration/middlewares/ (future)
+
+  tools:
+    domain: Langchain
+    purpose: Callable capabilities exposed to agents or used by nodes; typed and DI-injected.
+    contracts:
+      - contract.tools
+      - contract.logging
+    rules: ../.shared/rules/tools.md
+    tests: tests/unit/orchestration/tools/ (future)
+
+  schemas:
+    domain: Langgraph
+    purpose: Shared semantic data definitions not bound to a single node/agent.
+    rules: ../.shared/rules/schemas.md
+    tests: tests/unit/orchestration/schemas/ (future)
+
+  state:
+    domain: Langgraph
+    purpose: Canonical state model(s) used by graphs/nodes; authority for routing & bounded loops.
+    contracts:
+      - contract.state
+    rules: ../.shared/rules/state-contracts.md
+    tests: tests/unit/orchestration/state/ (future)
+
+  platform:
+    domain: Platform
+    purpose: Backend platform layer - contracts, adapters, config, observability, policy, runtime, utils.
+    architecture: Hexagonal (ports and adapters)
+    details: ../.shared/maps/platform.yml  # See platform.yml for layer breakdown
+    rules: ../.shared/rules/platform.md
+    tests: tests/unit/platform/
+
+## Contract Reference
+# See ../.shared/maps/contracts.yml for contract definitions and paths

@@ -143,6 +143,16 @@ def update_phase_evidence(
         status=phase_entry.status,
         evidence=evidence_to_items(evidence_bundle),
     )
+
+def update_phases_dict(
+    phases: dict[str, PhaseEntry],
+    phase_name: str,
+    phase_entry: PhaseEntry,
+) -> dict[str, PhaseEntry]:
+    """Immutably update phases dictionary with new entry."""
+    updated = dict(phases)
+    updated[phase_name] = phase_entry
+    return updated
 ```
 
 ## Current Adapters

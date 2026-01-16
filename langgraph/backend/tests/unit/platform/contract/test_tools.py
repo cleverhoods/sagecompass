@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from app.platform.adapters.tools import build_allowlist_contract
 from app.platform.core.contract.tools import validate_allowlist_contains_schema
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 @tool

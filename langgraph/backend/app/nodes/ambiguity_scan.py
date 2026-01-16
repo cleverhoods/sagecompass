@@ -11,6 +11,7 @@ from langgraph.types import Command
 from app.agents.ambiguity_scan.schema import OutputSchema
 from app.platform.adapters.evidence import collect_phase_evidence
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.phases import update_phases_dict
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
     extract_structured_response,
@@ -120,14 +121,19 @@ def make_node_ambiguity_scan(
 
         if structured is None:
             logger.warning("agent.missing_structured_response", phase=target_phase)
-            phase_entry.status = "stale"
-            phase_entry.error = {
-                "code": "missing_structured_response",
-                "message": "Agent response missing structured_response.",
-            }
-            state.phases[target_phase] = phase_entry
+            # Use adapter to update phase entry
+            updated_entry = PhaseEntry(
+                data=phase_entry.data,
+                error={
+                    "code": "missing_structured_response",
+                    "message": "Agent response missing structured_response.",
+                },
+                status="stale",
+                evidence=phase_entry.evidence,
+            )
+            phases = update_phases_dict(state.phases, target_phase, updated_entry)
             state.errors.append(f"{target_phase}: missing structured_response")
-            update = {"phases": state.phases, "errors": state.errors}
+            update = {"phases": phases, "errors": state.errors}
             validate_state_update(update, owner="ambiguity_scan")
             return Command(
                 update=update,

@@ -1,0 +1,48 @@
+# Claude Code Ignore Patterns
+# Never read these files/directories to prevent token waste
+
+# Lock files (huge)
+uv.lock
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Build artifacts & caches
+.cache/
+.langgraph_api/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Version control
+.git/
+
+# IDE & editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS files
+.DS_Store
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Logs & databases
+*.log
+*.db
+*.sqlite

@@ -4,7 +4,7 @@ import pytest
 
 from app.platform.core.contract.namespaces import NamespaceParts, build_namespace
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def test_build_namespace_omits_empty_tenant() -> None:

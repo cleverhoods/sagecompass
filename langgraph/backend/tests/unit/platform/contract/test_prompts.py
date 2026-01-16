@@ -4,7 +4,7 @@ import pytest
 
 from app.platform.core.contract.prompts import validate_prompt_placeholders, validate_prompt_suffix_order
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def test_validate_prompt_placeholders_accepts_required() -> None:

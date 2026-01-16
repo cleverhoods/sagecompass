@@ -4,7 +4,7 @@ import pytest
 
 from app.platform.adapters.guardrails import evaluate_guardrails_contract
 
-pytestmark = pytest.mark.compliance
+pytestmark = pytest.mark.platform
 
 
 def test_evaluate_guardrails_contract_blocks_unsafe() -> None:

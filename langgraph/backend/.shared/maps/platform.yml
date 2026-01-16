@@ -1,0 +1,48 @@
+# Platform Layer Architecture (langgraph/backend/app/platform/**)
+# Purpose: Platform layer breakdown. Paths in ../.shared/sys.yml
+
+scope: langgraph/backend/app/platform/**
+path_index: ../.shared/sys.yml  # See sys.yml for all platform paths
+
+platform_overview:
+  purpose: "Backend platform layer: contracts, config, observability, policy, runtime, and shared utils."
+  architecture: Hexagonal (ports and adapters)
+  rules: ../.shared/rules/platform.md
+  tests: tests/unit/platform/
+
+platform_layers:
+  core:
+    purpose: "Pure core with no dependencies - contains contract, dto, policy subdirectories."
+    purity: "No framework or state dependencies allowed."
+
+  contract:
+    purpose: "Pure type definitions and validators for backend invariants (no wiring dependencies)."
+    consumers: [adapters, agents, graphs, nodes, state]
+
+  dto:
+    purpose: "Pure data transfer objects for boundary translation (no framework dependencies)."
+    consumers: [adapters, contract, runtime]
+
+  policy:
+    purpose: "Pure deterministic policy evaluation used by guardrails/middleware (returns core DTOs)."
+    consumers: [adapters, middlewares, nodes]
+
+  adapters:
+    purpose: "Boundary translation between core DTOs and application state models. Runtime wrappers that coordinate core logic with wiring concerns (logging, config, state)."
+    consumers: [agents, middlewares, nodes, runtime]
+
+  runtime:
+    purpose: "Phase routing and message/state introspection helpers."
+    consumers: [graphs, nodes, state]
+
+  config:
+    purpose: "Env loading, file access helpers, path conventions."
+    consumers: [nodes, tools]
+
+  observability:
+    purpose: "Structured logging and opt-in debugging hooks."
+    consumers: [nodes, tools]
+
+  utils:
+    purpose: "Shared helpers (prompts/providers/model factory)."
+    consumers: [agents, nodes, tools]

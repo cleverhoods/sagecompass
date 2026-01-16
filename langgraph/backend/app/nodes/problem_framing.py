@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from langgraph.types import Command
 
 from app.agents.problem_framing.schema import ProblemFrame
-from app.platform.adapters.evidence import collect_phase_evidence
+from app.platform.adapters.evidence import collect_phase_evidence, evidence_to_items
 from app.platform.adapters.logging import get_logger
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
@@ -15,7 +15,7 @@ from app.platform.core.contract.structured_output import (
     validate_structured_response,
 )
 from app.platform.runtime.state_helpers import get_latest_user_input
-from app.state import EvidenceItem, PhaseEntry
+from app.state import PhaseEntry
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -112,15 +112,12 @@ def make_node_problem_framing(
 
         logger.info("problem_framing.success", phase=phase)
 
-        # Normalize evidence from DTO dicts back to EvidenceItem
-        normalized_evidence = [
-            item if isinstance(item, EvidenceItem) else EvidenceItem.model_validate(item)
-            for item in evidence_bundle.evidence
-        ]
+        # Use adapter to convert evidence from DTO to EvidenceItem models
+        evidence_items = evidence_to_items(evidence_bundle)
         state.phases[phase] = PhaseEntry(
             data=pf.model_dump(),
             status="complete",
-            evidence=normalized_evidence,
+            evidence=evidence_items,
         )
 
         update = {"phases": state.phases}
