@@ -11,6 +11,7 @@ from langgraph.types import Command
 from app.agents.ambiguity_scan.schema import OutputSchema
 from app.platform.adapters.evidence import collect_phase_evidence
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.adapters.phases import update_phases_dict
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
@@ -21,8 +22,6 @@ from app.platform.runtime.state_helpers import get_latest_user_input, reset_clar
 from app.state import PhaseEntry
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langchain_core.runnables import Runnable
     from langgraph.runtime import Runtime
 
@@ -48,10 +47,7 @@ def make_node_ambiguity_scan(
     confidence_threshold: Decimal | float = Decimal("0.8"),
     max_selected: int = 3,
     goto: AmbiguityScanRoute = "supervisor",
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[AmbiguityScanRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[AmbiguityScanRoute]]:
     """Node: ambiguity_scan.
 
     Purpose:
@@ -81,7 +77,8 @@ def make_node_ambiguity_scan(
 
     def node_ambiguity_scan(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[AmbiguityScanRoute]:
         update: dict[str, Any]
         user_input = get_latest_user_input(state.messages) or ""

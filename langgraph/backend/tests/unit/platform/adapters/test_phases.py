@@ -48,6 +48,7 @@ def test_phase_entry_to_result_converts_state_to_dto():
     assert result.phase_name == "test_phase"
     assert result.data == {"key": "value"}
     assert result.status == "complete"
+    assert result.evidence is not None, "evidence should not be None"
     assert len(result.evidence) == 1
     assert result.evidence[0]["key"] == "test-1"
 

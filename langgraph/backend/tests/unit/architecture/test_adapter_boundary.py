@@ -122,8 +122,11 @@ def test_adapter_imports_are_intentional() -> None:
     adapter_files = _get_all_python_files(ADAPTERS_PATH)
     adapter_files = [f for f in adapter_files if "__pycache__" not in str(f)]
 
+    # Pure Protocol definitions don't need runtime platform imports
+    protocol_only_files = {"node.py"}
+
     for file_path in adapter_files:
-        if file_path.name == "__init__.py":
+        if file_path.name == "__init__.py" or file_path.name in protocol_only_files:
             continue
 
         imports = _get_imports_from_file(file_path)

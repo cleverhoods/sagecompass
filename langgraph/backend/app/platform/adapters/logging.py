@@ -28,7 +28,7 @@ def configure_logging() -> structlog.stdlib.BoundLogger:
     return _configure_logging()
 
 
-def get_logger(name: str | None = None):
+def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Return a structured logger for the named component.
 
     This is an adapter wrapper that coordinates with the observability layer.

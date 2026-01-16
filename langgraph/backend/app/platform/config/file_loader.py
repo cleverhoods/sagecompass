@@ -6,6 +6,7 @@ import json
 import os
 from functools import cache
 from pathlib import Path
+from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
@@ -30,74 +31,116 @@ class FileLoader:
         return cls._dev_mode
 
     @classmethod
-    def _read_file(
-        cls,
-        file_path: str,
-        mode: str = "r",
-        loader=None,
-        category: str = "file",
-    ):
-        """Read a file and optionally parse it via a loader.
+    def _read_text(cls, path: Path | str, category: str = "file") -> str:
+        """Read text file.
 
-        Args:
-            file_path: Absolute path to the file.
-            mode: File open mode.
-            loader: Optional callable to parse the file handle.
-            category: Log category for observability.
-
-        Side effects/state writes:
-            Performs filesystem reads and emits structured logs.
-
-        Returns:
-            Parsed data if successful, otherwise False.
+        Raises:
+            FileNotFoundError: File does not exist
+            PermissionError: No permission to read file
+            IOError: Other I/O errors
         """
+        path = Path(path)
         logger = cls._logger()
         try:
-            with open(file_path, mode, encoding="utf-8") as f:
-                data = loader(f) if loader else f.read()
-                if cls._is_dev_mode():
-                    logger.info(f"{category}.load.success", path=file_path)
-                return data
+            content = path.read_text(encoding="utf-8")
+            if cls._is_dev_mode():
+                logger.info(f"{category}.load.success", path=str(path))
+            return content
         except FileNotFoundError:
-            logger.warning(f"{category}.load.missing", path=file_path)
+            logger.warning(f"{category}.load.missing", path=str(path))
+            raise
         except PermissionError as exc:
-            logger.error(f"{category}.load.denied", path=file_path, error=str(exc))
+            logger.error(f"{category}.load.denied", path=str(path), error=str(exc))
+            raise
         except Exception as e:
-            logger.error(f"{category}.load.error", path=file_path, error=str(e))
+            logger.error(f"{category}.load.error", path=str(path), error=str(e))
+            raise
 
-        return False
+    @classmethod
+    def _read_yaml(cls, path: Path | str, category: str = "config") -> dict[str, Any]:
+        """Read YAML file.
+
+        Raises:
+            FileNotFoundError: File does not exist
+            yaml.YAMLError: Invalid YAML syntax
+            PermissionError: No permission to read file
+        """
+        content = cls._read_text(path, category)
+        return yaml.safe_load(content)
+
+    @classmethod
+    def _read_json(cls, path: Path | str, category: str = "schema") -> dict[str, Any] | list[Any]:
+        """Read JSON file.
+
+        Raises:
+            FileNotFoundError: File does not exist
+            json.JSONDecodeError: Invalid JSON syntax
+            PermissionError: No permission to read file
+        """
+        content = cls._read_text(path, category)
+        return json.loads(content)
+
+    @classmethod
+    def _auto_load(cls, path: Path | str, category: str = "file") -> str | dict[str, Any] | list[Any]:
+        """Auto-detect file type by extension and load appropriately.
+
+        Supported extensions:
+        - .yaml, .yml -> YAML
+        - .json -> JSON
+        - .prompt, .txt, .md -> Text
+        - Others -> Text (default)
+
+        Raises:
+            FileNotFoundError: File does not exist
+            yaml.YAMLError: Invalid YAML (for .yaml files)
+            json.JSONDecodeError: Invalid JSON (for .json files)
+        """
+        path = Path(path)
+        ext = path.suffix.lower()
+
+        if ext in (".yaml", ".yml"):
+            return cls._read_yaml(path, category)
+        elif ext == ".json":
+            return cls._read_json(path, category)
+        else:
+            # Default to text for .prompt, .txt, .md, and unknown extensions
+            return cls._read_text(path, category)
 
     # --- Generic helpers -------------------------------------------------
 
     @classmethod
     @cache
-    def load_yaml(cls, relative_path: str, category: str = "config"):
+    def load_yaml(cls, relative_path: str, category: str = "config") -> dict[str, Any]:
         """Load a YAML file relative to APP_ROOT (app/).
 
         Example: load_yaml("agents/problem_framing/config.yaml")
 
-        Returns:
-            Parsed YAML data or False if missing/invalid.
+        Raises:
+            FileNotFoundError: File does not exist
+            yaml.YAMLError: Invalid YAML syntax
         """
-        file_path = os.path.join(APP_ROOT, relative_path)
-        return cls._read_file(file_path, loader=yaml.safe_load, category=category)
+        file_path = APP_ROOT / relative_path
+        return cls._read_yaml(file_path, category)
 
     # --- Legacy prompt/schema loaders (still relative to app/agents) -----
 
     @classmethod
     @cache
-    def load_prompt(cls, prompt_name: str, agent_name: str | None = None):
+    def load_prompt(cls, prompt_name: str, agent_name: str | None = None) -> str:
         """Load a .prompt file for a given agent.
 
         Prompt contracts:
         - `system.prompt` is required for every agent.
         - few-shots require `few-shots.prompt` + `examples.json` in the agent prompts folder.
+
+        Raises:
+            FileNotFoundError: Prompt file does not exist
         """
         if agent_name is None:
-            file_path = os.path.join(AGENTS_DIR, f"{prompt_name}.prompt")
+            file_path = AGENTS_DIR / f"{prompt_name}.prompt"
         else:
-            file_path = os.path.join(AGENTS_DIR, agent_name, "prompts", f"{prompt_name}.prompt")
-        return cls._read_file(file_path, category="prompt")
+            file_path = AGENTS_DIR / agent_name / "prompts" / f"{prompt_name}.prompt"
+        return cls._read_text(file_path, category="prompt")
 
     @classmethod
     def resolve_agent_prompt_path(cls, prompt_name: str, agent_name: str) -> Path:
@@ -109,6 +152,9 @@ class FileLoader:
 
         Returns:
             Path to the prompt file.
+
+        Raises:
+            FileNotFoundError: Prompt file does not exist
         """
         prompt_path = AGENTS_DIR / agent_name / "prompts" / f"{prompt_name}.prompt"
         if not prompt_path.exists():
@@ -117,46 +163,54 @@ class FileLoader:
 
     @classmethod
     @cache
-    def load_schema(cls, agent_name: str, schema_name: str):
-        """Load a JSON schema file for an agent."""
-        file_path = os.path.join(APP_ROOT, "agents", agent_name, f"{schema_name}.json")
-        return cls._read_file(file_path, loader=json.load, category="schema")
+    def load_schema(cls, agent_name: str, schema_name: str) -> dict[str, Any] | list[Any]:
+        """Load a JSON schema file for an agent.
+
+        Raises:
+            FileNotFoundError: Schema file does not exist
+            json.JSONDecodeError: Invalid JSON syntax
+        """
+        file_path = APP_ROOT / "agents" / agent_name / f"{schema_name}.json"
+        return cls._read_json(file_path, category="schema")
 
     # --- Specialized shortcuts -------------------------------------------
 
     @classmethod
     @cache
-    def load_agent_config(cls, agent_name: str):
+    def load_agent_config(cls, agent_name: str) -> dict[str, Any]:
         """Loads agents/<agent_name>/config.yaml from app/.
 
-        Returns:
-            Parsed YAML data or False if missing/invalid.
+        Raises:
+            FileNotFoundError: Config file does not exist
+            yaml.YAMLError: Invalid YAML syntax
         """
-        path = os.path.join(APP_ROOT, "agents", agent_name, "config.yaml")
-        return cls._read_file(path, loader=yaml.safe_load, category="agent.config")
+        path = APP_ROOT / "agents" / agent_name / "config.yaml"
+        return cls._read_yaml(path, category="agent.config")
 
     @classmethod
     @cache
-    def load_provider_config(cls, provider: str):
+    def load_provider_config(cls, provider: str) -> dict[str, Any]:
         """Loads config/provider/<provider>.yaml from the top-level config/ dir.
 
         This no longer assumes config lives under app/; it uses CONFIG_DIR.
 
-        Returns:
-            Parsed YAML data or False if missing/invalid.
+        Raises:
+            FileNotFoundError: Provider config does not exist
+            yaml.YAMLError: Invalid YAML syntax
         """
         category = "provider"
         provider_dir = CONFIG_DIR / category
         file_path = provider_dir / f"{provider}.yaml"
-        return cls._read_file(str(file_path), loader=yaml.safe_load, category=category)
+        return cls._read_yaml(file_path, category=category)
 
     @classmethod
     @cache
-    def load_guardrails_config(cls):
+    def load_guardrails_config(cls) -> dict[str, Any]:
         """Loads guardrails.yaml from the top-level config/ dir.
 
-        Returns:
-            Parsed YAML data or False if missing/invalid.
+        Raises:
+            FileNotFoundError: Guardrails config does not exist
+            yaml.YAMLError: Invalid YAML syntax
         """
         file_path = CONFIG_DIR / "guardrails.yaml"
-        return cls._read_file(str(file_path), loader=yaml.safe_load, category="config")
+        return cls._read_yaml(file_path, category="config")

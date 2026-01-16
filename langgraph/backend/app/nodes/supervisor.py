@@ -5,16 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
-from langgraph.graph import END
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import reset_clarification_context
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langgraph.runtime import Runtime
 
     from app.runtime import SageRuntimeContext
@@ -30,7 +28,7 @@ SupervisorRoute = Literal[
 ]
 
 
-def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] | None], Command[SupervisorRoute]]:
+def make_node_supervisor() -> NodeWithRuntime[SageState, Command[SupervisorRoute]]:
     """Node: supervisor (global).
 
     Purpose:
@@ -51,7 +49,8 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
 
     def node_supervisor(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[SupervisorRoute]:
         logger.info("supervisor.entry", state_keys=list(state.model_fields.keys()))
         from app.graphs.subgraphs.phases.registry import PHASES
@@ -82,7 +81,7 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
-                goto=END,
+                goto="__end__",
             )
 
         logger.info("supervisor.routing.phase_start", phase=next_phase)
@@ -91,9 +90,11 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
         if ambiguity.target_step == next_phase and ambiguity.checked and ambiguity.eligible:
             update = {"messages": [AIMessage(content=(f"Starting {next_phase} flow via the phase supervisor."))]}
             validate_state_update(update, owner="supervisor")
+            from app.platform.runtime.state_helpers import phase_to_supervisor_node
+
             return Command(
                 update=update,
-                goto=f"{next_phase}_supervisor",
+                goto=phase_to_supervisor_node(next_phase),
             )
 
         if ambiguity.target_step == next_phase and ambiguity.exhausted:
@@ -103,12 +104,12 @@ def make_node_supervisor() -> Callable[[SageState, Runtime[SageRuntimeContext] |
                 and isinstance(state.messages[-1], AIMessage)
                 and state.messages[-1].content == "Unable to clarify the request."
             ):
-                return Command(goto=END)
+                return Command(goto="__end__")
             update = {"messages": [AIMessage(content="Unable to clarify the request.")]}
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
-                goto=END,
+                goto="__end__",
             )
 
         if ambiguity.target_step != next_phase:

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 
 from langgraph.graph import StateGraph
-from langgraph.graph.state import CompiledStateGraph
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 
@@ -16,11 +14,13 @@ from app.runtime import SageRuntimeContext
 from app.state import SageState
 
 
-def build_problem_framing_subgraph(
+def build_problem_framing_subgraph(  # type: ignore[no-untyped-def]
     *,
     problem_framing_agent: Any | None = None,
-) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
+):
     """Phase Subgraph: problem_framing.
+
+    Note: Return type omitted due to LangGraph's use of generic TypeVars in CompiledStateGraph.
 
     Purpose:
         Wire the problem framing node and phase supervisor.
@@ -33,15 +33,6 @@ def build_problem_framing_subgraph(
     """
     graph = StateGraph(SageState, context_schema=SageRuntimeContext)
     phase = "problem_framing"
-    T = TypeVar("T")
-
-    def _as_runtime_node(
-        node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T],
-    ) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
-        def runtime_node(state: SageState, runtime: Runtime[SageRuntimeContext]) -> T:
-            return node(state, runtime)
-
-        return runtime_node
 
     # Inject all nodes
     resolved_problem_framing_agent = problem_framing_agent
@@ -59,28 +50,23 @@ def build_problem_framing_subgraph(
     )
     phase_supervisor_node = make_node_phase_supervisor(phase=phase)
 
-    def _problem_framing(
-        state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
-    ) -> Command[Literal["phase_supervisor"]]:
-        return problem_framing_node(state, runtime)
-
     def _phase_supervisor(
         state: SageState,
-        runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[Literal["problem_framing", "__end__"]]:
-        cmd = phase_supervisor_node(state, runtime)
+        cmd = phase_supervisor_node(state, runtime=runtime)
         if cmd.goto == "problem_framing":
-            return cmd
+            return Command(update=cmd.update, goto="problem_framing")
         return Command(update=cmd.update, goto="__end__")
 
-    graph.add_node("problem_framing", _as_runtime_node(_problem_framing))
+    # Add nodes - problem_framing matches protocol directly
+    graph.add_node("problem_framing", problem_framing_node)
 
-    # Supervisor reused across all phases
-    graph.add_node("phase_supervisor", _as_runtime_node(_phase_supervisor))
+    # Supervisor has goto transformation logic so needs wrapper
+    graph.add_node("phase_supervisor", _phase_supervisor)
 
     # Control flow (loop + termination)
     graph.set_entry_point("phase_supervisor")
 
-    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile()
-    return compiled_graph
+    return graph.compile()

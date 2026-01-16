@@ -9,6 +9,7 @@ from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import OutputSchema
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
     extract_structured_response,
@@ -23,8 +24,6 @@ from app.platform.runtime.state_helpers import (
 from app.schemas.clarification import ClarificationResponse
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langchain_core.runnables import Runnable
     from langgraph.runtime import Runtime
 
@@ -269,10 +268,7 @@ def make_node_ambiguity_clarification(
     phase: str | None = None,
     max_rounds: int = 3,
     goto: AmbiguityClarificationRoute = "ambiguity_supervisor",
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[AmbiguityClarificationRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[AmbiguityClarificationRoute]]:
     """Node: ambiguity_clarification.
 
     Purpose:
@@ -300,7 +296,8 @@ def make_node_ambiguity_clarification(
 
     def node_ambiguity_clarification(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[AmbiguityClarificationRoute]:
         user_input = get_latest_user_input(state.messages)
         if not user_input:
@@ -315,6 +312,9 @@ def make_node_ambiguity_clarification(
         )
         if command:
             return command
+
+        # Type narrowing: if no command returned, target_phase is guaranteed to be str
+        assert target_phase is not None, "target_phase must be set when no command is returned"
 
         pending_keys = get_pending_ambiguity_keys(ambiguity_context)
         command = _complete_if_no_pending_keys(ambiguity_context, pending_keys, target_phase, goto)
@@ -349,6 +349,8 @@ def make_node_ambiguity_clarification(
         if command:
             return command
 
+        # Type narrowing: if no command returned, structured is guaranteed to be OutputSchema
+        assert structured is not None, "structured must be set when no command is returned"
         responses = structured.responses
         command = _handle_empty_responses(responses, target_phase, ambiguity_context, goto)
         if command:

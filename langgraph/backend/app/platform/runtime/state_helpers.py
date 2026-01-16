@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Literal
 
 from langchain_core.messages import HumanMessage
 from langchain_core.messages.utils import AnyMessage
@@ -26,15 +27,46 @@ def is_latest_message_human(messages: Sequence[AnyMessage]) -> bool:
     return isinstance(messages[-1], HumanMessage)
 
 
-def phase_to_node(phase: str) -> str:
+def phase_to_node(
+    phase: str,
+) -> Literal[
+    "problem_framing",
+    "goal_framer",
+    "evaluate_feasibility",
+    "business_summary",
+    "phase_supervisor",
+]:
     """Map a phase name to its entry node."""
-    mapping = {
+    mapping: dict[
+        str,
+        Literal[
+            "problem_framing",
+            "goal_framer",
+            "evaluate_feasibility",
+            "business_summary",
+        ],
+    ] = {
         "problem_framing": "problem_framing",
         "goal_setting": "goal_framer",
         "evaluation": "evaluate_feasibility",
         "summary": "business_summary",
     }
-    return mapping.get(phase, "phase_supervisor")
+    result = mapping.get(phase)
+    if result is not None:
+        return result
+    return "phase_supervisor"
+
+
+def phase_to_supervisor_node(
+    phase: str,
+) -> Literal[
+    "problem_framing_supervisor",
+    "phase_supervisor",
+]:
+    """Map a phase name to its supervisor node."""
+    if phase == "problem_framing":
+        return "problem_framing_supervisor"
+    return "phase_supervisor"
 
 
 def format_ambiguity_key(categories: Sequence[str]) -> str:

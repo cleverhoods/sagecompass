@@ -6,6 +6,7 @@ from collections.abc import Iterable
 
 from langchain_core.documents import Document
 from langgraph.config import get_store
+from langgraph.store.base import BaseStore
 
 from app.platform.adapters.logging import get_logger
 from app.platform.core.dto.evidence import EvidenceBundle
@@ -23,7 +24,7 @@ def _extract_evidence_fields(item: EvidenceItem | dict) -> tuple[list[str] | Non
     return namespace, key, score
 
 
-def _get_runtime_store(phase: str):
+def _get_runtime_store(phase: str) -> BaseStore | None:
     try:
         store = get_store()
     except RuntimeError:
@@ -40,7 +41,7 @@ def hydrate_evidence_docs(
     *,
     phase: str,
     max_items: int = 8,
-    store=None,
+    store: BaseStore | None = None,
 ) -> list[Document]:
     """Hydrate evidence items into LangChain Documents for downstream use."""
     evidence_items = list(evidence or [])

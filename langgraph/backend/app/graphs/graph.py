@@ -2,41 +2,35 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
-from langgraph.graph.state import CompiledStateGraph
-from langgraph.runtime import Runtime
 
 from app.graphs.subgraphs.phases.registry import PHASES
 from app.platform.core.contract.registry import validate_phase_registry
 from app.runtime import SageRuntimeContext
 from app.state import SageState
 
-# Type alias for node callables operating on SageState.
-NodeFn = Callable[[SageState, Runtime[SageRuntimeContext] | None], object]
-T = TypeVar("T")
+if TYPE_CHECKING:
+    from langgraph.graph._node import StateNode
+
+    from app.runtime import SageRuntimeContext
+    from app.state import SageState
 
 
-def _as_runtime_node[T](
-    node: Callable[[SageState, Runtime[SageRuntimeContext] | None], T],
-) -> Callable[[SageState, Runtime[SageRuntimeContext]], T]:
-    def runtime_node(state: SageState, runtime: Runtime[SageRuntimeContext]) -> T:
-        return node(state, runtime)
-
-    return runtime_node
-
-
-def build_main_app(
+def build_main_app(  # type: ignore[no-untyped-def]
     *,
-    supervisor_node: NodeFn,
-    guardrails_node: NodeFn,
+    supervisor_node: StateNode[SageState, SageRuntimeContext],
+    guardrails_node: StateNode[SageState, SageRuntimeContext],
     ambiguity_preflight_graph: Runnable[SageState, Any],
-) -> CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState]:
+):
     """Graph factory for the main SageCompass graph.
+
+    Note: Return type omitted due to LangGraph's use of generic TypeVars in CompiledStateGraph.
+    The actual return type is CompiledStateGraph[SageState, SageRuntimeContext, StateT, StateT]
+    where StateT is inferred by LangGraph at compile time.
 
     Args:
         supervisor_node: DI-injected supervisor node callable.
@@ -54,9 +48,9 @@ def build_main_app(
     validate_phase_registry(PHASES)
 
     # Add control nodes
-    graph.add_node("supervisor", _as_runtime_node(supervisor_node))
+    graph.add_node("supervisor", supervisor_node)
     graph.add_node("ambiguity_check", ambiguity_preflight_graph)
-    graph.add_node("guardrails_check", _as_runtime_node(guardrails_node))
+    graph.add_node("guardrails_check", guardrails_node)
 
     # Add phase subgraphs from the phase registry
     for phase in PHASES.values():
@@ -66,7 +60,4 @@ def build_main_app(
     graph.add_edge(START, "supervisor")
 
     checkpointer = InMemorySaver()
-    compiled_graph: CompiledStateGraph[SageState, SageRuntimeContext, SageState, SageState] = graph.compile(
-        checkpointer=checkpointer
-    )
-    return compiled_graph
+    return graph.compile(checkpointer=checkpointer)

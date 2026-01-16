@@ -105,6 +105,9 @@ line-length = 120
 
 # ---- Code QA - Ruff config ----
 [tool.ruff.lint]
+# Allow unused variables when they match framework requirements
+# LangGraph requires runtime parameter in node functions even when unused
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|runtime)$"
 
 # Baseline quality + imports + modernize + bugbear + simplifications + docstrings
 select = [
@@ -154,10 +157,9 @@ disallow_untyped_defs = false # Allow test functions to omit type annotations (i
 # envfile = [".env", ".env.local"]
 
 [tool.poe.tasks]
-
 # -- QA lanes (Consolidated)
-qa = { cmd = "uv run poe qa_fast; uv run poe type_stats; uv run poe test_unit'", help = "Full lane: qa_fast + mypy summary + unit tests" }
-qa_fast = { cmd = "uv run poe fmt; uv run poe lint_fix; uv run poe lint; uv run poe pylint_struct; uv run poe semgrep_fast'", help = "Fast lane (self-correcting): fmt + ruff safe fixes, lint, pylint_struct, semgrep_fast" }
+qa_fast = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export UV_CACHE_DIR=\"$PWD/.cache/uv\"; uv run poe fmt; uv run poe lint_fix; uv run poe lint; uv run poe pylint_struct; uv run poe semgrep_fast'", help = "Fast lane (self-correcting): fmt + ruff safe fixes, lint, pylint_struct, semgrep_fast" }
+qa = { cmd = "bash -lc 'set -euo pipefail; mkdir -p ./.cache/uv; export UV_CACHE_DIR=\"$PWD/.cache/uv\"; uv run poe qa_fast; uv run poe type_stats; uv run poe test_unit'", help = "Full lane: qa_fast + mypy summary + unit tests" }
 
 # -- Test lanes
 test = { ref = "test_unit", help = "Default: run offline unit test lane" }

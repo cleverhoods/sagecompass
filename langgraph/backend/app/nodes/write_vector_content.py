@@ -7,20 +7,17 @@ from typing import TYPE_CHECKING, Literal
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.tools.vector_writer import write_to_vectorstore
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langgraph.runtime import Runtime
 
     from app.runtime import SageRuntimeContext
     from app.state import VectorWriteState
 
 
-def make_node_write_vector() -> Callable[
-    [VectorWriteState, Runtime[SageRuntimeContext] | None], Command[Literal["__end__"]]
-]:
+def make_node_write_vector() -> NodeWithRuntime[VectorWriteState, Command[Literal["__end__"]]]:
     """Node: vector_writer.
 
     Purpose:
@@ -36,7 +33,8 @@ def make_node_write_vector() -> Callable[
 
     def node_write_vector(
         state: VectorWriteState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[Literal["__end__"]]:
         items = state.get("items") or []
         logger.info("vector_writer.batch.start", count=len(items))

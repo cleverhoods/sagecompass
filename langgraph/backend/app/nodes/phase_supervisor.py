@@ -5,16 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 from langchain_core.messages import AIMessage
-from langgraph.graph import END
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import phase_to_node
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langgraph.runtime import Runtime
 
     from app.runtime import SageRuntimeContext
@@ -37,10 +35,7 @@ PhaseSupervisorRoute = Literal[
 def make_node_phase_supervisor(
     *,
     phase: str = "problem_framing",
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[PhaseSupervisorRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[PhaseSupervisorRoute]]:
     """Node: supervisor.
 
     Purpose:
@@ -58,7 +53,8 @@ def make_node_phase_supervisor(
 
     def node_phase_supervisor(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[PhaseSupervisorRoute]:
         # Enforce guardrails (once per graph, before any phase)
         if state.gating.guardrail is None:
@@ -93,7 +89,7 @@ def make_node_phase_supervisor(
         validate_state_update(update, owner="phase_supervisor")
         return Command(
             update=update,
-            goto=END,
+            goto="__end__",
         )
 
     return node_phase_supervisor

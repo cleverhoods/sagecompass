@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
-from langgraph.graph import END
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import (
     get_current_clarifying_question,
@@ -17,8 +17,6 @@ from app.platform.runtime.state_helpers import (
 from app.state import PhaseEntry
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langgraph.runtime import Runtime
 
     from app.runtime import SageRuntimeContext
@@ -47,10 +45,7 @@ def make_node_ambiguity_supervisor(
     retrieve_node: Literal["retrieve_context"] = "retrieve_context",
     clarification_node: Literal["ambiguity_clarification"] = "ambiguity_clarification",
     max_context_retrieval_rounds: int = 1,
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[AmbiguitySupervisorRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[AmbiguitySupervisorRoute]]:
     """Node: ambiguity_supervisor.
 
     Purpose:
@@ -73,7 +68,8 @@ def make_node_ambiguity_supervisor(
 
     def node_ambiguity_supervisor(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[AmbiguitySupervisorRoute]:
         update: dict[str, Any]
         target_phase = phase or state.ambiguity.target_step
@@ -139,7 +135,7 @@ def make_node_ambiguity_supervisor(
             validate_state_update(update, owner="ambiguity_supervisor")
             return Command(
                 update=update,
-                goto=END,
+                goto="__end__",
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)

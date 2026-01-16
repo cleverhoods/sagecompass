@@ -9,6 +9,7 @@ from langgraph.types import Command
 from app.agents.problem_framing.schema import ProblemFrame
 from app.platform.adapters.evidence import collect_phase_evidence, evidence_to_items
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
 from app.platform.core.contract.structured_output import (
     extract_structured_response,
@@ -18,8 +19,6 @@ from app.platform.runtime.state_helpers import get_latest_user_input
 from app.state import PhaseEntry
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langchain_core.runnables import Runnable
     from langgraph.runtime import Runtime
 
@@ -38,10 +37,7 @@ def make_node_problem_framing(
     phase: str = "problem_framing",
     max_context_items: int = 8,
     goto: ProblemFramingRoute = "phase_supervisor",
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[ProblemFramingRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[ProblemFramingRoute]]:
     """Node: problem_framing.
 
     Purpose:
@@ -63,7 +59,8 @@ def make_node_problem_framing(
 
     def node_problem_framing(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[ProblemFramingRoute]:
         update: dict[str, Any]
         user_input = get_latest_user_input(state.messages) or ""

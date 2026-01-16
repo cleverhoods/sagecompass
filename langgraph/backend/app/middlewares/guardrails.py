@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Sequence
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
-from langchain.agents.middleware.types import ToolCallRequest
+from langchain.agents.middleware.types import ModelCallResult, ToolCallRequest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langgraph.types import Command
 
 from app.platform.adapters.guardrails import evaluate_guardrails_contract
 from app.platform.adapters.logging import get_logger
@@ -53,8 +54,8 @@ class GuardrailsMiddleware(AgentMiddleware):
     def wrap_model_call(
         self,
         request: ModelRequest,
-        handler,
-    ) -> ModelResponse:
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelCallResult:
         """Apply guardrails before executing the model call."""
         rejected = self._check_guardrails(request)
         if rejected is not None:
@@ -64,15 +65,19 @@ class GuardrailsMiddleware(AgentMiddleware):
     async def awrap_model_call(
         self,
         request: ModelRequest,
-        handler,
-    ) -> ModelResponse:
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelCallResult:
         """Apply guardrails before executing the async model call."""
         rejected = self._check_guardrails(request)
         if rejected is not None:
             return rejected
         return await handler(request)
 
-    def wrap_tool_call(self, request: ToolCallRequest, handler):
+    def wrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], ToolMessage | Command],
+    ) -> ToolMessage | Command:
         """Enforce tool allowlist before executing tool calls."""
         tool_name = request.tool_call.get("name") if request.tool_call else None
         if self._allowed_tools and tool_name not in self._allowed_tools:
@@ -85,7 +90,11 @@ class GuardrailsMiddleware(AgentMiddleware):
             )
         return handler(request)
 
-    async def awrap_tool_call(self, request: ToolCallRequest, handler):
+    async def awrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], Awaitable[ToolMessage | Command]],
+    ) -> ToolMessage | Command:
         """Enforce tool allowlist before executing async tool calls."""
         tool_name = request.tool_call.get("name") if request.tool_call else None
         if self._allowed_tools and tool_name not in self._allowed_tools:

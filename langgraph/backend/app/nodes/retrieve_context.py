@@ -8,6 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.adapters.phases import update_phases_dict
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import get_latest_user_input
@@ -15,8 +16,6 @@ from app.state import EvidenceItem, PhaseEntry
 from app.tools.context_lookup import context_lookup
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langchain_core.runnables import Runnable
     from langgraph.runtime import Runtime
 
@@ -35,10 +34,7 @@ def make_node_retrieve_context(
     phase: str | None = None,
     collection: str | None = None,
     goto: RetrieveContextRoute = "supervisor",
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[RetrieveContextRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[RetrieveContextRoute]]:
     """Node: retrieve_context.
 
     Purpose:
@@ -61,7 +57,8 @@ def make_node_retrieve_context(
 
     def node_retrieve_context(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[RetrieveContextRoute]:
         update: dict[str, Any]
         query = get_latest_user_input(state.messages) or ""

@@ -48,6 +48,51 @@ Scope: `langgraph/backend/**`. Working dir: `langgraph/backend`.
 - `qa_fast`: quick architecture-level compliance via `uv run poe qa_fast`.
 - `qa`: full suite for sensitive changes; run only when the domain map or `app/platform/contract` tests flag the area as high risk.
 
+## Tooling (ALWAYS use poe tasks)
+
+**NEVER run raw commands** - ALWAYS use the poe tasks defined in `pyproject.toml`:
+
+**Type checking:**
+- `uv run poe type_stats` - full codebase type checking
+- `uv run poe type_stats_scoped {path}` - scoped type checking (e.g., `app/platform`)
+
+**Testing:**
+- `uv run poe test_unit` - unit tests
+- `uv run poe test_integration` - integration tests
+- `uv run poe test_architecture` - architecture tests
+
+**Linting:**
+- `uv run poe lint` - run linting
+- `uv run poe format` - format code
+
+**Why:** Poe tasks have correct flags, paths, and configuration. Raw commands bypass project standards.
+
+## Framework Usage (ABSOLUTELY NO WORKAROUNDS)
+
+**CRITICAL PROHIBITION:** Workarounds are absolutely forbidden. We USE frameworks, we do NOT work around them.
+
+**Forbidden workarounds:**
+- `cast()` to bypass type checking - indicates improper framework usage
+- `# type: ignore` without justification - masks actual type mismatches
+- `Any` types when proper types exist - defeats type safety
+- Wrapper functions that don't match framework protocols - creates adapter debt
+
+**Required approach when encountering type errors:**
+1. Read the framework's type stubs (`.venv/lib/python3.12/site-packages/{framework}/**/*.py`)
+2. Understand the framework's Protocol/TypeAlias definitions
+3. Match your code to the framework's expected types exactly
+4. If framework types seem wrong, verify installed version matches docs before assuming bug
+
+**Example - LangGraph nodes:**
+- WRONG: Wrap with `_as_runtime_node()` + `# type: ignore[call-overload]`
+- RIGHT: Read `langgraph/graph/_node.py`, see `_NodeWithRuntime` protocol, match signature exactly
+
+**Only acceptable use of type ignores:**
+- Documented framework bugs with version info and link to issue
+- Third-party library stubs that are provably incorrect
+
+**Philosophy:** If types don't match, the solution is to learn the framework better, not to suppress the error.
+
 ## Cross-cutting non-negotiables
 - DI-first + no import-time construction.
 - Platform governance, version alignment, and contract enforcement.

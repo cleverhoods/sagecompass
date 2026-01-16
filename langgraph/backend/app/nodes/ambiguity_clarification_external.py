@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 from langchain_core.messages import AIMessage
-from langgraph.graph import END
 from langgraph.types import Command
 
 from app.platform.adapters.logging import get_logger
+from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
 from app.platform.runtime.state_helpers import (
     get_current_clarifying_question,
@@ -19,8 +19,6 @@ from app.platform.runtime.state_helpers import (
 from app.schemas.clarification import ClarificationResponse
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from langgraph.runtime import Runtime
 
     from app.runtime import SageRuntimeContext
@@ -35,10 +33,7 @@ AmbiguityClarificationExternalRoute = Literal["__end__"]
 def make_node_ambiguity_clarification_external(
     *,
     phase: str | None = None,
-) -> Callable[
-    [SageState, Runtime[SageRuntimeContext] | None],
-    Command[AmbiguityClarificationExternalRoute],
-]:
+) -> NodeWithRuntime[SageState, Command[AmbiguityClarificationExternalRoute]]:
     """Node: ambiguity_clarification_external.
 
     Purpose:
@@ -57,7 +52,8 @@ def make_node_ambiguity_clarification_external(
 
     def node_ambiguity_clarification_external(
         state: SageState,
-        _runtime: Runtime[SageRuntimeContext] | None = None,
+        *,
+        runtime: Runtime[SageRuntimeContext],
     ) -> Command[AmbiguityClarificationExternalRoute]:
         update: dict[str, Any]
         ambiguity = state.ambiguity
@@ -68,7 +64,7 @@ def make_node_ambiguity_clarification_external(
             validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
-                goto=END,
+                goto="__end__",
             )
 
         pending_keys = get_pending_ambiguity_keys(ambiguity)
@@ -78,7 +74,7 @@ def make_node_ambiguity_clarification_external(
             validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
-                goto=END,
+                goto="__end__",
             )
 
         question = get_current_clarifying_question(ambiguity)
@@ -87,7 +83,7 @@ def make_node_ambiguity_clarification_external(
             logger.info("ambiguity_clarification_external.awaiting_user", phase=target_phase)
             update = {"messages": [AIMessage(content=message)]}
             validate_state_update(update, owner="ambiguity_clarification_external")
-            return Command(update=update, goto=END)
+            return Command(update=update, goto="__end__")
 
         clarification = ClarificationResponse(
             clarified_input=get_latest_user_input(state.messages),
@@ -111,7 +107,7 @@ def make_node_ambiguity_clarification_external(
         validate_state_update(update, owner="ambiguity_clarification_external")
         return Command(
             update=update,
-            goto=END,
+            goto="__end__",
         )
 
     return node_ambiguity_clarification_external

@@ -2,6 +2,7 @@
 
 import importlib
 import os
+from typing import Any
 
 from app.platform.adapters.logging import get_logger
 from app.platform.config.env import load_project_env
@@ -20,7 +21,7 @@ class ProviderFactory:
     """
 
     @staticmethod
-    def for_agent(agent_name: str | None = None):
+    def for_agent(agent_name: str | None = None) -> tuple[Any, dict[str, Any]]:
         """Instantiate a provider model for an agent using config + env.
 
         Args:
@@ -31,12 +32,19 @@ class ProviderFactory:
 
         Returns:
             Tuple of (provider instance, merged params).
+            Provider instance type is dynamic (ChatOpenAI, ChatAnthropic, etc.).
         """
         logger = get_logger("utils.provider_config")
         try:
             load_project_env()
             # --- Load configurations ---
-            agent_cfg = {} if agent_name is None else FileLoader.load_agent_config(agent_name) or {}
+            if agent_name is None:
+                agent_cfg = {}
+            else:
+                try:
+                    agent_cfg = FileLoader.load_agent_config(agent_name)
+                except FileNotFoundError:
+                    agent_cfg = {}
 
             provider_name_value = agent_cfg.get("provider") or os.getenv(
                 "DEFAULT_PROVIDER",
@@ -44,8 +52,6 @@ class ProviderFactory:
             )
             provider_name = str(provider_name_value).lower()
             prov_cfg = FileLoader.load_provider_config(provider_name)
-            if not prov_cfg:
-                raise FileNotFoundError(f"Provider config missing for '{provider_name}'")
 
             logger.info("provider.load.start", agent=agent_name, provider=provider_name)
 

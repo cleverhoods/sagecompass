@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import NotRequired
 
 from langchain.agents import AgentState
@@ -12,6 +12,7 @@ from langchain.agents.middleware import ModelResponse, wrap_model_call, wrap_too
 from langchain.agents.middleware.types import ModelRequest, ToolCallRequest
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, ToolMessage
+from langgraph.types import Command
 
 from app.tools import context_docs_tool
 
@@ -57,9 +58,11 @@ def _has_context_tool_message(messages: Sequence[object]) -> bool:
 @wrap_model_call(state_schema=ContextDocsState, name="ContextDocsModelMiddleware")
 def _context_docs_model_call(
     request: ModelRequest,
-    handler,
+    handler: Callable[[ModelRequest], ModelResponse | AIMessage],
 ) -> ModelResponse | AIMessage:
-    docs = list(request.state.get("context_docs") or [])
+    # ContextDocsState guarantees context_docs is list[Document] | None
+    docs_or_none: list[Document] | None = request.state.get("context_docs")  # type: ignore[assignment]
+    docs: list[Document] = docs_or_none if docs_or_none is not None else []
     if not docs:
         return handler(request)
     if _has_context_tool_message(request.messages):
@@ -78,11 +81,13 @@ def _context_docs_model_call(
 @wrap_tool_call(tools=[context_docs_tool], name="ContextDocsToolMiddleware")
 def _context_docs_tool_call(
     request: ToolCallRequest,
-    handler,
-) -> ToolMessage:
+    handler: Callable[[ToolCallRequest], ToolMessage | Command],
+) -> ToolMessage | Command:
     if not request.tool_call or request.tool_call.get("name") != TOOL_NAME:
         return handler(request)
-    docs = list(request.state.get("context_docs") or [])
+    # ContextDocsState guarantees context_docs is list[Document] | None
+    docs_or_none: list[Document] | None = request.state.get("context_docs")
+    docs: list[Document] = docs_or_none if docs_or_none is not None else []
     payload = _serialize_context_docs(docs)
     content = json.dumps(payload, ensure_ascii=True)
     tool_call_id = request.tool_call.get("id", "")
