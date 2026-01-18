@@ -54,9 +54,9 @@ The following functions were **moved to `app/platform/adapters/`** because they 
 - Graph/node orchestration logic
 - Runtime coordination (logging, config, state) - **use adapters for this**
 
-## Documentation References
+## Documentation References (Knowledge Base)
 
-Use official LangChain/LangGraph/LangSmith documentation as the source of truth when designing contracts.
+This README serves as the knowledge base for audits and reviews. Use official LangChain/LangGraph/LangSmith documentation as the source of truth when designing contracts.
 
 **Check installed versions:** `uv pip show langchain langchain-core langgraph langsmith pydantic`
 
@@ -64,3 +64,15 @@ Use official LangChain/LangGraph/LangSmith documentation as the source of truth 
 - LangChain: https://python.langchain.com/docs/concepts/
 - LangGraph: https://langchain-ai.github.io/langgraph/concepts/
 - LangSmith: https://docs.smith.langchain.com/
+
+| Contract area                                 | Reference                                                         |
+|-----------------------------------------------|-------------------------------------------------------------------|
+| Agent lifecycle + middleware                  | https://docs.langchain.com/oss/python/langchain/agents            |
+| Structured models + response parsing          | https://docs.langchain.com/oss/python/langchain/models            |
+| Message types (AIMessage, HumanMessage, etc.) | https://docs.langchain.com/oss/python/langchain/messages          |
+| Prompt templates + composability              | https://docs.langchain.com/oss/python/langchain/prompts           |
+| Tool integrations + allowlists                | https://docs.langchain.com/oss/python/langchain/tools             |
+| Graph runtime + execution                     | https://docs.langchain.com/oss/python/langgraph                   |
+| LangSmith tracing + evaluation                | https://docs.smith.langchain.com/                                 |
+| Guardrails & policy controls                  | https://docs.langchain.com/oss/python/langchain/policies          |
+| Typed output parsing                          | https://docs.langchain.com/oss/python/langchain/structured-output |
