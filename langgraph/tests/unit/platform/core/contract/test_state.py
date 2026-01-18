@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 
 from app.platform.core.contract.state import (
@@ -19,7 +21,7 @@ class TestValidateStateUpdate:
 
     def test_valid_update_passes(self) -> None:
         """Test that valid updates pass validation."""
-        update = {"messages": [], "errors": []}
+        update: Mapping[str, object] = {"messages": [], "errors": []}
         validate_state_update(update)  # Should not raise
 
     def test_unknown_field_raises(self) -> None:
@@ -31,25 +33,25 @@ class TestValidateStateUpdate:
     def test_owner_validation(self) -> None:
         """Test that owner validation works."""
         # Valid owner for errors field
-        update = {"errors": ["test error"]}
-        validate_state_update(update, owner="supervisor")  # Should not raise
+        errors_update = {"errors": ["test error"]}
+        validate_state_update(errors_update, owner="supervisor")  # Should not raise
 
         # Invalid owner for gating field
-        update = {"gating": {}}
+        gating_update: Mapping[str, object] = {"gating": {}}
         with pytest.raises(ValueError, match="not allowed to update"):
-            validate_state_update(update, owner="problem_framing")
+            validate_state_update(gating_update, owner="problem_framing")
 
     def test_phase_status_validation(self) -> None:
         """Test that phase status values are validated."""
         entry = PhaseEntry(status="complete")
-        update = {"phases": {"test": entry}}
-        validate_state_update(update)  # Should not raise
+        valid_update = {"phases": {"test": entry}}
+        validate_state_update(valid_update)  # Should not raise
 
         # Invalid status
         invalid_entry = {"status": "invalid_status"}
-        update = {"phases": {"test": invalid_entry}}
+        invalid_update = {"phases": {"test": invalid_entry}}
         with pytest.raises(ValueError, match="Invalid PhaseEntry status"):
-            validate_state_update(update)
+            validate_state_update(invalid_update)
 
 
 class TestPhaseDependencies:

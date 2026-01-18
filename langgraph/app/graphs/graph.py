@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from langchain_core.runnables import Runnable
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
+from langgraph.types import Checkpointer
 
 from app.graphs.subgraphs.phases.registry import PHASES
 from app.platform.core.contract.registry import validate_phase_registry
@@ -25,6 +26,7 @@ def build_main_app(  # type: ignore[no-untyped-def]
     supervisor_node: StateNode[SageState, SageRuntimeContext],
     guardrails_node: StateNode[SageState, SageRuntimeContext],
     ambiguity_preflight_graph: Runnable[SageState, Any],
+    checkpointer: Checkpointer = None,
 ):
     """Graph factory for the main SageCompass graph.
 
@@ -36,6 +38,8 @@ def build_main_app(  # type: ignore[no-untyped-def]
         supervisor_node: DI-injected supervisor node callable.
         guardrails_node: DI-injected guardrails gate node callable.
         ambiguity_preflight_graph: DI-injected ambiguity preflight subgraph.
+        checkpointer: DI-injected checkpointer. Defaults to InMemorySaver for local development.
+            Pass False to disable checkpointing, or a BaseCheckpointSaver for production use.
 
     Side effects/state writes:
         None (graph wiring only).
@@ -59,5 +63,6 @@ def build_main_app(  # type: ignore[no-untyped-def]
 
     graph.add_edge(START, "supervisor")
 
-    checkpointer = InMemorySaver()
-    return graph.compile(checkpointer=checkpointer)
+    # Default to InMemorySaver for local development if no checkpointer provided
+    resolved_checkpointer = checkpointer if checkpointer is not None else InMemorySaver()
+    return graph.compile(checkpointer=resolved_checkpointer)
