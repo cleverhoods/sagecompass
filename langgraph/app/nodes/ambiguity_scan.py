@@ -140,9 +140,7 @@ def make_node_ambiguity_scan(
             )
 
         # Enforce schema
-        structured_response = validate_structured_response(structured, OutputSchema)
-        assert isinstance(structured_response, OutputSchema)
-        structured = structured_response
+        structured = validate_structured_response(structured, OutputSchema)
 
         ambiguities = structured.ambiguities
         high_priority = [

@@ -50,6 +50,10 @@
 - [docs] Add session closing requirement to PROJECT_ROOT/CLAUDE.md section 6 requiring token usage check and analysis log creation before session ends.
 
 ### Changed
+- [langgraph] Refactor `validate_structured_response` to use generic `TypeVar` (`SchemaT`) instead of returning `BaseModel`, eliminating need for `assert isinstance()` after validation calls.
+- [langgraph] Replace `assert isinstance()` with `TypeGuard` pattern in `app/middlewares/dynamic_prompt.py` for production-safe type narrowing that survives Python `-O` optimization.
+- [langgraph] Remove redundant `assert isinstance()` calls from `problem_framing.py`, `ambiguity_clarification.py`, and `ambiguity_scan.py` nodes (now unnecessary due to generic TypeVar).
+- [langgraph] Add type safety patterns to `.shared/rules/quality-gates.md`: prefer TypeVar/TypeGuard over assert isinstance, prefer Mapping[str, object] over Any.
 - [langgraph] Add `app/platform/config/` and `app/platform/core/dto/` to high-risk areas in `.shared/sys.yml` (changes require full QA).
 - [langgraph] Split `.shared/rules/testing.md` (365 lines) into 4 focused snippets under 40 lines each: `testing-structure.md`, `testing-naming.md`, `testing-priorities.md`, `testing-quality.md`. Main file now serves as index with quick reference.
 - [langgraph] Migrate operational messages in nodes from `state.messages` to `state.events` via `emit_event()`: supervisor, ambiguity_supervisor, phase_supervisor, ambiguity_scan, retrieve_context, ambiguity_clarification, ambiguity_clarification_external nodes updated to separate operational trace from LLM conversation context.

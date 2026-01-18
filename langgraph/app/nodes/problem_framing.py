@@ -103,9 +103,7 @@ def make_node_problem_framing(
             validate_state_update(update, owner="problem_framing")
             return Command(update=update, goto=goto)
 
-        validated_pf = validate_structured_response(pf, ProblemFrame)
-        assert isinstance(validated_pf, ProblemFrame)
-        pf = validated_pf
+        pf = validate_structured_response(pf, ProblemFrame)
 
         logger.info("problem_framing.success", phase=phase)
 

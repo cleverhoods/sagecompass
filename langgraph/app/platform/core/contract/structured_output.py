@@ -21,11 +21,22 @@ def extract_structured_response(result: Any) -> Any | None:
     return None
 
 
-def validate_structured_response(
+def validate_structured_response[SchemaT: BaseModel](
     structured: Any,
-    schema: type[BaseModel],
-) -> BaseModel:
-    """Validate structured output against the schema."""
+    schema: type[SchemaT],
+) -> SchemaT:
+    """Validate structured output against the schema.
+
+    Returns the validated instance typed as the specific schema type,
+    eliminating the need for isinstance assertions after calling.
+
+    Args:
+        structured: Raw data to validate.
+        schema: Pydantic BaseModel subclass to validate against.
+
+    Returns:
+        Validated instance of the specific schema type.
+    """
     if isinstance(structured, schema):
         return structured
     return schema.model_validate(structured)

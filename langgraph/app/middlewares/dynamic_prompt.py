@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any
+from typing import Any, TypeGuard
 
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, dynamic_prompt
 from langchain_core.messages import BaseMessage, SystemMessage
@@ -22,6 +22,14 @@ from app.platform.core.contract.prompts import (
 
 PromptLike = str | ChatPromptTemplate | SystemMessagePromptTemplate | BasePromptTemplate
 PromptSource = PromptLike | Callable[[ModelRequest], PromptLike]
+
+
+def is_system_message(msg: BaseMessage) -> TypeGuard[SystemMessage]:
+    """TypeGuard for SystemMessage type narrowing.
+
+    Survives Python -O optimization (unlike assert isinstance).
+    """
+    return isinstance(msg, SystemMessage)
 
 
 def _as_mapping(value: Any) -> Mapping[str, Any]:
@@ -96,7 +104,8 @@ def make_dynamic_prompt_middleware(  # noqa: C901
         if isinstance(prompt_obj, SystemMessagePromptTemplate):
             validate_prompt_variables(prompt_obj.input_variables, placeholders)
             msg = prompt_obj.format(**values)
-            assert isinstance(msg, SystemMessage)
+            if not is_system_message(msg):
+                raise TypeError("Expected SystemMessage from SystemMessagePromptTemplate.format()")
             return msg
 
         if isinstance(prompt_obj, BasePromptTemplate):

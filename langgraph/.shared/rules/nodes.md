@@ -9,7 +9,7 @@ Source: `app/RULES.md` → “Nodes” (+ “Testability”).
 - Use logging through adapters (`app/platform/adapters/logging.get_logger`).
 - Use adapter functions for boundary translation between core DTOs and State models (`app/platform/adapters/`).
 - Collect evidence through adapters (`app/platform/adapters/evidence.collect_phase_evidence`).
-- Validate structured outputs with `validate_structured_response` (`app/platform/core/contract/structured_output.py`).
+- Validate structured outputs with `validate_structured_response` (`app/platform/core/contract/structured_output.py`). This function is generic (TypeVar) and returns the specific schema type—no assert needed.
 - Isolate complex branching into pure helper functions with unit tests.
 - Prefer small, pure functions for branching/decision logic; keep them separate from I/O.
 - Keep control flow shallow (no nested if/else beyond one level).

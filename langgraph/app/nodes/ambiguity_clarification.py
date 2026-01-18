@@ -173,7 +173,6 @@ def _extract_validated_structured_response(
         return None, Command(update=update, goto=goto)
 
     validated = validate_structured_response(structured, OutputSchema)
-    assert isinstance(validated, OutputSchema)
     return validated, None
 
 
