@@ -27,3 +27,4 @@ class PhaseResult:
     error: dict[str, object] | None = None  # Structured error if execution failed
     status: PhaseStatus = "complete"
     evidence: list[dict] | None = None  # Evidence items used
+    raw_output: str | None = None  # Raw LLM output before parsing

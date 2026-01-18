@@ -4,6 +4,7 @@ Contract meaning:
 - Defines which top-level fields exist on SageState and forbids ad-hoc keys.
 - Documents field ownership so nodes do not mutate data they do not own.
 - Encodes invariants such as allowed PhaseEntry status values.
+- Defines phase dependencies for invalidation when upstream phases change.
 """
 
 from __future__ import annotations
@@ -19,9 +20,19 @@ SAGESTATE_TOP_LEVEL_FIELDS: tuple[str, ...] = (
     "messages",
     "phases",
     "errors",
+    "events",
 )
 
 PHASE_STATUS_VALUES: tuple[str, ...] = ("pending", "complete", "stale")
+
+# Phase dependency graph: maps phase -> list of phases that depend on it
+# When a phase changes, all downstream phases should be marked stale
+PHASE_DEPENDENCIES: dict[str, tuple[str, ...]] = {
+    "problem_framing": ("goals_kpis", "feasibility", "decision_synthesis"),
+    "goals_kpis": ("feasibility", "decision_synthesis"),
+    "feasibility": ("decision_synthesis",),
+    "decision_synthesis": (),  # Terminal phase, no dependents
+}
 
 
 class StateOwnershipRule(BaseModel):
@@ -72,6 +83,11 @@ STATE_OWNERSHIP_RULES: tuple[StateOwnershipRule, ...] = (
         field="errors",
         owners=("nodes",),
         invariant="Errors are append-only summaries; no sensitive raw content.",
+    ),
+    StateOwnershipRule(
+        field="events",
+        owners=("nodes",),
+        invariant="Events are append-only trace records; not for LLM context.",
     ),
 )
 
@@ -136,3 +152,72 @@ def validate_state_update(update: Mapping[str, Any], *, owner: str | None = None
                 status = entry.get("status")
             if status is not None and status not in PHASE_STATUS_VALUES:
                 raise ValueError(f"Invalid PhaseEntry status: {status}")
+
+
+def get_downstream_phases(phase_name: str) -> tuple[str, ...]:
+    """Get all phases that depend on the given phase.
+
+    Args:
+        phase_name: Name of the upstream phase.
+
+    Returns:
+        Tuple of phase names that depend on this phase (directly or transitively).
+    """
+    return PHASE_DEPENDENCIES.get(phase_name, ())
+
+
+def get_phases_to_invalidate(changed_phase: str) -> set[str]:
+    """Get all phases that should be marked stale when a phase changes.
+
+    Computes transitive closure of dependencies: if A → B → C,
+    changing A invalidates both B and C.
+
+    Args:
+        changed_phase: Name of the phase that changed.
+
+    Returns:
+        Set of phase names to mark as stale.
+    """
+    to_invalidate: set[str] = set()
+    queue = list(get_downstream_phases(changed_phase))
+
+    while queue:
+        phase = queue.pop(0)
+        if phase not in to_invalidate:
+            to_invalidate.add(phase)
+            queue.extend(get_downstream_phases(phase))
+
+    return to_invalidate
+
+
+def invalidate_downstream_phases(
+    phases: Mapping[str, Any],
+    changed_phase: str,
+) -> dict[str, Any]:
+    """Mark downstream phases as stale when an upstream phase changes.
+
+    Creates a new phases dict with downstream entries marked stale.
+    Does not mutate the original.
+
+    Args:
+        phases: Current phases dict from state.
+        changed_phase: Name of the phase that changed.
+
+    Returns:
+        New phases dict with downstream phases marked stale.
+    """
+    to_invalidate = get_phases_to_invalidate(changed_phase)
+    if not to_invalidate:
+        return dict(phases)
+
+    updated = dict(phases)
+    for phase_name in to_invalidate:
+        if phase_name in updated:
+            entry = updated[phase_name]
+            # Handle both Pydantic models and dicts
+            if hasattr(entry, "model_copy"):
+                updated[phase_name] = entry.model_copy(update={"status": "stale"})
+            elif isinstance(entry, Mapping):
+                updated[phase_name] = {**entry, "status": "stale"}
+
+    return updated

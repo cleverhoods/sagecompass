@@ -1,0 +1,38 @@
+# Testing Navigation Map
+# Purpose: Index to testing rule snippets. Read based on task.
+
+rule_files:
+  structure:
+    path: ../.shared/rules/testing-structure.md
+    purpose: Directory layout, categories, mirroring
+    when: Creating new test file
+  naming:
+    path: ../.shared/rules/testing-naming.md
+    purpose: File and function naming conventions
+    when: Naming tests/functions
+  priorities:
+    path: ../.shared/rules/testing-priorities.md
+    purpose: What to test, coverage targets
+    when: Deciding what to test
+  quality:
+    path: ../.shared/rules/testing-quality.md
+    purpose: Quality guidelines, AAA pattern
+    when: Writing test code
+  fixtures:
+    path: ../.shared/rules/testing-fixtures.md
+    purpose: Fixture organization, conftest.py hierarchy
+    when: Creating or sharing fixtures
+
+quick_ref:
+  structure: "tests/[type]/[category]/[mirrored]"
+  types: [unit, integration, e2e]
+  categories: [architecture, platform, orchestration]
+  coverage:
+    contract_policy: ">90%"
+    adapters: ">80%"
+    overall: ">75%"
+
+commands:
+  unit: "uv run poe test_unit"
+  integration: "uv run poe test_integration"
+  architecture: "uv run pytest -m architecture"

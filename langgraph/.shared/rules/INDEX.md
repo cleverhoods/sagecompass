@@ -24,6 +24,13 @@ They are intended to be:
 - `tools.md` — tool typing + allowlists + determinism
 - `middlewares.md` — middleware policy, allowlists, and determinism
 - `schemas.md` — schema typing + orchestration boundaries
+- `testing-structure.md` — directory layout, categories, mirroring
+- `testing-naming.md` — file and function naming conventions
+- `testing-priorities.md` — what to test, coverage targets
+- `testing-quality.md` — quality guidelines, AAA pattern
+- `testing-fixtures.md` — fixture organization, conftest.py hierarchy
+
+**Note:** Test navigation index moved to `.shared/maps/testing.yml`
 
 ## Updating rules
 - Prefer small edits that improve clarity and reduce duplication.

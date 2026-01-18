@@ -29,14 +29,30 @@ def _logger():
 
 
 class AmbiguityClarificationAgentConfig:
-    """Configuration for the Ambiguity Clarification agent."""
+    """Configuration for the Ambiguity Clarification agent.
+
+    Attributes:
+        model: Optional LLM to use. If None, ProviderFactory supplies default.
+
+    Private Attributes:
+        _extra_middleware: Additional middleware to append after standard stack.
+
+    Example:
+        >>> config = AmbiguityClarificationAgentConfig()
+        >>> agent = build_agent(config)
+    """
 
     def __init__(
         self,
         model: BaseChatModel | None = None,
         extra_middleware: list[AgentMiddleware] | None = None,
     ) -> None:
-        """Initialize config with optional model and middleware overrides."""
+        """Initialize config with optional model and middleware overrides.
+
+        Args:
+            model: LLM instance to use for clarification generation.
+            extra_middleware: Additional middleware to append to the stack.
+        """
         self.model = model
         self._extra_middleware = extra_middleware or []
 
@@ -50,10 +66,32 @@ class AmbiguityClarificationAgentConfig:
 
 
 def build_agent(config: AmbiguityClarificationAgentConfig | None = None) -> Runnable:
-    """Construct an ambiguity clarification agent to refine ambiguous user input.
+    """Build the Ambiguity Clarification agent for resolving unclear input.
+
+    Purpose:
+        Generates clarifying questions or autonomous resolutions for
+        ambiguities detected by the ambiguity_scan agent. Can operate
+        in user-interactive or autonomous resolution mode.
+
+    Args:
+        config: Agent configuration with optional model and middleware overrides.
+            If None, uses default provider model from ProviderFactory.
+
+    Middleware stack (applied in order):
+        1. GuardrailsMiddleware - Enforces tool allowlist and safety policies
+        2. DynamicPromptMiddleware - Renders system prompt with placeholders
+           (user_input, ambiguous_items, keys_to_clarify)
 
     Returns:
-        A Runnable agent that outputs a structured ClarificationResponse.
+        Runnable agent that accepts {"user_input", "ambiguous_items", "keys_to_clarify"}
+        and returns a validated OutputSchema with clarification responses.
+
+    Raises:
+        ValidationError: If agent schema validation fails during build.
+
+    See Also:
+        - Schema: app/agents/ambiguity_clarification/schema.py (OutputSchema)
+        - Node: app/nodes/ambiguity_clarification.py (orchestration wrapper)
     """
     if config is None:
         config = AmbiguityClarificationAgentConfig()

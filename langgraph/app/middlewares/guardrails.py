@@ -16,6 +16,9 @@ from app.platform.core.policy.guardrails import GuardrailsConfig, build_guardrai
 
 logger = get_logger("middlewares.guardrails")
 
+# System tools that are always allowed (injected by middleware, not agent-invoked)
+SYSTEM_TOOLS: frozenset[str] = frozenset({"context_docs_tool"})
+
 
 def _latest_user_text(messages: Iterable[object]) -> str:
     for message in reversed(list(messages)):
@@ -80,6 +83,9 @@ class GuardrailsMiddleware(AgentMiddleware):
     ) -> ToolMessage | Command:
         """Enforce tool allowlist before executing tool calls."""
         tool_name = request.tool_call.get("name") if request.tool_call else None
+        # System tools (middleware-injected) are always allowed
+        if tool_name in SYSTEM_TOOLS:
+            return handler(request)
         if self._allowed_tools and tool_name not in self._allowed_tools:
             logger.warning("tool.blocked", tool=tool_name)
             return ToolMessage(
@@ -97,6 +103,9 @@ class GuardrailsMiddleware(AgentMiddleware):
     ) -> ToolMessage | Command:
         """Enforce tool allowlist before executing async tool calls."""
         tool_name = request.tool_call.get("name") if request.tool_call else None
+        # System tools (middleware-injected) are always allowed
+        if tool_name in SYSTEM_TOOLS:
+            return await handler(request)
         if self._allowed_tools and tool_name not in self._allowed_tools:
             logger.warning("tool.blocked", tool=tool_name)
             return ToolMessage(

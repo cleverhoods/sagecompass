@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
+from app.platform.adapters.events import emit_event
 from app.platform.adapters.logging import get_logger
 from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
@@ -60,7 +61,7 @@ def make_node_supervisor() -> NodeWithRuntime[SageState, Command[SupervisorRoute
         # 1. Run guardrails if not done yet (returns to supervisor)
         if state.gating.guardrail is None:
             logger.info("supervisor.guardrails_check.required")
-            update = {"messages": [AIMessage(content="Running safety checks.")]}
+            update = emit_event(owner="supervisor", kind="routing", message="Running safety checks.")
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
@@ -88,7 +89,12 @@ def make_node_supervisor() -> NodeWithRuntime[SageState, Command[SupervisorRoute
         ambiguity = state.ambiguity
 
         if ambiguity.target_step == next_phase and ambiguity.checked and ambiguity.eligible:
-            update = {"messages": [AIMessage(content=(f"Starting {next_phase} flow via the phase supervisor."))]}
+            update = emit_event(
+                owner="supervisor",
+                kind="routing",
+                message=f"Starting {next_phase} flow via the phase supervisor.",
+                phase=next_phase,
+            )
             validate_state_update(update, owner="supervisor")
             from app.platform.runtime.state_helpers import phase_to_supervisor_node
 
@@ -117,14 +123,19 @@ def make_node_supervisor() -> NodeWithRuntime[SageState, Command[SupervisorRoute
                 state,
                 target_step=next_phase,
             )
-            update = {"ambiguity": updated_ambiguity, "messages": [AIMessage(content="Checking for ambiguities.")]}
+            event_update = emit_event(
+                owner="supervisor", kind="routing", message="Checking for ambiguities.", phase=next_phase
+            )
+            update = {"ambiguity": updated_ambiguity, **event_update}
             validate_state_update(update, owner="supervisor")
             return Command(
                 update=update,
                 goto="ambiguity_check",
             )
 
-        update = {"messages": [AIMessage(content="Running ambiguity preflight.")]}
+        update = emit_event(
+            owner="supervisor", kind="routing", message="Running ambiguity preflight.", phase=next_phase
+        )
         validate_state_update(update, owner="supervisor")
         return Command(
             update=update,

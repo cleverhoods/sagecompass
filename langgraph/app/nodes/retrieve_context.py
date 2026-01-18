@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
-from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
+from app.platform.adapters.events import emit_event
 from app.platform.adapters.logging import get_logger
 from app.platform.adapters.node import NodeWithRuntime
 from app.platform.adapters.phases import update_phases_dict
@@ -65,7 +65,7 @@ def make_node_retrieve_context(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("retrieve_context.missing_target_step")
-            update = {"messages": [AIMessage(content="Unable to determine retrieval target.")]}
+            update = emit_event(owner="retrieve_context", kind="error", message="Unable to determine retrieval target.")
             validate_state_update(update, owner="retrieve_context")
             return Command(
                 update=update,
@@ -113,11 +113,13 @@ def make_node_retrieve_context(
         )
         phases = update_phases_dict(state.phases, target_phase, updated_entry)
 
-        message = f"Retrieved {len(evidence)} context items."
-        update = {
-            "phases": phases,
-            "messages": [AIMessage(content=message)],
-        }
+        event_update = emit_event(
+            owner="retrieve_context",
+            kind="progress",
+            message=f"Retrieved {len(evidence)} context items.",
+            phase=target_phase,
+        )
+        update = {"phases": phases, **event_update}
         validate_state_update(update, owner="retrieve_context")
         return Command(
             update=update,

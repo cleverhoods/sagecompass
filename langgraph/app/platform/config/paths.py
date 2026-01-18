@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent  # langgraph
+BACKEND_ROOT = Path(__file__).resolve().parent.parent.parent.parent  # langgraph
 
 APP_ROOT = BACKEND_ROOT / "app"
 
@@ -21,6 +21,7 @@ PLATFORM_DIR = APP_ROOT / "platform"
 
 # Provider config - temp
 CONFIG_DIR = BACKEND_ROOT / "config"
+PROVIDER_CONFIG_DIR = CONFIG_DIR / "provider"
 
 # Data - temp
 DATA_DIR = BACKEND_ROOT / "data"

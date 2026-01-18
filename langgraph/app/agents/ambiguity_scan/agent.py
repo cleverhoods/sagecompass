@@ -33,8 +33,15 @@ def _logger():
 class AmbiguityScanAgentConfig(BaseModel):
     """Configuration for the Ambiguity Scan agent build.
 
-    Assumptions:
-        If model is not provided, ProviderFactory supplies a default instance.
+    Attributes:
+        model: Optional LLM to use. If None, ProviderFactory supplies default.
+
+    Private Attributes:
+        _extra_middleware: Additional middleware to append after standard stack.
+
+    Example:
+        >>> config = AmbiguityScanAgentConfig()
+        >>> agent = build_agent(config)
     """
 
     model: BaseChatModel | None = None
@@ -47,13 +54,32 @@ class AmbiguityScanAgentConfig(BaseModel):
 
 
 def build_agent(config: AmbiguityScanAgentConfig | None = None) -> Runnable:
-    """Builds a LangChain agent runnable for use in LangGraph or standalone.
+    """Build the Ambiguity Scan agent for detecting unclear user input.
+
+    Purpose:
+        Analyzes user input to identify ambiguous terms, missing context,
+        or unclear requirements that could affect downstream phase quality.
+        Runs as a preflight check before each reasoning phase.
 
     Args:
-        config: Configuration for this agent run. If None, defaults will be used.
+        config: Agent configuration with optional model and middleware overrides.
+            If None, uses default provider model from ProviderFactory.
+
+    Middleware stack (applied in order):
+        1. GuardrailsMiddleware - Enforces tool allowlist and safety policies
+        2. ContextDocsMiddleware - Injects retrieved evidence into agent context
+        3. DynamicPromptMiddleware - Renders system prompt with placeholders
 
     Returns:
-        Runnable agent ready for invocation.
+        Runnable agent that accepts {"task_input", "messages", "context_docs"}
+        and returns a validated OutputSchema with detected ambiguities.
+
+    Raises:
+        ValidationError: If agent schema validation fails during build.
+
+    See Also:
+        - Schema: app/agents/ambiguity_scan/schema.py (OutputSchema)
+        - Node: app/nodes/ambiguity_scan.py (orchestration wrapper)
     """
     if config is None:
         config = AmbiguityScanAgentConfig()

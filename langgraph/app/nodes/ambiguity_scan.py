@@ -5,10 +5,10 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Literal
 
-from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.agents.ambiguity_scan.schema import OutputSchema
+from app.platform.adapters.events import emit_event
 from app.platform.adapters.evidence import collect_phase_evidence
 from app.platform.adapters.logging import get_logger
 from app.platform.adapters.node import NodeWithRuntime
@@ -85,7 +85,9 @@ def make_node_ambiguity_scan(
         target_phase = phase or state.ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_scan.missing_target_step")
-            update = {"messages": [AIMessage(content="Unable to determine ambiguity scan target.")]}
+            update = emit_event(
+                owner="ambiguity_scan", kind="error", message="Unable to determine ambiguity scan target."
+            )
             validate_state_update(update, owner="ambiguity_scan")
             return Command(update=update, goto=goto)
         importance_limit = Decimal(str(importance_threshold))
@@ -173,11 +175,13 @@ def make_node_ambiguity_scan(
                     "exhausted": False,
                 }
             )
-            update = {
-                "ambiguity": resolved_context,
-                "phases": state.phases,
-                "messages": [AIMessage(content="No high-priority ambiguities detected.")],
-            }
+            event_update = emit_event(
+                owner="ambiguity_scan",
+                kind="progress",
+                message="No high-priority ambiguities detected.",
+                phase=target_phase,
+            )
+            update = {"ambiguity": resolved_context, "phases": state.phases, **event_update}
             if include_errors:
                 update["errors"] = state.errors
             validate_state_update(update, owner="ambiguity_scan")
@@ -197,11 +201,8 @@ def make_node_ambiguity_scan(
 
         summary = "No ambiguities detected." if not ambiguities else f"Ambiguities detected: {len(ambiguities)}."
 
-        update = {
-            "ambiguity": updated_context,
-            "phases": state.phases,
-            "messages": [AIMessage(content=summary)],
-        }
+        event_update = emit_event(owner="ambiguity_scan", kind="progress", message=summary, phase=target_phase)
+        update = {"ambiguity": updated_context, "phases": state.phases, **event_update}
         if include_errors:
             update["errors"] = state.errors
         validate_state_update(update, owner="ambiguity_scan")

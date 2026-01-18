@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
+from app.platform.adapters.events import emit_event
 from app.platform.adapters.logging import get_logger
 from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
@@ -60,7 +61,11 @@ def make_node_ambiguity_clarification_external(
         target_phase = phase or ambiguity.target_step
         if not target_phase:
             logger.warning("ambiguity_clarification_external.missing_target_step")
-            update = {"messages": [AIMessage(content="Unable to determine clarification target.")]}
+            update = emit_event(
+                owner="ambiguity_clarification_external",
+                kind="error",
+                message="Unable to determine clarification target.",
+            )
             validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,
@@ -70,7 +75,12 @@ def make_node_ambiguity_clarification_external(
         pending_keys = get_pending_ambiguity_keys(ambiguity)
         if not pending_keys:
             logger.info("ambiguity_clarification_external.no_pending", phase=target_phase)
-            update = {"messages": [AIMessage(content="Clarification complete.")]}
+            update = emit_event(
+                owner="ambiguity_clarification_external",
+                kind="progress",
+                message="Clarification complete.",
+                phase=target_phase,
+            )
             validate_state_update(update, owner="ambiguity_clarification_external")
             return Command(
                 update=update,

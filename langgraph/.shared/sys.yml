@@ -8,6 +8,7 @@ navigation_maps:
   - .shared/maps/components.yml    # Component purposes, contracts, rules
   - .shared/maps/platform.yml      # Platform layer architecture
   - .shared/maps/contracts.yml     # Contract definitions and paths
+  - .shared/maps/testing.yml       # Test organization index
 
 ## Instruction Files (CLAUDE.md locations)
 instructions:
@@ -26,9 +27,8 @@ instructions:
 ## Application Structure (hierarchical)
 backend_tree:
   shared:
-    - .shared/maps/                # Navigation maps
-    - .shared/rules/               # Component rule snippets
-    - .shared/rules/testing.md     # Test organization rules
+    - .shared/maps/                # Navigation maps (components, platform, contracts, testing)
+    - .shared/rules/               # Component rule snippets (see maps for index)
     - .shared/efficient-commands.md
   orchestration:                   # LangGraph orchestration layer
     - app/agents/
@@ -49,31 +49,19 @@ backend_tree:
     - app/platform/config/
     - app/platform/observability/
     - app/platform/utils/
-
-## Test Structure (category-based organization)
-tests:
-  unit:
-    - tests/unit/architecture/     # Structural validation tests
+  tests:                           # Test structure (see maps/testing.yml for details)
+    - tests/unit/architecture/     # Structural validation
     - tests/unit/platform/         # Platform layer tests
-    - tests/unit/orchestration/    # Orchestration component tests (future)
-  integration:
-    - tests/integration/platform/
-    - tests/integration/orchestration/
-  e2e:
-    - tests/e2e/workflows/
-
-## Documentation
-docs:
-  architecture:
-    - docs/architecture-phases-completed.md
-    - docs/architecture-rules-validation.md
-  guides:
-    - docs/test-reorganization-plan.md
+    - tests/unit/orchestration/    # Orchestration tests
+    - tests/integration/
+    - tests/e2e/
 
 ## High-Risk Areas (changes require full QA)
 high_risk_areas:
   - app/platform/core/contract/    # Contract changes affect all consumers
   - app/platform/core/policy/      # Policy changes affect guardrails/middleware
+  - app/platform/core/dto/         # DTO changes affect boundary translation
+  - app/platform/config/           # Config changes affect env loading across the entire app
   - app/state/                     # State changes require careful validation across all nodes
   - app/graphs/                    # Graph changes affect routing and control flow
   - app/platform/adapters/         # Adapter changes affect boundary translation

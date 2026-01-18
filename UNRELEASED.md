@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 ### Added
+- [langgraph] Add `TraceEvent` DTO in `app/platform/core/dto/events.py` with `uid` field for deduplication and `EventKind` literal type for operational trace events.
+- [langgraph] Add trace state reducers in `app/state/trace.py` with `add_events()` and `merge_agent_events()` for LangGraph-compatible event accumulation.
+- [langgraph] Add events adapter in `app/platform/adapters/events.py` with `emit_event()`, `emit_agent_event()`, and `merge_event_updates()` helpers for dual-sink logging.
+- [langgraph] Add prompting utilities in `app/platform/runtime/prompting.py` with `build_llm_messages()` for canonical LLM context assembly from state.messages.
+- [langgraph] Add `events` and `agent_events` fields to `SageState` for operational trace storage separate from LLM conversation context.
+- [langgraph] Add `raw_output` field to `PhaseEntry` and `PhaseResult` DTO for debugging unparsed LLM output.
+- [langgraph] Add ownership rules for `events` and `agent_events` fields in state contract.
+- [langgraph] Add message purity architecture test in `tests/unit/architecture/test_message_purity.py` to enforce separation of operational messages from LLM context.
+- [langgraph] Add comprehensive unit tests for TraceEvent DTO, events adapter, prompting utilities, and trace reducers.
+- [langgraph] Add `ErrorEntry` DTO in `app/platform/core/dto/errors.py` with structured error logging fields (code, message, severity, owner, phase, context) for queryable error information.
+- [langgraph] Add phase dependency graph (`PHASE_DEPENDENCIES`) and invalidation functions (`get_phases_to_invalidate`, `invalidate_downstream_phases`) to `app/platform/core/contract/state.py` for automatic downstream phase invalidation when upstream phases change.
+- [langgraph] Add message type architecture test in `tests/unit/architecture/test_message_purity.py` to enforce that only HumanMessage/AIMessage/SystemMessage are used in state.messages (forbids FunctionMessage, ToolMessage, etc.).
+- [langgraph] Add comprehensive unit tests for ErrorEntry DTO and phase invalidation logic in `tests/unit/platform/core/`.
 - [docs] Create CLAUDE.md instruction files across the repository mirroring AGENTS.md structure for Claude Code agent compatibility.
 - [langgraph] Complete hexagonal architecture refactor with full `app/platform/core/` implementation including contract, policy, and dto layers.
 - [langgraph] Add `GuardrailResult`, `EvidenceBundle`, and `PhaseResult` DTOs in `app/platform/core/dto/` for clean boundary translation.
@@ -37,6 +50,10 @@
 - [docs] Add session closing requirement to PROJECT_ROOT/CLAUDE.md section 6 requiring token usage check and analysis log creation before session ends.
 
 ### Changed
+- [langgraph] Add `app/platform/config/` and `app/platform/core/dto/` to high-risk areas in `.shared/sys.yml` (changes require full QA).
+- [langgraph] Split `.shared/rules/testing.md` (365 lines) into 4 focused snippets under 40 lines each: `testing-structure.md`, `testing-naming.md`, `testing-priorities.md`, `testing-quality.md`. Main file now serves as index with quick reference.
+- [langgraph] Migrate operational messages in nodes from `state.messages` to `state.events` via `emit_event()`: supervisor, ambiguity_supervisor, phase_supervisor, ambiguity_scan, retrieve_context, ambiguity_clarification, ambiguity_clarification_external nodes updated to separate operational trace from LLM conversation context.
+- [langgraph] Update exports in `app/platform/core/dto/__init__.py`, `app/state/__init__.py`, `app/platform/adapters/__init__.py`, and `app/platform/runtime/__init__.py` to include new event and prompting utilities.
 - [langgraph] Rename `tmp/token_usage/README.md` to `tmp/token_usage/CLAUDE.md` to align with project's instruction file convention and ensure contract precedence rules apply.
 - [langgraph] Extract test organization rules from `tests/CLAUDE.md` to `.shared/rules/testing.md` to eliminate duplication and establish single source of truth for test structure, naming conventions, priorities, and quality guidelines.
 - [langgraph] Reduce `tests/CLAUDE.md` from 378 lines to 21 lines by referencing `.shared/rules/testing.md` and `.shared/efficient-commands.md` instead of duplicating content, following the same minimal pattern used by component CLAUDE.md files.
@@ -87,6 +104,8 @@
 - [langgraph] Convert inefficient for-loops with append to list comprehensions and extend for better performance.
 - [langgraph] Add missing docstrings to all new package `__init__.py` files.
 - [langgraph] Remove unused `TypeVar` import from `app/graphs/write_graph.py`.
+- [langgraph] Fix ambiguity subgraph routing: use `goto="supervisor"` instead of `goto="__end__"` so the parent graph's supervisor node is re-entered after ambiguity checks complete. Also fix exhausted case to use the `goto` parameter consistently.
+- [langgraph] Fix duplicate events during subgraph state merges: add `uid` field to `TraceEvent` and update reducers (`add_events`, `merge_agent_events`) to deduplicate by uid.
 
 ### Removed
 - [langgraph] Delete `app/graphs/subgraphs/phases/contract.py` to fix backwards dependency (PhaseContract now in platform/core).

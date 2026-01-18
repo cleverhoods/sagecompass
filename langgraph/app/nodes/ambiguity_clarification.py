@@ -8,6 +8,7 @@ from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.agents.ambiguity_clarification.schema import OutputSchema
+from app.platform.adapters.events import emit_event
 from app.platform.adapters.logging import get_logger
 from app.platform.adapters.node import NodeWithRuntime
 from app.platform.core.contract.state import validate_state_update
@@ -57,7 +58,7 @@ def _resolve_target_phase(
     target_phase = phase or ambiguity_context.target_step
     if not target_phase:
         logger.warning("ambiguity_clarification.missing_target_step")
-        update = {"messages": [AIMessage(content="Unable to determine clarification target.")]}
+        update = emit_event(owner=_NODE_OWNER, kind="error", message="Unable to determine clarification target.")
         validate_state_update(update, owner=_NODE_OWNER)
         return None, ambiguity_context, Command(update=update, goto=goto)
 
@@ -84,10 +85,10 @@ def _complete_if_no_pending_keys(
                 "exhausted": False,
             }
         )
-        update = {
-            "ambiguity": updated_context,
-            "messages": [AIMessage(content="Clarification complete. Continuing.")],
-        }
+        event_update = emit_event(
+            owner=_NODE_OWNER, kind="progress", message="Clarification complete. Continuing.", phase=target_phase
+        )
+        update = {"ambiguity": updated_context, **event_update}
         validate_state_update(update, owner=_NODE_OWNER)
         return Command(update=update, goto=goto)
     return None
@@ -402,10 +403,10 @@ def make_node_ambiguity_clarification(
             )
 
         logger.info("ambiguity_clarification.resolved")
-        update = {
-            "ambiguity": updated_context,
-            "messages": [AIMessage(content="Clarification complete. Continuing.")],
-        }
+        event_update = emit_event(
+            owner=_NODE_OWNER, kind="progress", message="Clarification complete. Continuing.", phase=target_phase
+        )
+        update = {"ambiguity": updated_context, **event_update}
         validate_state_update(update, owner=_NODE_OWNER)
         return Command(update=update, goto=goto)
 

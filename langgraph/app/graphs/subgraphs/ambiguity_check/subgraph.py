@@ -60,7 +60,7 @@ def build_ambiguity_preflight_subgraph(  # type: ignore[no-untyped-def]
     )
     supervisor_node = make_node_ambiguity_supervisor(
         phase=phase,
-        goto="__end__",
+        goto="supervisor",
         max_context_retrieval_rounds=max_context_retrieval_rounds,
     )
 

@@ -10,7 +10,7 @@ from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
-from app.platform.config.paths import AGENTS_DIR, APP_ROOT, CONFIG_DIR
+from app.platform.config.paths import AGENTS_DIR, APP_ROOT, CONFIG_DIR, PROVIDER_CONFIG_DIR
 
 
 class FileLoader:
@@ -199,8 +199,7 @@ class FileLoader:
             yaml.YAMLError: Invalid YAML syntax
         """
         category = "provider"
-        provider_dir = CONFIG_DIR / category
-        file_path = provider_dir / f"{provider}.yaml"
+        file_path = PROVIDER_CONFIG_DIR / f"{provider}.yaml"
         return cls._read_yaml(file_path, category=category)
 
     @classmethod

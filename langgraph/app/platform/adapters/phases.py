@@ -30,6 +30,7 @@ def phase_result_to_entry(result: PhaseResult) -> PhaseEntry:
         error=result.error or {},
         status=result.status,
         evidence=evidence,
+        raw_output=result.raw_output,
     )
 
 
@@ -55,6 +56,7 @@ def phase_entry_to_result(
         error=entry.error if entry.error else None,
         status=entry.status,
         evidence=evidence_dicts if evidence_dicts else None,
+        raw_output=entry.raw_output,
     )
 
 
@@ -81,6 +83,7 @@ def merge_phase_results(
         error=result.error or existing.error,
         status=result.status,
         evidence=evidence,
+        raw_output=result.raw_output or existing.raw_output,
     )
 
 

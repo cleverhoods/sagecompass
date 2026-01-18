@@ -54,19 +54,13 @@ The following functions were **moved to `app/platform/adapters/`** because they 
 - Graph/node orchestration logic
 - Runtime coordination (logging, config, state) - **use adapters for this**
 
-## Docs map
-This Docs map is the required knowledge base for audits and contract design. Use the official LangChain/LangGraph/LangSmith documentation as the source of truth (not third-party summaries) to avoid deviating from the frameworks or reinventing existing guidance.
+## Documentation References
 
-| Contract area | Reference |
-|---|---|
-| Agent lifecycle + middleware | https://docs.langchain.com/oss/python/langchain/agents |
-| Structured models + response parsing | https://docs.langchain.com/oss/python/langchain/models |
-| Message types (AIMessage, HumanMessage, etc.) | https://docs.langchain.com/oss/python/langchain/messages |
-| Prompt templates + composability | https://docs.langchain.com/oss/python/langchain/prompts |
-| Tool integrations + allowlists | https://docs.langchain.com/oss/python/langchain/tools |
-| Graph runtime + execution | https://docs.langchain.com/oss/python/langgraph |
-| LangSmith tracing + evaluation | https://docs.smith.langchain.com/ |
-| Guardrails & policy controls | https://docs.langchain.com/oss/python/langchain/policies |
-| Typed output parsing | https://docs.langchain.com/oss/python/langchain/structured-output |
+Use official LangChain/LangGraph/LangSmith documentation as the source of truth when designing contracts.
 
-Use these links as the source of truth whenever we explain why a contract exists or to show how SageCompass follows LangChain/LangGraph/LangSmith recommendations.
+**Check installed versions:** `uv pip show langchain langchain-core langgraph langsmith pydantic`
+
+**Official docs:**
+- LangChain: https://python.langchain.com/docs/concepts/
+- LangGraph: https://langchain-ai.github.io/langgraph/concepts/
+- LangSmith: https://docs.smith.langchain.com/

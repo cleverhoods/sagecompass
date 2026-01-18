@@ -33,8 +33,16 @@ def _logger():
 class ProblemFramingAgentConfig(BaseModel):
     """Configuration for the Problem Framing agent build.
 
-    Assumptions:
-        If model is not provided, ProviderFactory supplies a default instance.
+    Attributes:
+        model: Optional LLM to use. If None, ProviderFactory supplies default.
+
+    Private Attributes:
+        _extra_middleware: Additional middleware to append after standard stack.
+
+    Example:
+        >>> from langchain_anthropic import ChatAnthropic
+        >>> config = ProblemFramingAgentConfig(model=ChatAnthropic(model="claude-3-haiku"))
+        >>> agent = build_agent(config)
     """
 
     model: BaseChatModel | None = None
@@ -47,13 +55,32 @@ class ProblemFramingAgentConfig(BaseModel):
 
 
 def build_agent(config: ProblemFramingAgentConfig | None = None) -> Runnable:
-    """Builds a LangChain agent runnable for use in LangGraph or standalone.
+    """Build the Problem Framing agent for structured business idea analysis.
+
+    Purpose:
+        Analyzes user input to extract a structured problem frame containing
+        domain, stakeholders, pain points, and success criteria. This is the
+        first analytical phase in the SageCompass decision pipeline.
 
     Args:
-        config: Configuration for this agent run. If None, defaults will be used.
+        config: Agent configuration with optional model and middleware overrides.
+            If None, uses default provider model from ProviderFactory.
+
+    Middleware stack (applied in order):
+        1. GuardrailsMiddleware - Enforces tool allowlist and safety policies
+        2. ContextDocsMiddleware - Injects retrieved evidence into agent context
+        3. DynamicPromptMiddleware - Renders system prompt with placeholders
 
     Returns:
-        Runnable agent ready for invocation.
+        Runnable agent that accepts {"task_input", "messages", "context_docs"}
+        and returns a validated ProblemFrame structured output.
+
+    Raises:
+        ValidationError: If agent schema validation fails during build.
+
+    See Also:
+        - Schema: app/agents/problem_framing/schema.py (ProblemFrame)
+        - Node: app/nodes/problem_framing.py (orchestration wrapper)
     """
     if config is None:
         config = ProblemFramingAgentConfig()

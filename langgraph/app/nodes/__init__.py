@@ -1,4 +1,28 @@
-"""Node factory exports for SageCompass graphs."""
+"""Node factory exports for SageCompass graphs.
+
+This module exposes all node factories following the DI-first pattern.
+Each factory returns a NodeWithRuntime callable that can be registered
+with LangGraph's StateGraph.
+
+Pattern:
+    All nodes are created via `make_node_*` factories that accept
+    injected dependencies (agents, tools, config) and return closures
+    capturing those dependencies. This ensures:
+    - No import-time construction
+    - Full testability via dependency injection
+    - Explicit wiring in graph composition
+
+Node Categories:
+    - Supervisors: Global routing (supervisor), phase routing (phase_supervisor)
+    - Preflight: Guardrails check, ambiguity detection/resolution
+    - Phase Nodes: Problem framing, context retrieval, etc.
+
+Example:
+    >>> from app.nodes import make_node_problem_framing
+    >>> from app.agents.problem_framing.agent import build_agent
+    >>> node = make_node_problem_framing(agent=build_agent())
+    >>> graph.add_node("problem_framing", node)
+"""
 
 from __future__ import annotations
 
