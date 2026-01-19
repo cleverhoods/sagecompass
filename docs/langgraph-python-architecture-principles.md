@@ -1,7 +1,9 @@
-# LangGraph Python Principles
+# LangGraph (Python) Architecture Principles
 
 > Comprehensive architectural principles for the SageCompass LangGraph component,
 > categorized by implementation grade.
+>
+> **Version:** 1.0 | **LangGraph:** >=1.0.3 | **Updated:** 2026-01
 
 ---
 
@@ -20,9 +22,11 @@
 
 Foundational principles that apply to all code in the langgraph component.
 
-### DI-First + Import Purity
+### 1. DI-First + Import Purity
 
-**Source:** `langgraph/CLAUDE.md`, `.shared/rules/di-import-purity.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md), [`.shared/rules/di-import-purity.md`](../langgraph/.shared/rules/di-import-purity.md)
+
+**Learn more:** [Dependency Injection (Wikipedia)](https://en.wikipedia.org/wiki/Dependency_injection)
 
 - Be DI-first
 - Never construct models/agents/tools/stores/checkpointers/graphs at import time
@@ -31,25 +35,58 @@ Foundational principles that apply to all code in the langgraph component.
 
 **Rationale:** Keeps graphs inspectable; topology must explain behavior.
 
-### Node Orchestration Only
+### 2. Node Factory Pattern
 
-**Source:** `.shared/rules/nodes.md`, `app/README.md`
+**Source:** [`.shared/rules/nodes.md`](../langgraph/.shared/rules/nodes.md)
+
+**Learn more:** [Factory Pattern (Wikipedia)](https://en.wikipedia.org/wiki/Factory_method_pattern)
+
+- Implement nodes as `make_node_*` factories
+- Factory functions return node callables configured with DI-injected dependencies
+- Keep factory signatures explicit about required dependencies
+
+**Pattern:**
+```python
+def make_node_example(agent: Agent, store: BaseStore) -> Callable:
+    def node(state: SageState) -> Command:
+        # orchestration logic
+        return Command(goto="next")
+    return node
+```
+
+**Rationale:** Factories enable dependency injection, making nodes testable without framework mocking.
+
+**Forbidden:** Define nodes as module-level functions that directly instantiate dependencies.
+
+### 3. Node Orchestration Only
+
+**Source:** [`.shared/rules/nodes.md`](../langgraph/.shared/rules/nodes.md), [`app/README.md`](../langgraph/app/README.md)
 
 - Keep nodes orchestration-only (no domain reasoning in nodes)
 - Nodes invoke DI-injected agents/models/tools
 - Nodes validate structured outputs
 - Nodes update owned state keys
 - Nodes decide routing (conditional edges or `Command`)
+
+**Forbidden:** Put domain reasoning into node modules.
+
+### 4. Pure Decision Functions
+
+**Source:** [`.shared/rules/nodes.md`](../langgraph/.shared/rules/nodes.md)
+
+**Learn more:** [Pure Functions (Wikipedia)](https://en.wikipedia.org/wiki/Pure_function)
+
 - Isolate complex branching into pure helper functions with unit tests
 - Prefer small, pure functions for branching/decision logic
 - Keep control flow shallow (no nested if/else beyond one level)
 - Use guard clauses with early returns for invalid inputs or no-op paths
+- Keep decision functions separate from I/O
 
-**Forbidden:** Put domain reasoning into node modules.
+**Rationale:** Pure functions are easier to test, reason about, and reuse.
 
-### Graph Composition Only
+### 5. Graph Composition Only
 
-**Source:** `.shared/rules/graphs.md`, `app/graphs/README.md`
+**Source:** [`.shared/rules/graphs.md`](../langgraph/.shared/rules/graphs.md), [`app/graphs/README.md`](../langgraph/app/graphs/README.md)
 
 - Keep graph modules composition-only (no business logic)
 - Graphs exist purely for wiring and routing control
@@ -62,9 +99,15 @@ Foundational principles that apply to all code in the langgraph component.
 - Phase subgraphs: `graphs/subgraphs/phases/<phase>/`
 - Each phase must have a `contract.py` describing the PhaseContract
 
-### Agent Statelessness & Structured Output
+**Rationale:** Graphs should be declarative topology; business logic belongs in nodes/agents.
 
-**Source:** `.shared/rules/agents.md`, `app/agents/README.md`
+**Forbidden:** Embed conditionals, transformations, or domain logic in graph modules.
+
+### 6. Agent Statelessness & Structured Output
+
+**Source:** [`.shared/rules/agents.md`](../langgraph/.shared/rules/agents.md), [`app/agents/README.md`](../langgraph/app/agents/README.md)
+
+**Learn more:** [Pydantic (official docs)](https://docs.pydantic.dev/) · [LangGraph structured output](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/#structured-output)
 
 - Be stateless and created via `build_agent()`
 - Return structured outputs via Pydantic OutputSchema validated before state writes
@@ -74,9 +117,9 @@ Foundational principles that apply to all code in the langgraph component.
 
 **Forbidden:** Store hidden mutable state on agent instances.
 
-### Schema Design Rules
+### 7. Schema Design Rules
 
-**Source:** `.shared/rules/schemas.md`, `app/schemas/CLAUDE.md`
+**Source:** [`.shared/rules/schemas.md`](../langgraph/.shared/rules/schemas.md), [`app/schemas/CLAUDE.md`](../langgraph/app/schemas/CLAUDE.md)
 
 - Keep schemas as shared semantic data definitions, not bound to a single node or agent
 - Define schemas with typed Pydantic `BaseModel`s and clear docstrings
@@ -86,9 +129,9 @@ Foundational principles that apply to all code in the langgraph component.
 - Embed orchestration logic or IO in schemas
 - Construct models/agents/tools/stores/checkpointers at import time
 
-### Tool Design & Determinism
+### 8. Tool Design & Determinism
 
-**Source:** `.shared/rules/tools.md`, `app/tools/CLAUDE.md`
+**Source:** [`.shared/rules/tools.md`](../langgraph/.shared/rules/tools.md), [`app/tools/CLAUDE.md`](../langgraph/app/tools/CLAUDE.md)
 
 - Be typed, stateless, and DI-injected
 - Enforce tool allowlists/restrictions in code (middleware/tool wrappers)
@@ -98,20 +141,23 @@ Foundational principles that apply to all code in the langgraph component.
 
 **Forbidden:** Rely on model-initiated tool calls for core logic.
 
-### Prompt Asset Organization
+### 9. Prompt Asset Organization
 
-**Source:** `.shared/rules/prompts.md`, `app/agents/README.md`
+**Source:** [`.shared/rules/prompts.md`](../langgraph/.shared/rules/prompts.md), [`app/agents/README.md`](../langgraph/app/agents/README.md)
 
 - Validate prompt placeholders/suffix order with `PromptContract` helpers
 - Keep prompt files under agent folders (`system.prompt` required)
 - `global_system.prompt` may live under `app/agents/` as a shared prompt asset
 - Prompts are file-based; no hardcoded prompt strings in Python
+- Context flows through evidence hydration pattern (see #19), not direct prompt injection
 
-**Forbidden:** Inject retrieved context into prompts.
+**Forbidden:** Hardcode retrieved context into prompt template files. Use runtime evidence hydration instead.
 
-### State Contracts & Ownership
+**Rationale:** Separates static prompt assets from dynamic context, enabling prompt versioning and testability.
 
-**Source:** `.shared/rules/state-contracts.md`, `app/state/CLAUDE.md`
+### 10. State Contracts & Ownership
+
+**Source:** [`.shared/rules/state-contracts.md`](../langgraph/.shared/rules/state-contracts.md), [`app/state/CLAUDE.md`](../langgraph/app/state/CLAUDE.md)
 
 - Use `SageState` from `app/state/state.py`
 - Keep `GatingContext` for guardrail metadata only
@@ -123,21 +169,38 @@ Foundational principles that apply to all code in the langgraph component.
 
 **Forbidden:** Access state via dict fallbacks for routing keys.
 
-### Explicit Routing & State Management
+### 11. Explicit Routing & State Management
 
-**Source:** `.shared/rules/graphs.md`, `.shared/rules/di-import-purity.md`
+**Source:** [`.shared/rules/graphs.md`](../langgraph/.shared/rules/graphs.md), [`.shared/rules/di-import-purity.md`](../langgraph/.shared/rules/di-import-purity.md)
+
+**Learn more:** [LangGraph Command](https://langchain-ai.github.io/langgraph/concepts/low_level/#command)
 
 - Route explicitly with `Command(goto=...)` when updating + routing
 - Prefer explicit state models paired with explicit routing decisions
 - Have a single routing owner per phase (supervisor)
 - MUST NOT use `Send` except for explicit map/reduce patterns
 
-### Bounded Loops & Limits
+**Rationale:** Explicit routing makes graph behavior predictable and debuggable; implicit routing hides control flow.
 
-**Source:** `.shared/rules/di-import-purity.md`
+### 12. Bounded Loops & Limits
+
+**Source:** [`.shared/rules/di-import-purity.md`](../langgraph/.shared/rules/di-import-purity.md)
 
 - Bound loops via state limits and/or recursion limits
 - Must enforce in graphs and nodes to prevent infinite execution
+
+**Rationale:** Unbounded loops can exhaust resources and block pipelines; explicit limits ensure predictable termination.
+
+### 13. Observable Side Effects
+
+**Source:** [`.shared/rules/nodes.md`](../langgraph/.shared/rules/nodes.md)
+
+- Avoid hidden state; pass dependencies explicitly (DI-first)
+- Make side effects observable/injectable so unit tests can assert behavior
+- Separate I/O operations from decision logic
+- Use dependency injection to provide testable implementations
+
+**Rationale:** Observable side effects enable unit testing without mocking entire frameworks.
 
 ---
 
@@ -145,9 +208,11 @@ Foundational principles that apply to all code in the langgraph component.
 
 Patterns for complex scenarios, extensibility, and sophisticated architecture.
 
-### Hexagonal Architecture (Ports & Adapters)
+### 14. Hexagonal Architecture (Ports & Adapters)
 
-**Source:** `app/platform/README.md`, `app/platform/core/README.md`
+**Source:** [`app/platform/README.md`](../langgraph/app/platform/README.md), [`app/platform/core/README.md`](../langgraph/app/platform/core/README.md)
+
+**Learn more:** [Hexagonal Architecture (Wikipedia)](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) · [Alistair Cockburn's original article](https://alistair.cockburn.us/hexagonal-architecture/)
 
 Separate **pure core logic** from **framework-specific orchestration** using three layers:
 
@@ -159,11 +224,13 @@ Separate **pure core logic** from **framework-specific orchestration** using thr
 
 **Why:** Framework independence, testability, extractability, clear boundaries.
 
-**Enforcement:** `tests/architecture/test_core_purity.py`, `tests/architecture/test_adapter_boundary.py`
+**Enforcement:** [`tests/unit/architecture/test_core_purity.py`](../langgraph/tests/unit/architecture/test_core_purity.py), [`tests/unit/architecture/test_adapter_boundary.py`](../langgraph/tests/unit/architecture/test_adapter_boundary.py)
 
-### Dependency Inversion Principle
+### 15. Dependency Inversion Principle
 
-**Source:** `app/platform/README.md`, `app/platform/core/README.md`
+**Source:** [`app/platform/README.md`](../langgraph/app/platform/README.md), [`app/platform/core/README.md`](../langgraph/app/platform/core/README.md)
+
+**Learn more:** [SOLID Principles (Wikipedia)](https://en.wikipedia.org/wiki/SOLID) · [Dependency Inversion Principle](https://en.wikipedia.org/wiki/Dependency_inversion_principle)
 
 - Core defines contracts; application implements them. Never reverse.
 - Core exports DTOs and contracts
@@ -172,9 +239,9 @@ Separate **pure core logic** from **framework-specific orchestration** using thr
 
 **Forbidden:** Core importing from runtime/adapters (breaks dependency inversion).
 
-### Core Purity (NO Wiring Dependencies)
+### 16. Core Purity (NO Wiring Dependencies)
 
-**Source:** `.shared/rules/platform.md`, `app/platform/core/README.md`
+**Source:** [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md), [`app/platform/core/README.md`](../langgraph/app/platform/core/README.md)
 
 Keep `app/platform/core/` pure with **NO imports from:**
 - App orchestration (`app.state`, `app.graphs`, `app.nodes`, `app.agents`, `app.tools`)
@@ -193,9 +260,20 @@ Keep `app/platform/core/` pure with **NO imports from:**
 - Add state coordination, logging, or config loading to `core/contract/` or `core/policy/`
 - Import `SageState`, `PhaseEntry`, `GatingContext` into core DTOs
 
-### Adapter Boundary Translation
+### 17. Cross-Layer Import Rules
 
-**Source:** `.shared/rules/platform.md`, `app/platform/adapters/README.md`
+**Source:** [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md)
+
+- Only adapters may import from both core and application layers
+- Core MUST NOT import from adapters, runtime, config, or application
+- Application layers import through adapters, never directly from core internals
+- Runtime/config/observability are infrastructure layers, not business logic
+
+**Import Direction:** `Application → Adapters → Core` (never reverse)
+
+### 18. Adapter Boundary Translation
+
+**Source:** [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md), [`app/platform/adapters/README.md`](../langgraph/app/platform/adapters/README.md)
 
 - Use adapter functions for all boundary translation between core DTOs and application State models
 - Import logging, tools, and agent utilities through adapters
@@ -204,9 +282,9 @@ Keep `app/platform/core/` pure with **NO imports from:**
 
 **Pattern:** `DTO → Adapter → State Model` (or reverse)
 
-### Evidence Hydration Pattern
+### 19. Evidence Hydration Pattern
 
-**Source:** `.shared/rules/guardrails-and-memory.md`, `app/platform/README.md`
+**Source:** [`.shared/rules/guardrails-and-memory.md`](../langgraph/.shared/rules/guardrails-and-memory.md), [`app/platform/README.md`](../langgraph/app/platform/README.md)
 
 - Centralize evidence hydration in `app/platform/runtime` helpers
 - Nodes must NOT read from the Store directly (bypass runtime helpers)
@@ -215,20 +293,35 @@ Keep `app/platform/core/` pure with **NO imports from:**
 
 **Structure:** `Core DTO → Runtime Hydration → Adapter Translation → State Models`
 
-### Type Safety Patterns
+### 20. Framework Protocol Compliance
 
-**Source:** `.shared/rules/quality-gates.md`, `langgraph/CLAUDE.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
+
+**Learn more:** [Python Protocols (PEP 544)](https://peps.python.org/pep-0544/)
+
+**CRITICAL PRINCIPLE:** We USE frameworks, we do NOT work around them.
+
+**When encountering type errors:**
+1. Read the framework's type stubs (`.venv/lib/python3.12/site-packages/{framework}/**/*.py`)
+2. Understand the framework's Protocol/TypeAlias definitions
+3. Match your code to the framework's expected types exactly
+4. If framework types seem wrong, verify installed version matches docs before assuming bug
+
+**Example - LangGraph nodes:**
+- ❌ WRONG: Wrap with `_as_runtime_node()` + `# type: ignore[call-overload]`
+- ✅ RIGHT: Read `langgraph/graph/_node.py`, see `_NodeWithRuntime` protocol, match signature exactly
+
+### 21. Type Safety Patterns
+
+**Source:** [`.shared/rules/quality-gates.md`](../langgraph/.shared/rules/quality-gates.md), [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
+
+**Learn more:** [TypeVar (Python docs)](https://docs.python.org/3/library/typing.html#typing.TypeVar) · [TypeGuard (Python docs)](https://docs.python.org/3/library/typing.html#typing.TypeGuard) · [PEP 647 – User-Defined Type Guards](https://peps.python.org/pep-0647/)
 
 | Pattern | Use Instead Of | Why |
 |---------|----------------|-----|
 | `TypeVar` | `assert isinstance` | Returns specific types from generic validators |
 | `TypeGuard` | `assert isinstance` | Survives Python `-O` optimization, reusable |
 | `Mapping[str, object]` | `Any` | For heterogeneous dicts, prefer `object` |
-
-**Framework Usage (ABSOLUTELY NO WORKAROUNDS):**
-- We USE frameworks, we do NOT work around them
-- When encountering type errors, read framework's type stubs
-- Match code to framework's expected types exactly
 
 **Forbidden Type Workarounds:**
 - `cast()` to bypass type checking
@@ -239,18 +332,22 @@ Keep `app/platform/core/` pure with **NO imports from:**
 
 **Only acceptable type ignores:** Documented framework bugs (include version + issue link).
 
-### Artifact & Namespace Contracts
+### 22. Artifact & Namespace Contracts
 
-**Source:** `.shared/rules/state-contracts.md`, `.shared/rules/platform.md`
+**Source:** [`.shared/rules/state-contracts.md`](../langgraph/.shared/rules/state-contracts.md), [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md)
+
+**Learn more:** [Event Sourcing Pattern](https://martinfowler.com/eaaDev/EventSourcing.html)
 
 - Validate artifact payloads with `ArtifactEnvelope`
 - Build namespaces with `NamespaceParts`/`build_namespace`
 - Persist artifacts as immutable events plus a mutable `latest` pointer
 - ArtifactEnvelope contains: namespace, key, payload, provenance
 
-### Long-Term Memory & Storage
+### 23. Long-Term Memory & Storage
 
-**Source:** `.shared/rules/guardrails-and-memory.md`
+**Source:** [`.shared/rules/guardrails-and-memory.md`](../langgraph/.shared/rules/guardrails-and-memory.md)
+
+**Learn more:** [LangGraph Memory Concepts](https://langchain-ai.github.io/langgraph/concepts/memory/) · [LangGraph Store](https://langchain-ai.github.io/langgraph/concepts/persistence/#memory-store)
 
 - Use LangGraph Store for long-term memory and decision artifacts
 - Persist artifacts as immutable events plus a mutable `latest` pointer
@@ -262,9 +359,9 @@ Keep `app/platform/core/` pure with **NO imports from:**
 
 Requirements for production-ready, maintainable, and testable code.
 
-### Test Structure & Organization
+### 24. Test Structure & Organization
 
-**Source:** `.shared/rules/testing-structure.md`, `tests/CLAUDE.md`
+**Source:** [`.shared/rules/testing-structure.md`](../langgraph/.shared/rules/testing-structure.md), [`tests/CLAUDE.md`](../langgraph/tests/CLAUDE.md)
 
 **Structure:** `tests/[test_type]/[category]/[mirrored_structure]`
 
@@ -288,9 +385,9 @@ Requirements for production-ready, maintainable, and testable code.
 - Place tests outside the mirrored structure
 - Skip the category level in test paths
 
-### Test Naming Conventions
+### 25. Test Naming Conventions
 
-**Source:** `.shared/rules/testing-naming.md`
+**Source:** [`.shared/rules/testing-naming.md`](../langgraph/.shared/rules/testing-naming.md)
 
 - Name test files: `test_<module_name>.py`
 - Name test functions: `test_<function>_<scenario>_<expected>`
@@ -302,9 +399,9 @@ Requirements for production-ready, maintainable, and testable code.
 
 **Forbidden:** Vague names like `test_it_works` or `test_function`.
 
-### Test Priorities & Coverage
+### 26. Test Priorities & Coverage
 
-**Source:** `.shared/rules/testing-priorities.md`
+**Source:** [`.shared/rules/testing-priorities.md`](../langgraph/.shared/rules/testing-priorities.md)
 
 **MUST Test (High Priority):**
 1. Contract Validators (`platform/core/contract/`)
@@ -336,11 +433,13 @@ Requirements for production-ready, maintainable, and testable code.
 - Simple getters/setters with no logic
 - Pass-through delegation functions
 
-### Test Quality & AAA Pattern
+### 27. Test Quality & AAA Pattern
 
-**Source:** `.shared/rules/testing-quality.md`
+**Source:** [`.shared/rules/testing-quality.md`](../langgraph/.shared/rules/testing-quality.md)
 
-- Keep unit tests < 1ms, integration < 100ms
+**Learn more:** [Arrange-Act-Assert Pattern](https://wiki.c2.com/?ArrangeActAssert)
+
+- Keep unit tests fast (target < 50ms each), integration < 500ms
 - Make tests isolated (no external dependencies for unit tests)
 - Make tests deterministic (same input → same output)
 - Use Arrange-Act-Assert pattern
@@ -359,14 +458,16 @@ def test_phase_result_to_entry_converts_dto_to_state():
 ```
 
 **Forbidden:**
-- Slow unit tests (> 1ms)
+- Slow unit tests (> 100ms suggests I/O or external calls)
 - Test inter-dependencies
 - Real external services in unit tests
 - Multiple concepts in one test
 
-### Test Fixtures
+### 28. Test Fixtures
 
-**Source:** `.shared/rules/testing-fixtures.md`
+**Source:** [`.shared/rules/testing-fixtures.md`](../langgraph/.shared/rules/testing-fixtures.md)
+
+**Learn more:** [pytest fixtures (official docs)](https://docs.pytest.org/en/stable/explanation/fixtures.html)
 
 - Define fixtures in `conftest.py` (pytest auto-discovers them)
 - Place fixtures at **lowest directory level** where all consumers exist
@@ -396,9 +497,9 @@ def make_phase_entry():
 - Create fixture chains across different conftest.py files
 - Use `autouse=True` except for truly global setup
 
-### Quality Gates & Tooling
+### 29. Quality Gates & Tooling
 
-**Source:** `.shared/rules/quality-gates.md`, `langgraph/CLAUDE.md`
+**Source:** [`.shared/rules/quality-gates.md`](../langgraph/.shared/rules/quality-gates.md), [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
 
 **Commands to run before proposing changes:**
 
@@ -421,9 +522,9 @@ def make_phase_entry():
 - Maintain at least one bounded real-provider integration test
 - **NEVER run raw commands** - ALWAYS use poe tasks defined in `pyproject.toml`
 
-### QA Lanes
+### 30. QA Lanes
 
-**Source:** `langgraph/CLAUDE.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
 
 | Lane | When | Command |
 |------|------|---------|
@@ -439,9 +540,68 @@ def make_phase_entry():
 - `app/graphs/`
 - `app/platform/adapters/`
 
-### Structured Logging
+### 31. Code Style Automation
 
-**Source:** `.shared/rules/nodes.md`, `.shared/rules/middlewares.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
+
+**Learn more:** [Ruff (official docs)](https://docs.astral.sh/ruff/)
+
+**Do not manually check or mention style** - automated tools enforce this:
+- Format code: `uv run poe format` (Ruff)
+- Check types: `uv run poe type_stats` (mypy)
+- Check lint: `uv run poe lint` (Ruff)
+
+Always run `uv run poe format` before commits. Never discuss style in code reviews - linters handle it.
+
+**Forbidden:** Manual style checking or style discussions in reviews.
+
+### 32. Poe Tasks Only
+
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
+
+**Learn more:** [poethepoet (official docs)](https://poethepoet.natn.io/)
+
+**NEVER run raw commands** - ALWAYS use the poe tasks defined in `pyproject.toml`:
+
+| Task | Command |
+|------|---------|
+| Type checking | `uv run poe type_stats` |
+| Scoped type check | `uv run poe type_stats_scoped {path}` |
+| Unit tests | `uv run poe test_unit` |
+| Integration tests | `uv run poe test_integration` |
+| Architecture tests | `uv run poe test_architecture` |
+| Linting | `uv run poe lint` |
+| Formatting | `uv run poe format` |
+
+**Why:** Poe tasks have correct flags, paths, and configuration. Raw commands bypass project standards.
+
+### 33. Architecture Compliance Testing
+
+**Source:** [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md), [`tests/unit/architecture/`](../langgraph/tests/unit/architecture/)
+
+- Validate architecture compliance with dedicated tests
+- [`test_core_purity.py`](../langgraph/tests/unit/architecture/test_core_purity.py) - Ensures core has no forbidden imports
+- [`test_adapter_boundary.py`](../langgraph/tests/unit/architecture/test_adapter_boundary.py) - Validates adapter translation patterns
+- Run with: `uv run poe test_architecture`
+
+**Coverage Target:** 100% of architectural rules must have corresponding tests.
+
+### 34. Middleware Testability
+
+**Source:** [`.shared/rules/middlewares.md`](../langgraph/.shared/rules/middlewares.md)
+
+- Keep middleware testable with pure decision helpers and minimal wiring
+- Extract policy decisions into pure functions that can be unit tested
+- Middleware integration tests should verify wiring, not business logic
+- Use dependency injection to make middleware components swappable
+
+**Rationale:** Middleware sits at critical boundaries; testability ensures reliability.
+
+### 35. Structured Logging
+
+**Source:** [`.shared/rules/nodes.md`](../langgraph/.shared/rules/nodes.md), [`.shared/rules/middlewares.md`](../langgraph/.shared/rules/middlewares.md)
+
+**Learn more:** [Structured Logging (structlog)](https://www.structlog.org/en/stable/why.html)
 
 - Log entry, routing decisions, errors, and output summaries (no raw sensitive data)
 - Use logging through adapters (`app/platform/adapters/logging.get_logger`)
@@ -449,9 +609,9 @@ def make_phase_entry():
 - Redact secrets/PII in logs and persistence
 - Use structured logging with context
 
-### Dependency Management
+### 36. Dependency Management
 
-**Source:** `langgraph/CLAUDE.md`, `.shared/rules/platform.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md), [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md)
 
 - Treat `uv.lock` as the source of truth for installed versions
 - Never read uv.lock directly (10k+ lines)
@@ -473,9 +633,29 @@ def make_phase_entry():
 
 Governance, compliance, auditability, and cross-cutting requirements for critical systems.
 
-### Centralized Guardrail Logic
+### 37. Token Efficiency
 
-**Source:** `.shared/rules/guardrails-and-memory.md`, `.shared/rules/middlewares.md`, `app/platform/README.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md), [`.shared/efficient-commands.md`](../langgraph/.shared/efficient-commands.md)
+
+**CRITICAL:** These token efficiency rules apply everywhere under `langgraph/**`.
+
+**Purpose-based reading strategies:**
+- **EDIT goal:** Read full file without limits
+- **UNDERSTAND goal:** Read first 30-50 lines (imports, class definitions)
+- **FIND goal:** Grep first, then read specific section
+- **VERIFY goal:** Use Grep with `files_with_matches` only
+
+**File size guidelines:**
+- < 5KB: Safe to read entirely
+- 5-50KB: Use offset/limit
+- 50-500KB: Use head/tail only
+- \> 500KB: DO NOT READ (use grep/awk)
+
+**Forbidden:** Reading lock files (uv.lock), cache directories, or files without limits.
+
+### 38. Centralized Guardrail Logic
+
+**Source:** [`.shared/rules/guardrails-and-memory.md`](../langgraph/.shared/rules/guardrails-and-memory.md), [`.shared/rules/middlewares.md`](../langgraph/.shared/rules/middlewares.md), [`app/platform/README.md`](../langgraph/app/platform/README.md)
 
 - Centralize guardrail logic in `app/platform/core/policy/*`
 - Call the same guardrail policies from the gate node AND middleware
@@ -487,26 +667,28 @@ Governance, compliance, auditability, and cross-cutting requirements for critica
 
 **Forbidden:** Implement domain reasoning inside middleware.
 
-### Redaction & Data Security
+### 39. Redaction & Data Security
 
-**Source:** `.shared/rules/di-import-purity.md`, `.shared/rules/guardrails-and-memory.md`, `.shared/rules/middlewares.md`
+**Source:** [`.shared/rules/di-import-purity.md`](../langgraph/.shared/rules/di-import-purity.md), [`.shared/rules/guardrails-and-memory.md`](../langgraph/.shared/rules/guardrails-and-memory.md), [`.shared/rules/middlewares.md`](../langgraph/.shared/rules/middlewares.md)
+
+**Learn more:** [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
 
 - Redact secrets/PII in logs and persistence (applies globally)
 - All logging must exclude sensitive data
 - Middleware handles redaction/normalization at policy boundary
 
-### Platform Contract Enforcement
+### 40. Platform Contract Enforcement
 
-**Source:** `.shared/rules/platform.md`
+**Source:** [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md)
 
 - Treat `app/platform/core/contract/**` as the canonical enforcement targets for backend invariants
 - Keep platform logic aligned with platform contract tests (`tests/unit/platform/test_platform_contracts.py`)
 - Satisfy platform domain governance enforced by `tests/unit/platform/test_platform_contracts.py`
 - Use `app/platform/core/contract/README.md` as the knowledge base for every audit/review
 
-### Structured Output Validation
+### 41. Structured Output Validation
 
-**Source:** `.shared/rules/nodes.md`, `.shared/rules/quality-gates.md`
+**Source:** [`.shared/rules/nodes.md`](../langgraph/.shared/rules/nodes.md), [`.shared/rules/quality-gates.md`](../langgraph/.shared/rules/quality-gates.md)
 
 - Validate structured outputs with `validate_structured_response`
 - This function is generic (TypeVar) and returns the specific schema type—no assert needed
@@ -514,17 +696,17 @@ Governance, compliance, auditability, and cross-cutting requirements for critica
 - Outputs validated before state writes
 - Keep OutputSchema fields explicit (avoid raw `dict`/`Any`)
 
-### Platform Configuration & Path Management
+### 42. Platform Configuration & Path Management
 
-**Source:** `.shared/rules/platform.md`
+**Source:** [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md)
 
 - Keep configuration and path conventions centralized under `app/platform/config/**`
 - Keep policy logic pure and deterministic under `app/platform/core/policy/**`
 - Keep runtime helpers under `app/platform/runtime/**` and use them for evidence hydration
 
-### Operating Loop
+### 43. Operating Loop
 
-**Source:** `langgraph/CLAUDE.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
 
 1. **Plan**: Confirm relevant component via maps and document minimal changes
 2. **Implement**: Make smallest correct change, keeping DI/import purity in mind
@@ -532,9 +714,9 @@ Governance, compliance, auditability, and cross-cutting requirements for critica
 4. **Full QA loop (conditional)**: Run `uv run poe qa` when touching high-risk areas
 5. **Done gate**: Update `../UNRELEASED.md`, verify map references, double-check instruction surface
 
-### Session Start Ritual
+### 44. Session Start Ritual
 
-**Source:** `langgraph/CLAUDE.md`, `.shared/efficient-commands.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md), [`.shared/efficient-commands.md`](../langgraph/.shared/efficient-commands.md)
 
 1. Read `.shared/sys.yml` (comprehensive path index)
 2. Based on task, read relevant map:
@@ -543,9 +725,9 @@ Governance, compliance, auditability, and cross-cutting requirements for critica
    - Contract enforcement: `.shared/maps/contracts.yml`
 3. Only use grep/find when maps don't cover target
 
-### Documentation Principles
+### 45. Documentation Principles
 
-**Source:** `../CLAUDE.md`, `.shared/rules/platform.md`
+**Source:** [`../CLAUDE.md`](../CLAUDE.md), [`.shared/rules/platform.md`](../langgraph/.shared/rules/platform.md)
 
 - Maintain version alignment with locked dependencies
 - Cite official docs (links) when describing framework behavior
@@ -553,9 +735,11 @@ Governance, compliance, auditability, and cross-cutting requirements for critica
 - No meta-commentary in token-sensitive files (CLAUDE.md, UNRELEASED.md, .shared/)
 - State facts, commands, and rules only
 
-### CHANGELOG & UNRELEASED.md Policy
+### 46. CHANGELOG & UNRELEASED.md Policy
 
-**Source:** `../CLAUDE.md`
+**Source:** [`../CLAUDE.md`](../CLAUDE.md)
+
+**Learn more:** [Keep a Changelog](https://keepachangelog.com/)
 
 All changes MUST be documented using **UNRELEASED.md workflow**.
 
@@ -570,9 +754,9 @@ All changes MUST be documented using **UNRELEASED.md workflow**.
 - Development → Update `UNRELEASED.md`
 - Release → Merge into `CHANGELOG.md`, clear UNRELEASED
 
-### Cross-Cutting Non-Negotiables
+### Cross-Cutting Non-Negotiables (Summary)
 
-**Source:** `langgraph/CLAUDE.md`
+**Source:** [`langgraph/CLAUDE.md`](../langgraph/CLAUDE.md)
 
 All code must satisfy:
 - DI-first + no import-time construction
