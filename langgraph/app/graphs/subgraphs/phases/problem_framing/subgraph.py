@@ -58,6 +58,7 @@ def build_problem_framing_subgraph(  # type: ignore[no-untyped-def]
         cmd = phase_supervisor_node(state, runtime=runtime)
         if cmd.goto == "problem_framing":
             return Command(update=cmd.update, goto="problem_framing")
+        # End subgraph - parent graph edge routes back to supervisor
         return Command(update=cmd.update, goto="__end__")
 
     # Add nodes - problem_framing matches protocol directly

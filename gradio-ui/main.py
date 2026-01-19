@@ -11,6 +11,7 @@ from streamer import (
     DEFAULT_INBROWSER,
     DEFAULT_PORT,
     SageCompassStreamer,
+    StreamUpdate,
 )
 
 EXAMPLE_MESSAGES = [
@@ -20,16 +21,13 @@ EXAMPLE_MESSAGES = [
 ]
 
 CSS = """
-#progress_md {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 0.95rem;
-  line-height: 1.35rem;
+#phase_header {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
 }
-#progress_md ul { margin: 6px 0 0 18px; }
-#progress_md strong { display: inline-block; margin-bottom: 4px; }
 """
 
 
@@ -49,23 +47,16 @@ class SageCompassUI:
         self.port = port
         self.inbrowser = inbrowser
 
-    def _submit(
-        self,
-        user_message: str,
-        history: list[dict[str, str]] | None,
-        state: dict[str, Any] | None,
-    ):
-        # streamer.stream(...) must yield 5 outputs:
-        # (chatbot_value, history_holder, state_holder, message_box_value, progress_md)
-        yield from self.streamer.stream(user_message, state)
-
     def _stream_response(
         self,
         user_message: str,
-        history: list[dict[str, str]] | None,
         state: dict[str, Any] | None,
     ):
-        yield from self._submit(user_message, history, state)
+        """Stream responses, yielding Gradio outputs for each update."""
+        for update in self.streamer.stream(user_message, state):
+            # Unpack StreamUpdate into Gradio outputs:
+            # (chatbot, state, textbox, phase)
+            yield update.messages, update.state, "", update.phase
 
     def _on_example_select(self, evt: gr.SelectData):
         v = evt.value
@@ -77,6 +68,9 @@ class SageCompassUI:
         """Build and launch the Gradio chat interface."""
         with gr.Blocks(title="SageCompass") as demo:
             gr.Markdown("## SageCompass")
+
+            # Phase indicator header (at top)
+            phase_indicator = gr.Markdown(value="**Phase:** \u2014", elem_id="phase_header")
 
             # Gradio 6.3.0 Chatbot already expects messages (list of dicts),
             # so DO NOT pass type="messages".
@@ -96,49 +90,27 @@ class SageCompassUI:
             )
             send_button = gr.Button("Send")
             clear_button = gr.Button("Reset conversation")
-            history_holder = gr.State([])
             state_holder = gr.State({})
 
-            # Progress panel: Accordion + Markdown (bold headers + bullets)
-            with gr.Accordion("Progress", open=True):
-                chain_of_thought_log = gr.Markdown(value="", elem_id="progress_md")
-
-            send_action = self._stream_response
+            inputs = [message_box, state_holder]
+            outputs = [chatbot, state_holder, message_box, phase_indicator]
 
             message_box.submit(
-                send_action,
-                inputs=[message_box, history_holder, state_holder],
-                outputs=[
-                    chatbot,
-                    history_holder,
-                    state_holder,
-                    message_box,
-                    chain_of_thought_log,
-                ],
+                self._stream_response,
+                inputs=inputs,
+                outputs=outputs,
                 queue=True,
             )
             send_button.click(
-                send_action,
-                inputs=[message_box, history_holder, state_holder],
-                outputs=[
-                    chatbot,
-                    history_holder,
-                    state_holder,
-                    message_box,
-                    chain_of_thought_log,
-                ],
+                self._stream_response,
+                inputs=inputs,
+                outputs=outputs,
                 queue=True,
             )
             clear_button.click(
-                lambda: ([], [], {}, "", ""),
+                lambda: ([], {}, "", "**Phase:** \u2014"),
                 inputs=[],
-                outputs=[
-                    chatbot,
-                    history_holder,
-                    state_holder,
-                    message_box,
-                    chain_of_thought_log,
-                ],
+                outputs=outputs,
             )
 
             chatbot.example_select(
@@ -146,13 +118,12 @@ class SageCompassUI:
                 inputs=None,
                 outputs=message_box,
             ).then(
-                send_action,
-                inputs=[message_box, history_holder, state_holder],
-                outputs=[chatbot, history_holder, state_holder, message_box, chain_of_thought_log],
+                self._stream_response,
+                inputs=inputs,
+                outputs=outputs,
                 queue=True,
             )
 
-        # Gradio 6 moved css= here
         demo.launch(
             server_name=self.host,
             server_port=self.port,

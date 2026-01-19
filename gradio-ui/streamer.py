@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 import copy
-import json
 import os
+from dataclasses import dataclass
 from typing import Any, Iterable
 
 from langgraph_sdk import get_sync_client
+
+
+@dataclass
+class StreamUpdate:
+    """Single update yielded during streaming."""
+
+    messages: list[dict[str, str]]  # Chat messages for display
+    state: dict[str, Any]  # Full backend state
+    phase: str  # Formatted phase display
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 1111
@@ -35,16 +44,35 @@ class LangGraphApiClient:
         self.client = get_sync_client(url=self.base_url, api_key=api_key)
 
     def stream_state(self, state: dict[str, Any]) -> Iterable[dict[str, Any]]:
-        """Stream full state snapshots ('values') and yield dict states only."""
+        """Stream state updates and accumulate into full state."""
+        accumulated: dict[str, Any] = {}
         try:
             for chunk in self.client.runs.stream(
                 None,  # threadless
                 self.assistant_id,
                 input=state,
-                stream_mode="values",
+                stream_mode="updates",
             ):
-                if getattr(chunk, "event", None) == "values" and isinstance(chunk.data, dict):
-                    yield chunk.data
+                event = getattr(chunk, "event", None)
+
+                if event == "updates" and isinstance(chunk.data, dict):
+                    # Updates come as {node_name: {field: value, ...}}
+                    # Merge into accumulated state
+                    for node_name, node_updates in chunk.data.items():
+                        if isinstance(node_updates, dict):
+                            for key, value in node_updates.items():
+                                if key == "messages" and isinstance(value, list):
+                                    # Append messages rather than replace
+                                    existing = accumulated.get("messages", [])
+                                    accumulated["messages"] = existing + value
+                                elif key == "events" and isinstance(value, list):
+                                    # Append events rather than replace
+                                    existing = accumulated.get("events", [])
+                                    accumulated["events"] = existing + value
+                                else:
+                                    accumulated[key] = value
+                    yield accumulated.copy()
+
         except Exception as exc:
             raise LangGraphApiError(f"LangGraph SDK stream failed: {exc}") from exc
 
@@ -65,6 +93,13 @@ def _prepare_state(prev_state: dict[str, Any] | None, user_message: str) -> dict
     return state
 
 
+def _should_display_message(message: dict[str, Any]) -> bool:
+    """Filter to HumanMessage and AIMessage only (exclude SystemMessage)."""
+    msg_type = str(message.get("type", "") or "").lower()
+    # Exclude system messages from UI
+    return msg_type != "system"
+
+
 def _message_role(message: dict[str, Any]) -> str:
     msg_type = str(message.get("type", "") or "").lower()
     role = str(message.get("role", "") or "").lower()
@@ -74,7 +109,7 @@ def _message_role(message: dict[str, Any]) -> str:
         return "assistant"
     if msg_type in ("human",):
         return "user"
-    if msg_type in ("ai", "assistant", "chat", "tool", "system"):
+    if msg_type in ("ai", "assistant", "chat", "tool"):
         return "assistant"
     return "assistant"
 
@@ -99,11 +134,23 @@ def _message_text(message: dict[str, Any]) -> str:
 
 
 def _normalize_messages(messages: Iterable[dict[str, Any]] | None) -> list[dict[str, str]]:
+    """Normalize messages for Gradio display, filtering out system messages and duplicates."""
     normalized: list[dict[str, str]] = []
+    seen_ids: set[str] = set()
     if not messages:
         return normalized
     for msg in messages:
         if not isinstance(msg, dict):
+            continue
+
+        # Deduplicate by message ID
+        msg_id = msg.get("id")
+        if msg_id and msg_id in seen_ids:
+            continue
+        if msg_id:
+            seen_ids.add(msg_id)
+
+        if not _should_display_message(msg):
             continue
         role = _message_role(msg)
         content = _message_text(msg)
@@ -113,87 +160,58 @@ def _normalize_messages(messages: Iterable[dict[str, Any]] | None) -> list[dict[
     return normalized
 
 
-def _collect_streamed_assistant_lines(
-    messages: Iterable[dict[str, Any]] | None,
-    prev_text: str,
-) -> tuple[list[str], str]:
-    """Return assistant text lines added since prev_text plus the latest text."""
-    latest_text = ""
-    if not messages:
-        return [], prev_text
+def _get_latest_event_status(events: list[dict[str, Any]]) -> str | None:
+    """Get the latest event formatted as a step status line."""
+    if not events:
+        return None
 
-    for message in reversed(list(messages)):
-        if not isinstance(message, dict):
+    # Find last event with a message
+    for event in reversed(events):
+        if not isinstance(event, dict):
             continue
-        if _message_role(message) != "assistant":
-            continue
-        text = _message_text(message).strip()
-        if text:
-            latest_text = text
-            break
+        message = event.get("message", "")
+        if message:
+            phase = event.get("phase") or "preflight"
+            return f"**Step ({phase}):** {message}"
 
-    if not latest_text:
-        return [], prev_text
-
-    prev_lines = prev_text.splitlines() if prev_text else []
-    latest_lines = latest_text.splitlines()
-
-    if prev_text and latest_text.startswith(prev_text):
-        new_lines = latest_lines[len(prev_lines) :]
-    else:
-        new_lines = latest_lines
-
-    return [line for line in new_lines if line.strip()], latest_text
+    return None
 
 
-def _format_progress_md(lines: list[str]) -> str:
-    """
-    Turn a raw list of progress lines into ChatGPT-ish Markdown sections:
+def _get_current_phase(state: dict[str, Any]) -> str | None:
+    """Extract current phase from events or phases dict."""
+    events = state.get("events", [])
+    if events:
+        # Last event with phase set
+        for event in reversed(events):
+            if isinstance(event, dict) and event.get("phase"):
+                return event.get("phase")
+    return None
 
-      **Header**
-      - item
-      - item
 
-    Heuristics:
-    - Lines ending with ":" start a new header
-    - Lines starting with "phase ", "step ", "running " also treated as headers
-    - Otherwise, lines become bullets under the current header
-    """
-    cleaned = [l.strip() for l in lines if (l or "").strip()]
-    if not cleaned:
-        return ""
+def _format_phase_display(phase: str | None) -> str:
+    """Format phase for display in UI header."""
+    if phase:
+        return f"**Phase:** {phase}"
+    return "**Phase:** \u2014"
 
-    def is_header(s: str) -> bool:
-        s2 = s.strip()
-        low = s2.lower()
-        return (
-            s2.endswith(":")
-            or low.startswith(("phase ", "step ", "running ", "retrieving ", "planning "))
-        )
 
-    sections: list[tuple[str, list[str]]] = []
-    current_title = "Progress"
-    current_items: list[str] = []
+def _build_display(state: dict[str, Any]) -> list[dict[str, str]]:
+    """Build chat display: chat messages + current step status during streaming."""
+    # Chat messages (filtered, deduplicated by ID)
+    display = _normalize_messages(state.get("messages"))
 
-    for line in cleaned:
-        if is_header(line):
-            # flush current section
-            if current_items:
-                sections.append((current_title, current_items))
-                current_items = []
-            current_title = line.rstrip(":").rstrip(".")
-        else:
-            current_items.append(line)
+    # Only show step status during streaming (before final AIMessage arrives)
+    # Skip if we already have an assistant message with substantial content
+    has_ai_response = any(
+        m.get("role") == "assistant" and len(m.get("content", "")) > 100
+        for m in display
+    )
+    if not has_ai_response:
+        status = _get_latest_event_status(state.get("events", []))
+        if status:
+            display.append({"role": "assistant", "content": status})
 
-    if current_items:
-        sections.append((current_title, current_items))
-
-    out: list[str] = []
-    for title, items in sections:
-        out.append(f"**{title}**")
-        out.extend([f"- {it}" for it in items])
-        out.append("")  # blank line between sections
-    return "\n".join(out).strip()
+    return display
 
 
 class SageCompassStreamer:
@@ -206,35 +224,36 @@ class SageCompassStreamer:
         self,
         user_message: str,
         state: dict[str, Any] | None,
-    ) -> Iterable[tuple[list[dict[str, str]], list[dict[str, str]], dict[str, Any], str, str]]:
+    ) -> Iterable[StreamUpdate]:
+        """Stream updates from LangGraph backend to Gradio UI."""
         user_message = (user_message or "").strip()
         if not user_message:
             current_state = state or {}
-            display = _normalize_messages(current_state.get("messages"))
-            yield display, display, current_state, "", ""
+            yield StreamUpdate(
+                messages=_build_display(current_state),
+                state=current_state,
+                phase=_format_phase_display(_get_current_phase(current_state)),
+            )
             return
 
         request_state = _prepare_state(state or {}, user_message)
 
-        # We'll keep collecting progress lines and render them as Markdown.
-        progress_lines: list[str] = []
-        prev_assistant_text = ""
+        # Keep user message to prepend to display (stream may not include it initially)
+        user_msg_display = {"role": "user", "content": user_message}
 
         try:
             for next_state in self.api.stream_state(request_state):
-                display = _normalize_messages(next_state.get("messages"))
+                display = _build_display(next_state)
 
+                # Ensure user message is always first if not already present
+                if not display or display[0].get("role") != "user":
+                    display = [user_msg_display] + display
 
-                # Extract the incremental new lines and treat them as progress.
-                new_lines, prev_assistant_text = _collect_streamed_assistant_lines(
-                    next_state.get("messages"), prev_assistant_text
+                yield StreamUpdate(
+                    messages=display,
+                    state=next_state,
+                    phase=_format_phase_display(_get_current_phase(next_state)),
                 )
-                progress_lines.extend(new_lines)
-
-                progress_md = _format_progress_md(progress_lines)
-
-                # 5 outputs: chatbot, history_state, backend_state, textbox_value, progress_md
-                yield display, display, next_state, "", progress_md
 
         except LangGraphApiError as exc:
             error_message = str(exc)
@@ -246,5 +265,12 @@ class SageCompassStreamer:
             messages.append({"role": "assistant", "content": error_message})
             request_state["messages"] = messages
 
-            display = _normalize_messages(messages)
-            yield display, display, request_state, "", _format_progress_md(progress_lines)
+            display = _build_display(request_state)
+            if not display or display[0].get("role") != "user":
+                display = [user_msg_display] + display
+
+            yield StreamUpdate(
+                messages=display,
+                state=request_state,
+                phase=_format_phase_display(_get_current_phase(request_state)),
+            )

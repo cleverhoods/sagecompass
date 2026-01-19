@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal
 
+from langchain_core.messages import AIMessage
 from langgraph.types import Command
 
 from app.agents.problem_framing.schema import ProblemFrame
@@ -29,6 +30,27 @@ logger = get_logger("nodes.problem_framing")
 
 
 ProblemFramingRoute = Literal["phase_supervisor", "supervisor"]
+
+
+def _format_problem_frame_response(pf: ProblemFrame) -> str:
+    """Format ProblemFrame as a user-friendly markdown response."""
+    lines = ["## Problem Framing Complete", ""]
+    lines.append(f"**Business Domain:** {pf.business_domain}")
+    lines.append(f"**Primary Outcome:** {pf.primary_outcome}")
+
+    if pf.actors:
+        lines.append("\n**Key Actors:**")
+        lines.extend(f"- {actor}" for actor in pf.actors)
+
+    if pf.current_pain:
+        lines.append("\n**Current Pain Points:**")
+        lines.extend(f"- {pain}" for pain in pf.current_pain)
+
+    if pf.constraints:
+        lines.append("\n**Constraints:**")
+        lines.extend(f"- {constraint}" for constraint in pf.constraints)
+
+    return "\n".join(lines)
 
 
 def make_node_problem_framing(
@@ -115,7 +137,13 @@ def make_node_problem_framing(
             evidence=evidence_items,
         )
 
-        update = {"phases": state.phases}
+        # Create user-facing response message
+        response_message = _format_problem_frame_response(pf)
+
+        update: dict[str, Any] = {
+            "phases": state.phases,
+            "messages": [AIMessage(content=response_message)],
+        }
         if include_errors:
             update["errors"] = state.errors
         validate_state_update(update, owner="problem_framing")

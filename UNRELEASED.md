@@ -96,6 +96,12 @@
 - [langgraph] Add `architecture` marker to pytest configuration for hexagonal architecture enforcement tests.
 
 ### Fixed
+- [langgraph] Add AIMessage with formatted response to problem_framing node on completion, enabling user-facing output in chat display.
+- [langgraph] Fix subgraph-to-parent routing by adding explicit edges from subgraph nodes (`ambiguity_check`, `guardrails_check`, phase supervisors) back to `supervisor` in main graph. Subgraphs now route to `__end__` which triggers the edge.
+- [gradio-ui] Refactor streamer.py with `StreamUpdate` dataclass replacing tuple returns for cleaner API.
+- [gradio-ui] Add message deduplication by ID in `_normalize_messages()` to prevent duplicate messages in chat display.
+- [gradio-ui] Switch to `stream_mode="updates"` with manual state accumulation for granular streaming updates.
+- [gradio-ui] Fix display logic to show step status only during streaming (before final AIMessage arrives), preventing duplicate phase response display.
 - [docs] Remove meta-commentary from PROJECT_ROOT/CLAUDE.md (deleted "Philosophy" section) to comply with "facts, commands, and rules only" directive in section 4.
 - [langgraph] Remove meta-commentary from backend/CLAUDE.md (deleted "Philosophy:" line explaining framework usage rationale).
 - [langgraph] Remove meta-commentary from app/tools/CLAUDE.md (removed "for clarity and ecosystem alignment" explanation from `@tool` decorator exception).

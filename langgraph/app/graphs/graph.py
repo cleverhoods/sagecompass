@@ -63,6 +63,13 @@ def build_main_app(  # type: ignore[no-untyped-def]
 
     graph.add_edge(START, "supervisor")
 
+    # When subgraphs complete (route to __end__), return to supervisor
+    graph.add_edge("ambiguity_check", "supervisor")
+    graph.add_edge("guardrails_check", "supervisor")
+    for phase in PHASES.values():
+        phase_node = f"{phase.name}_supervisor"
+        graph.add_edge(phase_node, "supervisor")
+
     # Default to InMemorySaver for local development if no checkpointer provided
     resolved_checkpointer = checkpointer if checkpointer is not None else InMemorySaver()
     return graph.compile(checkpointer=resolved_checkpointer)
