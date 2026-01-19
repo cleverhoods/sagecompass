@@ -12,7 +12,7 @@
 
 This framework provides a structured approach to evaluating, creating, and maintaining CLAUDE.md files. It includes:
 
-- **6-level maturity model** (collapsed from 12 for practical use)
+- **6-level maturity model**
 - **Quantifiable metrics** with empirical validation
 - **Patterns and antipatterns** derived from community best practices
 - **Real token efficiency data** from production usage
